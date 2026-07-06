@@ -1,4 +1,17 @@
 name: Publish website to IONOS
+
+# Auto-uploads the Orbital website to jobs.lisaney.com (IONOS) every time you
+# change the repo — so you NEVER manually upload to IONOS again.
+#
+# ONE-TIME SETUP (in your GitHub repo → Settings → Secrets and variables → Actions):
+#   IONOS_FTP_SERVER   = your IONOS FTP host  (e.g. access-xxxx.webspace-data.io  or  ftp.your-domain)
+#   IONOS_FTP_USERNAME = your IONOS FTP/SFTP username
+#   IONOS_FTP_PASSWORD = your IONOS FTP/SFTP password
+# (Find these in IONOS → Hosting → your site → SFTP/FTP access. Create a password if needed.)
+#
+# After that: any push to the repo re-publishes the site automatically. You can also
+# run it by hand from the Actions tab → "Publish website to IONOS" → Run workflow.
+
 on:
   push:
     branches: [ main, master ]
@@ -8,24 +21,31 @@ on:
       - 'START-HERE.html'
       - 'manifest.json'
       - 'orbital-logo.png'
+      - 'orbital-config.js'
       - 'assets/**'
   workflow_dispatch: {}
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Upload website to IONOS via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.IONOS_FTP_SERVER }}
           username: ${{ secrets.IONOS_FTP_USERNAME }}
           password: ${{ secrets.IONOS_FTP_PASSWORD }}
-          protocol: ftps
+          protocol: ftp
+          # IONOS webspace commonly rejects FTPS (explicit TLS) with "500 'AUTH': command
+          # unrecognized" — plain FTP is what their standard hosting expects.
+          # Publish only the website files (the scraper/.github stay out of the public site).
           exclude: |
             **/.git*
             **/.github/**
             scraper.py
             requirements.txt
             README.txt
+          # If your IONOS web root is a subfolder, set it here (most are just "/").
           server-dir: ./
