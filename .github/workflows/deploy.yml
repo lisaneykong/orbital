@@ -1,4 +1,22 @@
 name: Publish website to IONOS
+
+# Auto-uploads the Orbital website to jobs.lisaney.com (IONOS) every time you
+# change the repo — so you NEVER manually upload to IONOS again.
+#
+# IONOS's "Secure FTP" is actually SFTP over SSH (port 22), not classic FTP/FTPS —
+# confirmed from IONOS → Hosting → your site → Connection data (Protocol: SFTP + SSH).
+# Plain FTP/FTPS against that host fails with "500 'AUTH': command unrecognized"
+# because the server simply doesn't speak FTP at all.
+#
+# ONE-TIME SETUP (in your GitHub repo → Settings → Secrets and variables → Actions):
+#   IONOS_FTP_SERVER   = Server/Host from IONOS Connection data (e.g. home703391031.1and1-data.host)
+#   IONOS_FTP_USERNAME = User name from IONOS Connection data (e.g. u90902675)
+#   IONOS_FTP_PASSWORD = the password you set for that SFTP/SSH user
+# (Find these in IONOS → Hosting → your site → SFTP, SSH & WebDAV → Connection data.)
+#
+# After that: any push to the repo re-publishes the site automatically. You can also
+# run it by hand from the Actions tab → "Publish website to IONOS" → Run workflow.
+
 on:
   push:
     branches: [ main, master ]
@@ -8,24 +26,34 @@ on:
       - 'START-HERE.html'
       - 'manifest.json'
       - 'orbital-logo.png'
+      - 'orbital-config.js'
       - 'assets/**'
   workflow_dispatch: {}
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Upload website to IONOS via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+
+      - name: Stage only the public website files (keep scraper/.github off the live site)
+        run: |
+          mkdir -p _publish
+          cp index.html setup.html START-HERE.html manifest.json _publish/ 2>/dev/null || true
+          cp orbital-logo.png orbital-config.js _publish/ 2>/dev/null || true
+          [ -d assets ] && cp -r assets _publish/ || true
+
+      - name: Upload website to IONOS via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
           server: ${{ secrets.IONOS_FTP_SERVER }}
           username: ${{ secrets.IONOS_FTP_USERNAME }}
           password: ${{ secrets.IONOS_FTP_PASSWORD }}
-          protocol: ftps
-          exclude: |
-            **/.git*
-            **/.github/**
-            scraper.py
-            requirements.txt
-            README.txt
-          server-dir: ./
+          port: 22
+          local_path: './_publish/*'
+          # IONOS's web root for this account — most standard hosting plans use this path.
+          # If your site doesn't appear after a successful run, check IONOS -> Hosting ->
+          # your site for the exact web-root folder name and update this.
+          remote_path: '/'
+          sftp_only: true
+          delete_remote_files: false
