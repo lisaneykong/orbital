@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Orbital CRM · Install</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<style>
+:root{--bg:#05080d;--panel:#0c111b;--line:#1b2638;--line2:#243349;--text:#e8eef7;--muted:#8595ad;--dim:#5c6b82;--accent:#37d6e6;--accent2:#00e6a2;--good:#39e6a0;--bad:#ff7a8a;--gold:#ffd76a}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:30px;
+  font-family:'Inter Tight','Segoe UI',system-ui,sans-serif;color:var(--text);
+  background:radial-gradient(900px 500px at 80% -10%,rgba(55,214,230,.12),transparent 60%),radial-gradient(700px 420px at 10% 0%,rgba(157,139,255,.08),transparent 55%),var(--bg)}
+body:before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.45;
+  background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(circle at 50% 0%,#000,transparent 75%);mask-image:radial-gradient(circle at 50% 0%,#000,transparent 75%)}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;letter-spacing:-.01em}
+.mono{font-family:'JetBrains Mono',monospace}
+.card{position:relative;z-index:1;width:min(580px,100%);border:1px solid var(--line);border-radius:24px;
+  background:linear-gradient(180deg,rgba(14,22,34,.95),rgba(8,12,20,.9));box-shadow:0 30px 80px rgba(0,0,0,.55);overflow:hidden}
+.head{padding:26px 30px 20px;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:center}
+.orbit{width:50px;height:50px;border-radius:50%;flex:none;position:relative;background:radial-gradient(circle at 35% 30%,#11324a,#060b14);border:1px solid var(--line2);box-shadow:inset 0 0 18px rgba(55,214,230,.25)}
+.orbit:after{content:'';position:absolute;inset:10px;border-radius:50%;border:1.5px solid rgba(55,214,230,.55);transform:rotate(-22deg) scaleY(.42)}
+.orbit:before{content:'';position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent)}
+.head h1{font-size:1.4rem;letter-spacing:.5px}.head h1 b{color:var(--accent)}
+.head p{margin:3px 0 0;color:var(--muted);font-size:.84rem}
+.body{padding:24px 30px 30px}
+
+/* ---------- PIN VAULT — alien command core ---------- */
+.vault{position:relative;padding:40px 30px 44px;text-align:center;overflow:hidden}
+.vault:before{content:'';position:absolute;left:0;right:0;top:-40px;height:130px;pointer-events:none;z-index:0;
+  background:linear-gradient(180deg,rgba(55,214,230,.12),transparent);animation:vscan 5s ease-in-out infinite}
+@keyframes vscan{0%,100%{transform:translateY(0);opacity:.45}50%{transform:translateY(380px);opacity:.85}}
+.vault>*{position:relative;z-index:1}
+.vault .core{width:84px;height:84px;margin:0 auto 18px;position:relative;display:grid;place-items:center}
+.vault .core .r1,.vault .core .r2,.vault .core .r3{position:absolute;border-radius:50%;border:1px solid rgba(55,214,230,.25)}
+.vault .core .r1{inset:0;border-top-color:var(--accent);border-right-color:rgba(55,214,230,.05);animation:cspin 6s linear infinite}
+.vault .core .r2{inset:11px;border-bottom-color:var(--accent2);border-left-color:rgba(0,230,162,.05);animation:cspin 4s linear infinite reverse}
+.vault .core .r3{inset:-7px;border-style:dashed;border-color:rgba(55,214,230,.18);animation:cspin 22s linear infinite}
+@keyframes cspin{to{transform:rotate(360deg)}}
+.vault .core .hex{width:46px;height:46px;display:grid;place-items:center;
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+  background:radial-gradient(circle at 50% 32%,rgba(55,214,230,.55),rgba(6,12,20,.95));
+  box-shadow:0 0 26px rgba(55,214,230,.45),inset 0 0 16px rgba(55,214,230,.55);animation:cpulse 3s ease-in-out infinite}
+@keyframes cpulse{50%{box-shadow:0 0 36px rgba(55,214,230,.7),inset 0 0 20px rgba(55,214,230,.8)}}
+.vault .core svg{filter:drop-shadow(0 0 6px rgba(55,214,230,.9))}
+.vault h2{font-family:'Orbitron',sans-serif;font-size:1.1rem;letter-spacing:.34em;text-transform:uppercase;margin-bottom:8px;
+  background:linear-gradient(90deg,#9fefff,#37d6e6 60%,#00e6a2);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.vault p{color:var(--muted);font-size:.82rem;margin:0 auto 26px;max-width:330px;letter-spacing:.02em}
+.dots{display:flex;gap:16px;justify-content:center;margin-bottom:30px}
+.dots i{width:13px;height:13px;transform:rotate(45deg);border:1px solid rgba(55,214,230,.45);background:rgba(55,214,230,.05);transition:.18s}
+.dots i.on{background:var(--accent);border-color:var(--accent);box-shadow:0 0 14px var(--accent)}
+.dots.bad i{border-color:var(--bad);box-shadow:0 0 12px rgba(255,122,138,.6);animation:dshake .4s}
+@keyframes dshake{0%,100%{transform:rotate(45deg) translateX(0)}25%{transform:rotate(45deg) translateX(-6px)}75%{transform:rotate(45deg) translateX(6px)}}
+.padframe{position:relative;max-width:300px;margin:0 auto;padding:18px}
+.padframe:before,.padframe:after{content:'';position:absolute;width:24px;height:24px;border:2px solid rgba(55,214,230,.5);pointer-events:none}
+.padframe:before{left:-2px;top:-2px;border-right:0;border-bottom:0}
+.padframe:after{right:-2px;bottom:-2px;border-left:0;border-top:0}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.key{position:relative;font-family:'Orbitron',sans-serif;font-size:1.32rem;font-weight:700;color:#bfefff;
+  background:linear-gradient(158deg,rgba(20,34,50,.92),rgba(8,14,22,.96));border:1px solid rgba(55,214,230,.28);
+  clip-path:polygon(13px 0,100% 0,100% calc(100% - 13px),calc(100% - 13px) 100%,0 100%,0 13px);
+  padding:17px 0;cursor:pointer;transition:.12s;user-select:none;letter-spacing:.04em;box-shadow:inset 0 0 12px rgba(55,214,230,.08)}
+.key:hover{border-color:var(--accent);color:#eafdff;background:linear-gradient(158deg,rgba(55,214,230,.24),rgba(10,18,28,.96));box-shadow:0 0 20px rgba(55,214,230,.32),inset 0 0 18px rgba(55,214,230,.22)}
+.key:active{transform:scale(.93)}
+.key.fn{font-family:'Space Grotesk',sans-serif;font-size:.78rem;font-weight:600;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.key.fn:hover{color:var(--accent)}
+.vault .pinerr{color:var(--bad);font-size:.82rem;min-height:18px;margin-top:20px;letter-spacing:.04em}
+/* ---- deep-space backdrop behind the keypad (drifting satellite, planets, stars) ---- */
+.spacefield{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+  background:
+    radial-gradient(1px 1px at 18% 28%, rgba(255,255,255,.85), transparent),
+    radial-gradient(1px 1px at 68% 58%, rgba(255,255,255,.6), transparent),
+    radial-gradient(1.6px 1.6px at 42% 78%, rgba(159,239,255,.75), transparent),
+    radial-gradient(1px 1px at 84% 22%, rgba(255,255,255,.55), transparent),
+    radial-gradient(1px 1px at 54% 12%, rgba(255,255,255,.5), transparent),
+    radial-gradient(1px 1px at 12% 66%, rgba(255,255,255,.45), transparent),
+    radial-gradient(1.5px 1.5px at 90% 74%, rgba(0,230,162,.55), transparent),
+    radial-gradient(1px 1px at 33% 46%, rgba(255,255,255,.4), transparent),
+    radial-gradient(1px 1px at 76% 38%, rgba(159,239,255,.5), transparent)}
+.spacefield:after{content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(1px 1px at 25% 60%, rgba(255,255,255,.7), transparent),
+    radial-gradient(1px 1px at 60% 25%, rgba(255,255,255,.6), transparent),
+    radial-gradient(1.4px 1.4px at 80% 55%, rgba(0,230,162,.5), transparent),
+    radial-gradient(1px 1px at 45% 90%, rgba(159,239,255,.5), transparent);
+  animation:twinkle 4.5s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.35}50%{opacity:.95}}
+.spacefield .planet{position:absolute;border-radius:50%;filter:blur(.4px)}
+.spacefield .p1{width:96px;height:96px;left:-30px;bottom:-26px;
+  background:radial-gradient(circle at 34% 30%, #335a86, #0e1c2e 68%);
+  box-shadow:inset -9px -7px 18px rgba(0,0,0,.55), 0 0 34px rgba(55,214,230,.14);
+  opacity:.55;animation:pfloat 16s ease-in-out infinite}
+.spacefield .p1:before{content:'';position:absolute;left:-16px;top:42%;width:128px;height:18px;
+  border-radius:50%;border:2px solid rgba(55,214,230,.22);transform:rotate(-24deg)}
+.spacefield .p2{width:44px;height:44px;right:-10px;top:20px;
+  background:radial-gradient(circle at 40% 35%, #6a4a7a, #170f22 70%);
+  box-shadow:inset -4px -3px 11px rgba(0,0,0,.55);opacity:.5;animation:pfloat 21s ease-in-out infinite reverse}
+@keyframes pfloat{50%{transform:translateY(-12px)}}
+.spacefield .sat{position:absolute;left:0;top:0;filter:drop-shadow(0 0 7px rgba(55,214,230,.6));
+  animation:satdrift 46s linear infinite}
+.spacefield .sat svg{display:block;animation:satbob 7s ease-in-out infinite}
+@keyframes satbob{50%{transform:translateY(-6px) rotate(2deg)}}
+@keyframes satdrift{
+  0%{transform:translate(-70px,300px) rotate(-14deg);opacity:0}
+  8%{opacity:.95}
+  92%{opacity:.95}
+  100%{transform:translate(470px,-90px) rotate(10deg);opacity:0}}
+
+/* ---------- SETUP FORM ---------- */
+.hidden{display:none!important}
+.intro{border:1px solid var(--line2);border-radius:14px;padding:15px 17px;margin-bottom:22px;background:rgba(55,214,230,.05)}
+.intro .t{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2);margin-bottom:9px}
+.intro .row{display:flex;gap:10px;font-size:.88rem;color:var(--text);line-height:1.5;padding:3px 0}
+.intro .row b.n{color:var(--accent);flex:none}
+.intro .foot{font-size:.76rem;color:var(--dim);margin-top:10px}
+label{display:block;font-size:.82rem;color:var(--text);margin:18px 0 7px;font-weight:600}
+label .hint{color:var(--dim);font-weight:400;font-size:.78rem}
+input{width:100%;font:inherit;font-family:'JetBrains Mono',monospace;font-size:.86rem;color:var(--text);
+  background:rgba(5,8,13,.7);border:1px solid var(--line2);border-radius:12px;padding:13px 14px;outline:none;transition:.15s}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(55,214,230,.14)}
+input.bad{border-color:var(--bad)}
+input.good{border-color:var(--good)}
+.hero{margin-top:24px;width:100%;font:inherit;font-weight:700;font-size:1rem;cursor:pointer;border-radius:13px;
+  border:1px solid rgba(55,214,230,.5);background:linear-gradient(180deg,rgba(55,214,230,.3),rgba(0,230,162,.12));color:#eafdff;padding:15px 20px;transition:.15s;display:flex;align-items:center;justify-content:center;gap:9px}
+.hero:hover{filter:brightness(1.08);box-shadow:0 8px 30px rgba(55,214,230,.25)}
+.hero:disabled{opacity:.6;cursor:default;filter:none;box-shadow:none}
+.subrow{display:flex;gap:10px;margin-top:11px}
+.btn{flex:1;font:inherit;font-weight:600;font-size:.85rem;cursor:pointer;border-radius:11px;border:1px solid var(--line2);background:rgba(255,255,255,.03);color:var(--muted);padding:11px 14px;transition:.15s}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.msg{margin-top:16px;font-size:.85rem;padding:12px 14px;border-radius:11px;display:none;line-height:1.5}
+.msg.show{display:block}
+.msg.ok{color:var(--good);background:rgba(57,230,160,.08);border:1px solid rgba(57,230,160,.35)}
+.msg.err{color:var(--bad);background:rgba(255,122,138,.08);border:1px solid rgba(255,122,138,.35)}
+.msg.info{color:var(--muted);background:rgba(255,255,255,.03);border:1px solid var(--line2)}
+.note{margin-top:22px;font-size:.78rem;color:var(--dim);line-height:1.6;border-top:1px solid var(--line);padding-top:16px}
+.note b{color:var(--muted)}
+.note code{font-family:'JetBrains Mono';color:var(--accent2);background:rgba(5,8,13,.6);padding:2px 6px;border-radius:6px}
+.links{margin-top:14px;display:flex;gap:16px;font-size:.82rem}
+.links a{color:var(--muted);text-decoration:none}.links a:hover{color:var(--accent)}
+.progwrap{display:none;flex-direction:column;align-items:center;gap:10px;margin-top:22px}
+.progwrap.show{display:flex}
+.ring{--p:0;width:128px;height:128px;border-radius:50%;display:grid;place-items:center;position:relative;
+  background:conic-gradient(var(--accent) calc(var(--p)*1%),rgba(255,255,255,.07) 0);transition:background .35s ease}
+.ring:before{content:'';position:absolute;inset:10px;border-radius:50%;background:#0a0f18;box-shadow:inset 0 0 22px rgba(55,214,230,.18)}
+.ring.spin:after{content:'';position:absolute;inset:-3px;border-radius:50%;border:2px solid transparent;border-top-color:rgba(55,214,230,.65);animation:rspin 1s linear infinite}
+@keyframes rspin{to{transform:rotate(360deg)}}
+.ring .pv{position:relative;z-index:1;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.7rem;color:#fff;line-height:1}
+.ring .pl{position:relative;z-index:1;font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent2);margin-top:4px}
+.ring.done{background:conic-gradient(var(--good) 100%,var(--good) 0)}
+.ring.done .pv{color:var(--good)}
+.progcount{font-size:.84rem;color:var(--muted)}.progcount b{color:var(--good);font-family:'JetBrains Mono',monospace;font-size:1rem}
+.progsub{font-size:.74rem;color:var(--dim)}
+/* ---------- DB + GITHUB PANEL ---------- */
+.dbpanel{border:1px solid var(--line2);border-radius:14px;background:rgba(5,8,13,.45);margin:0 0 22px}
+.dbpanel summary{cursor:pointer;padding:14px 16px;font-weight:600;font-size:.9rem;color:var(--accent);list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dbpanel summary::-webkit-details-marker{display:none}
+.dbpanel summary:after{content:'\25be';transition:.2s;color:var(--muted)}
+.dbpanel[open] summary:after{transform:rotate(180deg)}
+.dbbody{padding:4px 16px 18px;font-size:.84rem;color:var(--muted);line-height:1.6}
+.dbh{font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--text);font-size:.9rem;margin:18px 0 8px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.dbh:first-child{margin-top:6px}
+.dbh span{font-weight:400;font-size:.72rem;color:var(--dim);letter-spacing:.02em}
+.codebox{position:relative;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#070c14;margin-bottom:6px}
+.codebox pre{margin:0;padding:14px;padding-top:40px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.72rem;line-height:1.55;color:#9fc4e8;white-space:pre}
+.copysql{position:absolute;top:8px;right:8px;z-index:2;font:inherit;font-size:.74rem;font-weight:600;color:#04121a;background:var(--accent);border:0;border-radius:7px;padding:6px 13px;cursor:pointer;transition:.15s}
+.copysql:hover{filter:brightness(1.1)}
+.copysql.done{background:var(--good)}
+.dbnote{font-size:.78rem;color:var(--dim);line-height:1.6;margin:8px 0 4px}.dbnote b{color:var(--muted)}
+.dbnote code,.dbbody code{font-family:'JetBrains Mono',monospace;color:var(--accent2);background:rgba(5,8,13,.6);padding:1px 5px;border-radius:5px;font-size:.76rem}
+.dbol{margin:6px 0 4px;padding-left:20px}.dbol li{margin-bottom:7px}.dbol b{color:var(--text)}
+.dbol i{color:var(--accent2);font-style:normal}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="orbit"></div>
+    <div>
+      <h1>ORBITAL<b>//</b>COMMAND</h1>
+      <p>Install &amp; connect — everything in this browser</p>
+    </div>
+  </div>
+
+  <!-- ====== STEP 0: PIN VAULT ====== -->
+  <div class="vault" id="vault">
+    <svg class="gen-nebula" aria-hidden="true" style="position:absolute;inset:0;z-index:0;mix-blend-mode:screen;opacity:.8;pointer-events:none" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <filter id="vault-neb" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.007 0.012" numOctaves="4" seed="11" result="n">
+            <animate attributeName="baseFrequency" dur="42s" values="0.007 0.012;0.010 0.008;0.007 0.012" repeatCount="indefinite"/>
+          </feTurbulence>
+          <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.14  0 0 0 0 0.55  0 0 0 0 0.72  0 0 0 0.9 0"/>
+          <feComponentTransfer><feFuncA type="gamma" amplitude="1" exponent="2.4" offset="0"/></feComponentTransfer>
+        </filter>
+        <radialGradient id="vault-tint" cx="50%" cy="20%" r="80%">
+          <stop offset="0%" stop-color="#ff4d6d" stop-opacity=".5"/>
+          <stop offset="45%" stop-color="#9d6bff" stop-opacity=".32"/>
+          <stop offset="100%" stop-color="#04060c" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="100%" height="100%" filter="url(#vault-neb)"/>
+      <rect width="100%" height="100%" fill="url(#vault-tint)"/>
+    </svg>
+    <div class="spacefield" aria-hidden="true">
+      <div class="planet p1"></div>
+      <div class="planet p2"></div>
+      <div class="sat">
+        <svg width="74" height="48" viewBox="0 0 74 48" fill="none">
+          <rect x="2" y="15" width="20" height="18" rx="2" fill="#0e2233" stroke="#37d6e6" stroke-width="1"/>
+          <line x1="8.5" y1="15" x2="8.5" y2="33" stroke="#37d6e6" stroke-width=".5"/>
+          <line x1="15" y1="15" x2="15" y2="33" stroke="#37d6e6" stroke-width=".5"/>
+          <line x1="2" y1="24" x2="22" y2="24" stroke="#37d6e6" stroke-width=".5"/>
+          <line x1="22" y1="24" x2="28" y2="24" stroke="#9fb6c9" stroke-width="1.5"/>
+          <path d="M37 13 L46 18 L46 30 L37 35 L28 30 L28 18 Z" fill="#13283b" stroke="#37d6e6" stroke-width="1.2"/>
+          <circle cx="37" cy="24" r="3.6" fill="#37d6e6" opacity=".9"/>
+          <line x1="46" y1="24" x2="52" y2="24" stroke="#9fb6c9" stroke-width="1.5"/>
+          <rect x="52" y="15" width="18" height="18" rx="2" fill="#0e2233" stroke="#00e6a2" stroke-width="1"/>
+          <line x1="58.5" y1="15" x2="58.5" y2="33" stroke="#00e6a2" stroke-width=".5"/>
+          <line x1="64" y1="15" x2="64" y2="33" stroke="#00e6a2" stroke-width=".5"/>
+          <line x1="37" y1="13" x2="37" y2="5" stroke="#9fb6c9" stroke-width="1"/>
+          <circle cx="37" cy="4" r="2.2" fill="#00e6a2"/>
+        </svg>
+      </div>
+    </div>
+    <div class="core">
+      <span class="r1"></span><span class="r2"></span><span class="r3"></span>
+      <span class="hex"><svg viewBox="0 0 24 24" width="22" fill="none" stroke="#9fefff" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+    </div>
+    <h2>Owner Access</h2>
+    <p>Authenticate with your 4-digit command code to bring the install console online.</p>
+    <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+    <div class="padframe">
+      <div class="keypad" id="keypad">
+        <div class="key" data-k="1">1</div><div class="key" data-k="2">2</div><div class="key" data-k="3">3</div>
+        <div class="key" data-k="4">4</div><div class="key" data-k="5">5</div><div class="key" data-k="6">6</div>
+        <div class="key" data-k="7">7</div><div class="key" data-k="8">8</div><div class="key" data-k="9">9</div>
+        <div class="key fn" data-k="clear">Clear</div><div class="key" data-k="0">0</div><div class="key fn" data-k="back">⌫</div>
+      </div>
+    </div>
+    <div class="pinerr" id="pinErr"></div>
+  </div>
+
+  <!-- ====== STEP 1+2: ALL VARIABLES AT ONCE ====== -->
+  <div class="body hidden" id="setupBody">
+    <div class="intro">
+      <div class="t">First-time install · required to launch</div>
+      <div class="row"><b class="n">1.</b><div>Paste all three keys below (copy them from <b style="color:var(--text)">supabase.com → your project → Settings → API</b>).</div></div>
+      <div class="row"><b class="n">2.</b><div>Press <b style="color:var(--text)">Connect &amp; fetch real jobs</b>. The dial fills 0 → 100% as a full scraping cycle runs and verifies.</div></div>
+      <div class="row"><b class="n">3.</b><div>The dashboard <b style="color:var(--text)">unlocks automatically</b> once that first real job report is built — then it refreshes daily.</div></div>
+      <div class="foot">🔒 The console stays locked until this full cycle completes — that's what guarantees your first report is real, not sample data. Keys stay in this browser only.</div>
+    </div>
+
+    <details class="dbpanel" id="dbPanel">
+      <summary>🛠 Database table + GitHub setup &amp; launch sequence</summary>
+      <div class="dbbody">
+        <div class="dbh">A · Create the database table <span>one time · Supabase → SQL Editor → Run · safe to re-run</span></div>
+        <div class="codebox">
+          <button class="copysql" id="copySql">Copy SQL</button>
+          <button class="copysql" id="copySqlOpen" style="right:96px;background:var(--accent2)">Copy &amp; open Supabase →</button>
+<pre id="sqlBlock">-- WIPES the jobs table and rebuilds it fresh to this EXACT schema.
+-- Use this if a previous table was a different shape and caused "no match" / "permission denied".
+drop table if exists public.jobs cascade;
+create table public.jobs (
+  idx             bigint generated always as identity,
+  id              text primary key,
+  company         text not null,
+  title           text not null,
+  location_hub    text,
+  location        text,
+  salary_range    text,
+  salary_min      int,
+  salary_max      int,
+  intern_rate     int,
+  intern_weeks    int,
+  is_intern       boolean default false,
+  type            text,
+  match           int,
+  planets         int,
+  demand          int,
+  posting_age     int,
+  tech            text,
+  clearance       text,
+  relocation_flag boolean default false,
+  relocation_note text,
+  logo_bg         text,
+  url             text,
+  timestamp       timestamptz,
+  description     text,
+  requirements    text,
+  source          text,
+  status          text default 'active',
+  saved           boolean default false,
+  archived        boolean default false,
+  itar_flag       boolean default false,
+  clearance_level text,
+  degree_levels   text,
+  hw_sw_track     text,
+  housing_stipend boolean default false,
+  intern_skills   text,
+  apply_deadline  timestamptz,
+  program_start   timestamptz,
+  created_at      timestamptz default now()
+);
+alter table public.jobs enable row level security;
+drop policy if exists "anon read jobs" on public.jobs;
+create policy "anon read jobs" on public.jobs
+  for select to anon using (true);
+-- GRANT table permissions — fixes "permission denied for table jobs" even with the
+-- correct service_role key (the role needs an explicit grant to write).
+grant usage on schema public to anon, authenticated, service_role;
+grant select on public.jobs to anon, authenticated;
+grant all privileges on public.jobs to service_role;
+grant insert, update, delete on public.jobs to service_role;
+-- Single-user tool: disable row-level security so the service_role key can always write.
+alter table public.jobs disable row level security;
+-- Belt & suspenders: an explicit write policy (in case the key resolves as authenticated).
+drop policy if exists "service role writes" on public.jobs;
+create policy "service role writes" on public.jobs
+  for all to service_role using (true) with check (true);
+create index if not exists jobs_hub_time_idx
+  on public.jobs (location_hub, timestamp desc);
+-- Supabase's REST layer (PostgREST) caches role permissions and does NOT always pick up
+-- GRANT/RLS changes immediately — this NOTIFY forces an instant cache reload so the fix
+-- above takes effect right away instead of waiting for PostgREST's automatic refresh.
+NOTIFY pgrst, 'reload schema';</pre>
+        </div>
+        <div class="dbnote" style="margin-top:14px;padding:12px;border:1px solid rgba(255,90,110,.3);border-radius:10px;background:rgba(255,90,110,.05)">
+          <b style="color:#ff9baa">Still getting "permission denied for table jobs" after running the SQL above?</b> That error only ever means one thing at the database level: the role writing to the table is missing a GRANT — it is <i>not</i> caused by Row-Level Security (RLS violations show a different message). If the big script above ran into any error partway through, later lines (including the GRANT) may not have executed. Run <b>just this one isolated block</b> by itself — it can't be blocked by anything earlier failing:
+        </div>
+        <div class="codebox" style="margin-top:8px">
+          <button class="copysql" id="copySqlFix">Copy</button>
+<pre id="sqlFixBlock">grant usage on schema public to service_role, anon, authenticated;
+grant all privileges on public.jobs to service_role;
+grant select on public.jobs to anon, authenticated;
+alter table public.jobs disable row level security;
+NOTIFY pgrst, 'reload schema';</pre>
+        </div>
+        <div class="dbnote">Paste that alone into Supabase → SQL Editor → Run, confirm "Success. No rows returned", then try <b>Connect &amp; fetch real jobs</b> again. If it STILL fails after this exact isolated block succeeds, the key in field 3 is not actually authenticating as service_role against this project (even if it decodes that way) — regenerate the service_role key from Settings → API and paste the fresh one.</div>
+        <div class="dbnote"><b style="color:var(--gold)">⚠ This wipes any existing jobs table</b> (old rows are deleted) and rebuilds it to the exact format the app expects — use it any time a previous table was a different shape and caused "no match" or write errors. The <b>Test connection</b> and <b>Connect &amp; fetch</b> buttons check your live table against this format and pop an alert if anything is still off — if that happens, copy this SQL and run it again.</div>
+
+        <div class="dbh">B · Turn on the daily auto-scraper <span>GitHub Actions · free · runs itself</span></div>
+        <ol class="dbol">
+          <li>Make a free <b>github.com</b> account → <b>New repository</b> (Private), name it <i>orbital</i>.</li>
+          <li>Upload everything from your downloaded orbital folder (include the hidden <code>.github</code> folder).</li>
+          <li>Repo → <b>Settings → Secrets and variables → Actions → New repository secret</b>. Add two, names exactly:<br><code>SUPABASE_URL</code> = your Project URL &nbsp;·&nbsp; <code>SUPABASE_SERVICE_ROLE_KEY</code> = your service_role key.</li>
+          <li><b>Actions</b> tab → “Orbital daily scrape” → <b>Run workflow</b>. After this it runs every day on its own.</li>
+        </ol>
+
+        <div class="dbh">C · Launch sequence — verify it all matches</div>
+        <ol class="dbol">
+          <li>Run the SQL (A) → press <b>Test connection</b> here. You want “✔ the table format <b>matches</b>”.</li>
+          <li>Paste all three keys → press <b>Connect &amp; fetch real jobs</b>. Watch 0 → 100%, then the live verify list.</li>
+          <li>Open the dashboard → press <b>Refresh</b>; the count should match the verify list.</li>
+        </ol>
+        <div class="dbnote"><b>Dev notes.</b> Row <code>id = {company}-{ats_id}</code> so the browser pass and the GitHub scraper de-duplicate into the same rows. <code>location_hub</code> is one of <code>SEATTLE / GREATER_LA / NEW_ZEALAND</code> only. The browser pass covers Greenhouse/Ashby/Amazon (CORS-friendly); Workday/Lever and custom sites populate via the daily Action. Every write is checked against the column list above and auto-skips any column your table lacks (logged), so a partial table still loads.</div>
+      </div>
+    </details>
+
+    <label>1 · Project URL <span class="hint">— Settings → API → Project URL</span></label>
+    <input id="url" placeholder="https://your-project-ref.supabase.co" autocomplete="off" spellcheck="false" />
+
+    <label>2 · Anon public key <span class="hint">— Settings → API → anon public (lets the site READ jobs)</span></label>
+    <input id="key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…" autocomplete="off" spellcheck="false" />
+
+    <label>3 · Service role key <span class="hint">— Settings → API → service_role (used once, here, to SAVE jobs)</span></label>
+    <input id="svc" placeholder="eyJ…  secret key — stays in this browser only" autocomplete="off" spellcheck="false" />
+    <div id="svcRoleReadout" style="font-size:.78rem;margin-top:4px;min-height:16px"></div>
+
+    <button class="hero" id="scrapeBtn">
+      <svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      Connect &amp; fetch real jobs
+    </button>
+    <div class="subrow">
+      <button class="btn" id="saveBtn">Save connection</button>
+      <button class="btn" id="testBtn">Test connection</button>
+    </div>
+
+    <div class="progwrap" id="progWrap">
+      <div class="ring" id="ring"><div style="text-align:center"><div class="pv" id="ringPv">0%</div><div class="pl" id="ringLbl">Scanning</div></div></div>
+      <div class="progcount">Roles loaded: <b id="progCount">0</b></div>
+      <div class="progsub" id="progSub">Starting…</div>
+    </div>
+    <div class="msg" id="scrapeMsg"></div>
+    <div class="msg" id="msg"></div>
+    <div id="scrapeLog" class="mono" style="display:none;margin-top:12px;max-height:200px;overflow:auto;font-size:.72rem;color:var(--dim);line-height:1.7;border:1px solid var(--line);border-radius:11px;padding:12px 14px;background:rgba(5,8,13,.6)"></div>
+
+    <!-- ====== REQUIRED GITHUB GATE — the primary engine ====== -->
+    <div id="githubGate" style="display:none;margin-top:22px;border:2px solid var(--accent);border-radius:16px;padding:18px;background:rgba(55,214,230,.06)">
+      <div style="font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent2);margin-bottom:4px">Step 2 of 2 · Required</div>
+      <h2 style="font-size:1.15rem;margin:0 0 4px">Turn on the GitHub engine</h2>
+      <p style="color:var(--muted);font-size:.86rem;margin:0 0 14px">This is the heart of Orbital — the free robot that pulls <b>Blue Origin, Amazon Kuiper</b> and the big boards browsers can't reach, and refreshes everything daily. <b>The dashboard won't open until this is running.</b></p>
+      <ol class="dbol" style="margin:0 0 14px;padding-left:20px;color:var(--muted);font-size:.85rem;line-height:1.6">
+        <li><b>Make the repo.</b> Go to <a class="lnk" href="https://github.com" target="_blank" style="color:var(--accent)">github.com</a> → free account → green <b>New</b> button → name it <i>orbital</i> → <b>Private</b> → <b>Create repository</b>.</li>
+        <li><b>Open the upload page.</b> On your new empty repo, click the link <i>“uploading an existing file”</i> (or the <b>Add file ▾ → Upload files</b> button, top right).</li>
+        <li><b>Upload the WHOLE orbital folder's contents.</b> Open the <code>orbital-crm</code> folder you downloaded, select <b>everything inside it</b>, and drag it onto that GitHub page. Drop the files and you should see this list appear:
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin:9px 0;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--accent2)">
+            <span>📄 index.html</span><span>📄 setup.html</span>
+            <span>📄 scraper.py</span><span>📄 requirements.txt</span>
+            <span>📄 START-HERE.html</span><span>📄 manifest.json</span>
+            <span>📁 assets/</span><span style="color:var(--gold)">📁 .github/ ← must be here!</span>
+          </div>
+          <span style="color:var(--gold)">⚠ The <code>.github</code> folder is hidden by default — without it the robot won't run. On Mac press <b>Cmd+Shift+.</b> to show hidden files; on Windows turn on <b>View → Hidden items</b> — then drag it in too.</span></li>
+        <li><b>Save it.</b> Scroll down, click the green <b>Commit changes</b> button.</li>
+        <li><b>Add your 2 secret keys.</b> In the repo: <b>Settings → Secrets and variables → Actions → New repository secret</b>. Add two (names EXACTLY):<br><code>SUPABASE_URL</code> = your Project URL · <code>SUPABASE_SERVICE_ROLE_KEY</code> = your service_role key.</li>
+        <li><b>Run it.</b> <b>Actions</b> tab → click <i>“Orbital daily scrape”</i> on the left → <b>Run workflow ▾ → Run workflow</b>. Wait ~2 min for the green ✓.</li>
+      </ol>
+      <label>Your GitHub repo URL</label>
+      <input id="ghRepo" placeholder="https://github.com/your-username/orbital" autocomplete="off" spellcheck="false" />
+      <button class="hero" id="ghVerifyBtn" style="margin-top:12px">
+        <svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Verify the GitHub engine is running
+      </button>
+      <div class="msg" id="ghMsg"></div>
+    </div>
+
+    <a href="index.html" id="launchBtn" style="display:none;margin-top:18px;text-align:center;box-sizing:border-box;font-weight:700;color:#04121a;background:linear-gradient(135deg,#37d6e6,#39e6a0);padding:14px;border-radius:12px;text-decoration:none">🚀 Install complete — open my dashboard →</a>
+
+    <!-- ====== PROFILE + RÉSUMÉ — editable right here ====== -->
+    <div style="margin-top:28px;border-top:1px solid var(--line);padding-top:22px">
+      <div class="intro" style="margin-bottom:18px">
+        <div class="t">Your profile &amp; résumé · optional, edit anytime</div>
+        <div class="foot" style="margin-top:2px">Everything below saves instantly and powers your dashboard — no need to open another screen.</div>
+      </div>
+
+      <label>Owner email <span class="hint">— sign-ins from this address (or any @lisaney.com) get full control</span></label>
+      <input id="ownerEmail" placeholder="you@lisaney.com" autocomplete="off" spellcheck="false" />
+
+      <label>LinkedIn profile URL <span class="hint">— sharpens job matching against your headline, skills &amp; experience</span></label>
+      <input id="linkedinUrl" placeholder="https://www.linkedin.com/in/your-handle" autocomplete="off" spellcheck="false" />
+
+      <label>Default region <span class="hint">— which hub opens first</span></label>
+      <select id="defRegion" style="width:100%;font:inherit;font-size:.9rem;color:var(--text);background:rgba(5,8,13,.7);border:1px solid var(--line2);border-radius:12px;padding:13px 14px;outline:none">
+        <option value="global">🌍 Global (all hubs)</option>
+        <option value="seattle">📍 Seattle</option>
+        <option value="la">📍 Greater LA</option>
+        <option value="nz">📍 New Zealand</option>
+      </select>
+
+      <label>Match floor — <span id="floorVal" style="color:var(--accent)">70%</span> <span class="hint">— hide roles below this résumé-match score</span></label>
+      <input type="range" id="floorRange" min="0" max="95" step="5" value="70" style="width:100%;accent-color:var(--accent)" />
+
+      <label>Résumé (PDF) <span class="hint">— powers matching + every role's “Convert résumé”</span></label>
+      <label id="resumeDrop" style="display:flex;align-items:center;gap:12px;cursor:pointer;border:1px dashed var(--line2);border-radius:12px;padding:14px;background:rgba(5,8,13,.5);transition:.15s">
+        <input type="file" id="resumeFile" accept="application/pdf" hidden />
+        <span style="font-size:1.3rem">🚀</span>
+        <span id="resumeNameLbl" style="font-size:.85rem;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Click to choose a PDF…</span>
+        <span class="btn" style="flex:none;pointer-events:none;padding:8px 14px">Choose</span>
+      </label>
+      <div class="msg" id="resumeMsg"></div>
+    </div>
+
+    <div class="note">
+      <b>Need the database first?</b> Open the <a href="START-HERE.html" style="color:var(--accent)">setup guide</a>, copy the SQL block, paste it into Supabase → SQL Editor → Run. Then come back here.
+      <br><br><b>Is this safe?</b> Everything stays in this browser. The <code>service_role</code> key only runs here to save jobs once — don't share this page.
+    </div>
+    <div class="links">
+      <a href="START-HERE.html">← Setup guide</a>
+      <a href="index.html">Open dashboard →</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const URL_RE=/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i;
+const OWNER_PIN='1725';
+
+/* ======================= SCHEMA MATCH CHECK ======================= */
+// The exact columns the dashboard + scraper read/write. If the live table is
+// missing any of these, formats won't match and writes/reads break.
+const EXPECTED_COLS=['id','company','title','location_hub','location','salary_range','salary_min','salary_max','intern_rate','intern_weeks','is_intern','type','match','planets','demand','posting_age','tech','clearance','relocation_flag','relocation_note','logo_bg','url','description','requirements','source','status','saved','archived','timestamp'];
+// Decode a Supabase JWT's "role" claim (anon | service_role) without verifying signature.
+// Newer Supabase projects issue a different key format entirely: sb_publishable_... (read-only,
+// same role as the old anon key) and sb_secret_... (the real write key) instead of long JWTs.
+function jwtRole(tok){
+  try{ const p=tok.split('.'); if(p.length<2) return null; const json=JSON.parse(decodeURIComponent(escape(atob(p[1].replace(/-/g,'+').replace(/_/g,'/'))))); return json.role||null; }
+  catch(e){ return null; }
+}
+function keyKind(tok){
+  if(/^sb_publishable_/i.test(tok)) return 'new-publishable';
+  if(/^sb_secret_/i.test(tok)) return 'new-secret';
+  if(/^eyJ/.test(tok)) return 'legacy-jwt';
+  return 'unknown';
+}
+// Extract the project ref baked into a legacy JWT's payload, so we can catch the #1 silent
+// cause of "permission denied": a key copy-pasted from a DIFFERENT Supabase project than
+// the URL you're connecting to. (New sb_secret_/sb_publishable_ keys don't carry a ref this way.)
+function jwtRef(tok){
+  try{ const p=tok.split('.'); if(p.length<2) return null; const json=JSON.parse(decodeURIComponent(escape(atob(p[1].replace(/-/g,'+').replace(/_/g,'/'))))); return json.ref||null; }
+  catch(e){ return null; }
+}
+function urlRef(u){ const m=(u||'').match(/https?:\/\/([a-z0-9]+)\.supabase\.co/i); return m?m[1]:null; }
+// Live, in-browser decode of field 3 so you can self-diagnose which role Supabase will see —
+// no need to ever paste your secret key to anyone to check this.
+(function(){
+  const svcEl=$('svc'), out=$('svcRoleReadout');
+  if(!svcEl||!out) return;
+  function paint(){
+    const v=svcEl.value.trim();
+    if(!v){ out.textContent=''; return; }
+    const kind=keyKind(v);
+    if(kind==='legacy-jwt'){
+      const role=jwtRole(v);
+      if(role==='service_role'){ out.innerHTML='<span style="color:var(--good)">✔ Decoded role: <b>service_role</b> — this is the correct write key.</span>'; }
+      else if(role==='anon'){ out.innerHTML='<span style="color:var(--bad)">✖ Decoded role: <b>anon</b> — this is the READ-ONLY key. Copy the service_role key instead (Settings → API, below the anon key).</span>'; }
+      else if(role){ out.innerHTML=`<span style="color:var(--gold)">⚠ Decoded role: <b>${role}</b> — expected "service_role". Double-check you copied the right key.</span>`; }
+      else{ out.innerHTML='<span style="color:var(--gold)">⚠ Could not decode a role from this token — it may be malformed or truncated.</span>'; }
+    } else if(kind==='new-secret'){ out.innerHTML='<span style="color:var(--good)">✔ Detected a new-format <b>secret</b> key — this is the correct write key.</span>'; }
+    else if(kind==='new-publishable'){ out.innerHTML='<span style="color:var(--bad)">✖ This is a <b>publishable</b> key (read-only). Copy the <b>secret</b> key instead: Settings → API Keys → secret → Reveal.</span>'; }
+    else{ out.innerHTML='<span style="color:var(--dim)">Paste your service_role / secret key above to see its decoded role here.</span>'; }
+  }
+  svcEl.addEventListener('input',paint);
+  paint();
+})();
+async function verifySchema(u,k){
+  try{
+    const c=window.supabase.createClient(u,k);
+    // 1) Does the table exist at all? (core columns the dashboard truly needs.)
+    const CORE=['id','company','title','location_hub','url'];
+    let {error}=await c.from('jobs').select(CORE.join(','),{head:true});
+    if(error){
+      const msg=error.message||String(error);
+      if(/relation .* does not exist|could not find the table|undefined table|pgrst205/i.test(msg)) return {ok:false, noTable:true, error:msg};
+      const m=msg.match(/column ["']?(?:jobs)?["']?\.?["']?([a-z_]+)["']? does not exist|could not find the '([^']+)' column/i);
+      const col=m&&(m[1]||m[2]);
+      if(col && CORE.includes(col)) return {ok:false, col, error:msg};   // a CORE column is missing → real problem
+      // a non-core column tripped the select — table still usable; auto-heal covers the rest
+      return {ok:true, partial:true};
+    }
+    // 2) Table + core columns exist. Note any missing OPTIONAL columns but DON'T block —
+    //    fpUpsert auto-skips columns the table lacks, so the fetch still works.
+    const {error:fullErr}=await c.from('jobs').select(EXPECTED_COLS.join(','),{head:true});
+    if(fullErr){
+      const m=(fullErr.message||'').match(/column ["']?(?:jobs)?["']?\.?["']?([a-z_]+)["']? does not exist|could not find the '([^']+)' column/i);
+      return {ok:true, partial:true, missingCol:(m&&(m[1]||m[2]))||null};
+    }
+    return {ok:true};
+  }catch(e){ return {ok:false, error:e.message||String(e)}; }
+}
+function schemaAlert(res){
+  if(res.noTable){
+    alert('⚠  NO MATCH — TABLE NOT FOUND\n\nThis Supabase project has no "jobs" table yet.\n\nFIX: open the “Database table + GitHub” panel on this page, press “Copy SQL”, paste it into Supabase → SQL Editor → Run. Then try again.');
+  } else if(res.col){
+    alert('⚠  NO MATCH — SCHEMA MISMATCH\n\nYour "jobs" table is missing the column:  '+res.col+'\n\nIt was probably built from an older script. FIX: open the “Database table + GitHub” panel, press “Copy SQL”, and re-run it in Supabase → SQL Editor (safe to run again). Then try again.');
+  } else {
+    alert('⚠  COULD NOT VERIFY THE TABLE FORMAT\n\n'+(res.error||'')+'\n\nOpen the “Database table + GitHub” panel and re-run the SQL.');
+  }
+}
+
+/* ======================= PIN VAULT ======================= */
+let pinBuf='';
+function paintDots(){ document.querySelectorAll('#dots i').forEach((d,i)=>d.classList.toggle('on',i<pinBuf.length)); }
+function pinPress(k){
+  const err=$('pinErr');
+  if(k==='clear'){ pinBuf=''; err.textContent=''; paintDots(); return; }
+  if(k==='back'){ pinBuf=pinBuf.slice(0,-1); err.textContent=''; paintDots(); return; }
+  if(pinBuf.length>=4) return;
+  pinBuf+=k; paintDots();
+  if(pinBuf.length===4){
+    if(pinBuf===OWNER_PIN){
+      try{ localStorage.setItem('orbital.role','owner'); }catch(e){}
+      setTimeout(()=>{ $('vault').classList.add('hidden'); $('setupBody').classList.remove('hidden'); $('url').focus(); }, 180);
+    } else {
+      const dots=$('dots'); dots.classList.add('bad'); err.textContent='Wrong PIN — try again.';
+      setTimeout(()=>{ dots.classList.remove('bad'); pinBuf=''; paintDots(); }, 480);
+    }
+  }
+}
+$('keypad').addEventListener('click',e=>{ const b=e.target.closest('.key'); if(b) pinPress(b.dataset.k); });
+document.addEventListener('keydown',e=>{
+  if(!$('vault').classList.contains('hidden')){
+    if(/^[0-9]$/.test(e.key)) pinPress(e.key);
+    else if(e.key==='Backspace') pinPress('back');
+    else if(e.key==='Escape') pinPress('clear');
+  }
+});
+
+/* ======================= CONNECT HELPERS ======================= */
+function show(el,type,html){const m=$(el);m.className='msg show '+type;m.innerHTML=html;}
+function clearMsg(el){const m=$(el);m.className='msg';m.innerHTML='';}
+function validateConn(){
+  const u=$('url').value.trim(), k=$('key').value.trim();
+  let ok=true;
+  if(!URL_RE.test(u)){$('url').classList.add('bad');ok=false;} else {$('url').classList.remove('bad');$('url').classList.add('good');}
+  if(k.length<30){$('key').classList.add('bad');ok=false;} else {$('key').classList.remove('bad');$('key').classList.add('good');}
+  return ok;
+}
+function persist(){
+  localStorage.setItem('orbital.supabaseUrl',$('url').value.trim().replace(/\/$/,''));
+  localStorage.setItem('orbital.supabaseAnonKey',$('key').value.trim());
+}
+// prefill if already saved
+if(localStorage.getItem('orbital.supabaseUrl')) $('url').value=localStorage.getItem('orbital.supabaseUrl');
+if(localStorage.getItem('orbital.supabaseAnonKey')) $('key').value=localStorage.getItem('orbital.supabaseAnonKey');
+
+/* ======================= PROFILE + RÉSUMÉ (same keys the dashboard reads) ======================= */
+// copy-SQL button in the Database + GitHub panel
+(function(){ const cb=$('copySql'); if(cb) cb.addEventListener('click',e=>{ e.preventDefault(); const t=$('sqlBlock').textContent; navigator.clipboard.writeText(t).then(()=>{ cb.textContent='Copied ✓'; cb.classList.add('done'); setTimeout(()=>{cb.textContent='Copy SQL';cb.classList.remove('done');},1600); }); }); })();
+(function(){ const cb=$('copySqlFix'); if(cb) cb.addEventListener('click',e=>{ e.preventDefault(); const t=$('sqlFixBlock').textContent; navigator.clipboard.writeText(t).then(()=>{ cb.textContent='Copied ✓'; cb.classList.add('done'); setTimeout(()=>{cb.textContent='Copy';cb.classList.remove('done');},1600); }); }); })();
+// One-click: copy the SQL AND open THIS project's Supabase SQL editor (deep-linked from the URL field).
+(function(){ const cb=$('copySqlOpen'); if(!cb) return; cb.addEventListener('click',async e=>{
+  e.preventDefault();
+  try{ await navigator.clipboard.writeText($('sqlBlock').textContent); }catch(_){}
+  cb.textContent='Copied ✓ opening…'; cb.classList.add('done');
+  const u=($('url')?$('url').value:'').trim();
+  const m=u.match(/https?:\/\/([a-z0-9]+)\.supabase\.co/i);
+  const dest = m ? 'https://supabase.com/dashboard/project/'+m[1]+'/sql/new' : 'https://supabase.com/dashboard/projects';
+  setTimeout(()=>{ window.open(dest,'_blank'); cb.textContent='Copy & open Supabase →'; cb.classList.remove('done'); }, 500);
+}); })();
+function readSettings(){ try{ return JSON.parse(localStorage.getItem('orbital.settings')||'{}'); }catch(e){ return {}; } }
+function writeSettings(patch){ const s=Object.assign(readSettings(),patch); localStorage.setItem('orbital.settings',JSON.stringify(s)); }
+(function initProfile(){
+  // owner email
+  const oe=$('ownerEmail'); if(oe){ oe.value=localStorage.getItem('orbital.ownerEmail')||''; oe.addEventListener('input',()=>localStorage.setItem('orbital.ownerEmail',oe.value.trim())); }
+  // linkedin profile url
+  const li=$('linkedinUrl'); if(li){
+    li.value=localStorage.getItem('orbital.linkedinUrl')||'';
+    li.addEventListener('input',()=>{
+      const v=li.value.trim();
+      localStorage.setItem('orbital.linkedinUrl',v);
+      const okLi=v===''||/linkedin\.com\/(in|pub)\//i.test(v);
+      li.classList.toggle('bad',!okLi); li.classList.toggle('good',v!==''&&okLi);
+    });
+    if(li.value){ const okLi=/linkedin\.com\/(in|pub)\//i.test(li.value); li.classList.toggle('good',okLi); }
+  }
+  // default region
+  const dr=$('defRegion'); if(dr){ dr.value=localStorage.getItem('orbital.region')||'global'; dr.addEventListener('change',()=>localStorage.setItem('orbital.region',dr.value)); }
+  // match floor
+  const fr=$('floorRange'), fv=$('floorVal'); const s=readSettings();
+  if(fr){ const cur=(s.matchFloor!=null?s.matchFloor:70); fr.value=cur; if(fv) fv.textContent=cur+'%';
+    fr.addEventListener('input',()=>{ if(fv) fv.textContent=fr.value+'%'; writeSettings({matchFloor:+fr.value}); }); }
+  // résumé
+  const rname=localStorage.getItem('orbital.resumeName'); const rl=$('resumeNameLbl');
+  if(rname && rl){ rl.textContent='Current: '+rname; rl.style.color='var(--text)'; }
+  const rf=$('resumeFile'), rmsg=$('resumeMsg'), rdrop=$('resumeDrop');
+  function storeResume(file){
+    if(!file) return;
+    if(file.type!=='application/pdf' && !/\.pdf$/i.test(file.name||'')){ rmsg.className='msg show err'; rmsg.textContent='Please choose a PDF file.'; return; }
+    rmsg.className='msg show info'; rmsg.textContent='Loading '+file.name+' …';
+    const reader=new FileReader();
+    reader.onerror=()=>{ rmsg.className='msg show err'; rmsg.textContent='Could not read that file — try again.'; };
+    reader.onload=()=>{
+      let persisted=true;
+      try{ localStorage.setItem('orbital.resumePdf',reader.result); }catch(e){ persisted=false; }
+      try{
+        localStorage.setItem('orbital.resumeName',file.name);
+        const hist=JSON.parse(localStorage.getItem('orbital.resumeHistory')||'[]');
+        hist.unshift({name:file.name, when:new Date().toISOString()});
+        localStorage.setItem('orbital.resumeHistory',JSON.stringify(hist.slice(0,12)));
+      }catch(_){}
+      if(rl){ rl.textContent='Current: '+file.name; rl.style.color='var(--text)'; }
+      rmsg.className='msg show '+(persisted?'ok':'info');
+      rmsg.innerHTML = persisted ? '✔ '+file.name+' saved &amp; synced to your dashboard.' : '✔ '+file.name+' loaded for this browser (PDF too large to store permanently).';
+    };
+    reader.readAsDataURL(file);
+  }
+  if(rf) rf.addEventListener('change',e=>{ const f=e.target.files[0]; storeResume(f); if(f) ingestPdf(f,'resume'); e.target.value=''; });
+  if(rdrop){
+    rdrop.addEventListener('dragover',e=>{e.preventDefault();rdrop.style.borderColor='var(--accent)';});
+    rdrop.addEventListener('dragleave',()=>rdrop.style.borderColor='var(--line2)');
+    rdrop.addEventListener('drop',e=>{e.preventDefault();rdrop.style.borderColor='var(--line2)';const f=e.dataTransfer.files[0];storeResume(f);if(f)ingestPdf(f,'resume');});
+  }
+
+  /* ===== professional-profile extraction: résumé + LinkedIn PDF → skills ===== */
+  if(window.pdfjsLib){ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'; }
+  const SKILL_LEXICON=['Program Management','Project Management','Technical Program Management','Mission Integration','Mission Operations','Mission Assurance','Systems Engineering','Systems Integration','Requirements Management','Verification & Validation','Business Operations','Operations Management','S&OP','Sales & Operations Planning','Supply Chain','Procurement','Sourcing','Vendor Management','Process Automation','Process Improvement','Lifecycle Management','Stakeholder Management','Cross-functional Leadership','Salesforce','Salesforce Administration','CRM','CRM Administration','Pipeline Management','Solutions Engineering','Solutions Architecture','Pre-Sales','Agile','Scrum','Kanban','P&L Ownership','Budgeting','Forecasting','Risk Management','Risk Mitigation','Root Cause Analysis','Regulatory Compliance','ITAR','FAA','FCC','Contract Negotiation','Contract Management','KPI Tracking','Analytics','SQL','Python','Tableau','Power BI','Jira','Confluence','Data Analysis','Change Management','Go-to-Market','Customer Success','Account Management','Quota Attainment','Startup Scaling','Team Leadership','People Management','Payload Integration','Launch Operations','Ground Operations','Quality Management','Six Sigma','Lean Operations','Manufacturing Operations','Logistics','Inventory Management','Product Management','Roadmapping','Enterprise Sales','Negotiation'];
+  function extractPdfText(file){
+    return new Promise((resolve,reject)=>{
+      if(!window.pdfjsLib){ reject(new Error('pdf reader unavailable')); return; }
+      const r=new FileReader();
+      r.onload=async()=>{ try{
+        const pdf=await pdfjsLib.getDocument({data:new Uint8Array(r.result)}).promise;
+        let txt='';
+        for(let p=1;p<=pdf.numPages;p++){ const pg=await pdf.getPage(p); const c=await pg.getTextContent(); txt+=c.items.map(i=>i.str).join(' ')+'\n'; }
+        resolve(txt);
+      }catch(e){ reject(e); } };
+      r.onerror=reject; r.readAsArrayBuffer(file);
+    });
+  }
+  function deriveSkills(text){
+    const low=' '+text.toLowerCase().replace(/\s+/g,' ')+' '; const found=[];
+    for(const s of SKILL_LEXICON){ if(low.includes(s.toLowerCase())) found.push(s); }
+    const m=text.match(/(?:skills|core competencies|areas of expertise|technical skills)\s*[:\n]([\s\S]{0,400})/i);
+    if(m){ m[1].split(/[,•|\u00b7\n;]/).map(x=>x.trim()).filter(x=>x.length>2&&x.length<40&&/[a-z]/i.test(x)).slice(0,24).forEach(x=>{
+      const canon=SKILL_LEXICON.find(s=>s.toLowerCase()===x.toLowerCase());
+      if(canon){ if(!found.includes(canon)) found.push(canon); }
+      else { const tc=x.replace(/\b\w/g,c=>c.toUpperCase()); if(!found.some(f=>f.toLowerCase()===tc.toLowerCase())) found.push(tc); }
+    }); }
+    return [...new Set(found)];
+  }
+  function loadProfile(){ try{ return JSON.parse(localStorage.getItem('orbital.profile')||'{}'); }catch(e){ return {}; } }
+  function saveProfile(){ localStorage.setItem('orbital.profile',JSON.stringify(PROF)); localStorage.setItem('orbital.skills',JSON.stringify(PROF.skills||[])); }
+  const PROF=Object.assign({name:'',title:'',summary:'',skills:[]}, loadProfile());
+  if(!Array.isArray(PROF.skills)) PROF.skills=[];
+  function renderChips(){
+    const box=$('skillChips'); if(!box) return;
+    box.innerHTML = PROF.skills.length ? PROF.skills.map((s,i)=>`<span style="display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:#cdf6fb;background:rgba(55,214,230,.12);border:1px solid rgba(55,214,230,.3);border-radius:999px;padding:5px 10px">${String(s).replace(/</g,'&lt;')}<span data-del="${i}" style="cursor:pointer;color:#7fb8c4;font-weight:700">✕</span></span>`).join('') : '<span style="font-size:.8rem;color:var(--dim)">No skills yet — upload a PDF above, or add your own below.</span>';
+    box.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{ PROF.skills.splice(+b.dataset.del,1); saveProfile(); renderChips(); }));
+  }
+  function setProfStatus(t,c){ const el=$('profileStatus'); if(el){ el.textContent=t; el.style.color=c||'var(--dim)'; } }
+  const pn=$('profName'), pt=$('profTitle'), psum=$('profSummary');
+  if(pn){ pn.value=PROF.name||''; pn.addEventListener('input',()=>{PROF.name=pn.value; saveProfile();}); }
+  if(pt){ pt.value=PROF.title||''; pt.addEventListener('input',()=>{PROF.title=pt.value; saveProfile();}); }
+  if(psum){ psum.value=PROF.summary||''; psum.addEventListener('input',()=>{PROF.summary=psum.value; saveProfile();}); }
+  renderChips();
+  const sa=$('skillAdd'), sab=$('skillAddBtn');
+  function addSkill(){ const v=(sa.value||'').trim(); if(!v) return; if(!PROF.skills.some(x=>x.toLowerCase()===v.toLowerCase())){ PROF.skills.push(v); saveProfile(); renderChips(); } sa.value=''; }
+  if(sab) sab.addEventListener('click',addSkill);
+  if(sa) sa.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); addSkill(); } });
+  async function ingestPdf(file, kind){
+    if(!file) return;
+    setProfStatus('Reading your '+(kind==='linkedin'?'LinkedIn export':'résumé')+' — extracting skills & experience…','var(--muted)');
+    try{
+      const text=await extractPdfText(file);
+      const skills=deriveSkills(text);
+      let added=0; skills.forEach(s=>{ if(!PROF.skills.some(x=>x.toLowerCase()===s.toLowerCase())){ PROF.skills.push(s); added++; } });
+      if(!PROF.summary){ const clean=text.replace(/\s+/g,' ').trim(); if(clean){ PROF.summary=clean.slice(0,380); if(psum) psum.value=PROF.summary; } }
+      saveProfile(); renderChips();
+      setProfStatus('✓ Read your '+(kind==='linkedin'?'LinkedIn':'résumé')+': '+skills.length+' skills detected ('+added+' new). Review & edit below — this drives every match.','var(--good)');
+    }catch(e){ setProfStatus('Could not auto-read that PDF — you can still add your skills by hand below.','var(--gold)'); }
+  }
+  // LinkedIn PDF upload
+  const lf=$('linkedinFile'), lname=$('linkedinNameLbl'), ldrop=$('linkedinDrop');
+  function pickLinkedin(file){ if(!file) return; if(file.type!=='application/pdf' && !/\.pdf$/i.test(file.name||'')){ const lm=$('linkedinPdfMsg'); if(lm){lm.className='msg show err';lm.textContent='Please choose your LinkedIn PDF export.';} return; } if(lname){ lname.textContent='Current: '+file.name; lname.style.color='var(--text)'; } try{localStorage.setItem('orbital.linkedinPdfName',file.name);}catch(_){} ingestPdf(file,'linkedin'); }
+  if(lf) lf.addEventListener('change',e=>pickLinkedin(e.target.files[0]));
+  if(ldrop){
+    ldrop.addEventListener('dragover',e=>{e.preventDefault();ldrop.style.borderColor='var(--accent)';});
+    ldrop.addEventListener('dragleave',()=>ldrop.style.borderColor='var(--line2)');
+    ldrop.addEventListener('drop',e=>{e.preventDefault();ldrop.style.borderColor='var(--line2)';pickLinkedin(e.dataTransfer.files[0]);});
+  }
+  const lpn=localStorage.getItem('orbital.linkedinPdfName'); if(lpn&&lname){ lname.textContent='Current: '+lpn; lname.style.color='var(--text)'; }
+})();
+
+$('saveBtn').addEventListener('click',()=>{
+  if(!validateConn()){show('msg','err','Check the URL (must look like <span class="mono">https://ref.supabase.co</span>) and the anon key.');return;}
+  persist();
+  if(localStorage.getItem('orbital.installComplete')){
+    show('msg','ok','Saved. Opening the dashboard…');
+    setTimeout(()=>location.href='index.html',600);
+  } else {
+    show('msg','info','Connection saved. <b>Two steps still required:</b> press <b>Connect &amp; fetch real jobs</b> above, then turn on the <b>GitHub engine</b> — the dashboard unlocks only once GitHub is confirmed running.');
+  }
+});
+$('testBtn').addEventListener('click',async()=>{
+  if(!validateConn()){show('msg','err','Enter a valid Project URL and anon key first.');return;}
+  show('msg','info','Testing connection &amp; checking the table format matches…');
+  const u=$('url').value.trim().replace(/\/$/,''), k=$('key').value.trim();
+  const sres=await verifySchema(u,k);
+  if(!sres.ok){
+    schemaAlert(sres);
+    show('msg','err','✖ No match: '+(sres.col?('your table is missing column <b>'+sres.col+'</b>'):(sres.noTable?'no <span class="mono">jobs</span> table exists yet':sres.error))+'. Open the <b>Database table + GitHub</b> panel below and run the SQL.');
+    return;
+  }
+  try{
+    const c=window.supabase.createClient(u,k);
+    const {count}=await c.from('jobs').select('*',{count:'exact',head:true});
+    persist();
+    show('msg','ok',`✔ Connected — and the table format <b>matches</b>. It holds <b>${count??0}</b> row(s).`);
+  }catch(err){ show('msg','err','Connected and schema matched, but counting rows failed: '+(err.message||err)); }
+});
+$('ghVerifyBtn').addEventListener('click',verifyGithub);
+// If a returning user already finished the GitHub gate once, let them re-verify/launch.
+if(localStorage.getItem('orbital.installComplete')){ const lb=$('launchBtn'); if(lb) lb.style.display='block'; }
+
+/* =====================================================================
+   WEB-BASED FIRST PASS — browser-side scraper. Pulls REAL postings from
+   each live board (each keeps its real apply URL), filters to the space-ops
+   profile + target regions, and upserts into Supabase. Mirrors scraper.py.
+   ===================================================================== */
+const COMPANIES=[
+  ['SpaceX','spacex','greenhouse'],['Rocket Lab','rocketlab','greenhouse'],['Relativity Space','relativity','greenhouse'],
+  ['Stoke Space','stokespacetechnologies','greenhouse'],['Vast Space','vast','greenhouse'],['Apex Space','apex','greenhouse'],
+  ['Varda Space Industries','vardaspace','greenhouse'],['Astranis','astranis','greenhouse'],['Slingshot Aerospace','slingshotaerospace','greenhouse'],
+  ['Gravitics','graviticsinc','greenhouse'],['Ursa Major','ursamajor','greenhouse'],['LeoLabs','leolabsinc','greenhouse'],
+  ['True Anomaly','trueanomalyinc','greenhouse'],['Outpost','outpostspace','greenhouse'],
+  ['Terran Orbital','terranorbitalcorporation','greenhouse'],['BlackSky','blacksky','greenhouse'],['Planet Labs','planetlabs','greenhouse'],
+  ['Anduril','andurilindustries','greenhouse'],['Inversion Space','inversionspace','greenhouse'],['K2 Space','k2spacecorporation','greenhouse'],
+  ['Muon Space','muonspace','greenhouse'],
+  ['Starcloud','starcloud','greenhouse'],['Mithril Technologies','mithril','greenhouse'],['Hubble Network','hubblenetwork','greenhouse'],
+  ['Stratolaunch','stratolaunch','greenhouse'],['Capella Space','capellaspace','greenhouse'],['Spaceium','spaceium','greenhouse'],['Albedo','albedo','greenhouse'],
+  ['Starfish Space','starfish-space-inc','ashby'],['Hadrian','hadrian-automation','ashby'],['Impulse Space','impulse','ashby'],['Constellation Space','constellationspace','ashby'],['Turion Space','turion-space','ashby'],
+  ['E-Space','espace','lever'],['Loft Orbital','loftorbital','lever'],['Hermeus','hermeus','lever'],['Kepler Communications','kepler','lever'],
+  ['Blue Origin','blueorigin|wd5|BlueOrigin','workday'],['Sierra Space','sierraspace|wd1|Sierra_Space_External_Career_Site','workday'],['Maxar','maxar|wd1|lanterisspace','workday'],
+  ['Project Kuiper','kuiper','amazon'],
+];
+const RESUME_KW=['program management','program manager','systems engineering','mission integration','mission operations','mission assurance','space mission operations','business operations','operations management','operational excellence','s&op','sales & operations planning','process automation','process improvement','lifecycle management','cross-functional','stakeholder management','salesforce','salesforce implementation','crm','crm administration','enterprise information systems','pipeline management','root cause analysis','regulatory compliance','solutions engineering','solutions architect','agile','agile operations','p&l','p&l ownership','resource optimization','risk mitigation','contract negotiation','kpi','kpi tracking','startup scaling','scaling','payload','payload integration','launch operations','supply chain','procurement','technical program'];
+const TITLE_EXCLUDE=/\b(propulsion|gnc|guidance|navigation|thermal|structural|stress|rf engineer|avionics|aerodynamics|flight dynamics|embedded|flight software|c\+\+|fpga|firmware|software engineer|design engineer|mechanical engineer|electrical engineer|technician|machinist|inspector|assembler|a&p|administrative|data scientist|ux designer)\b/i;
+const TITLE_INCLUDE=/\b(program manager|tpm|technical program|mission integration|mission manager|operations manager|business operations|s&op|systems integration|systems engineer|systems engineering|requirements engineer|verification and validation|model-based systems|mbse|incose|solutions architect|lifecycle|launch operations|supply chain|sourcing|procurement|program operations|business development|strategy manager|operations lead|senior manager|sr\.? manager|portfolio manager|production manager|project manager)\b/i;
+function hubOf(loc){
+  const s=(loc||'').toLowerCase();
+  if(/seattle|redmond|kent|renton|bellevue|tukwila|auburn|\bwa\b/.test(s)) return 'SEATTLE';
+  const LA_METRO=/los angeles|hawthorne|el segundo|long beach|torrance|irvine|costa mesa|tustin|pasadena|van nuys|culver city|santa monica|redondo beach|manhattan beach|inglewood|burbank|glendale|anaheim|orange county|santa clarita|palmdale/;
+  const NORCAL=/san francisco|bay area|oakland|san jose|palo alto|mountain view|sunnyvale|berkeley|redwood city|menlo park|santa clara|silicon valley|sacramento/;
+  if(LA_METRO.test(s)) return 'GREATER_LA';
+  if(!NORCAL.test(s) && /\bca\b/.test(s)) return 'GREATER_LA';
+  if(/new zealand|mahia|māhia|auckland|\bnz\b|christchurch|wellington/.test(s)) return 'NEW_ZEALAND';
+  return null;
+}
+function alignment(title,desc){
+  let s=30; const t=(title+' '+(desc||'')).toLowerCase();
+  let extra=[]; try{ extra=(JSON.parse(localStorage.getItem('orbital.skills')||'[]')||[]).map(x=>String(x).toLowerCase()); }catch(e){}
+  const kws=[...new Set([...RESUME_KW, ...extra])];
+  for(const k of kws){ if(k.length>2 && t.includes(k)) s+=5; }
+  return Math.min(s,100);
+}
+function qualifies(title,score,intern,hub){ if(intern) return true; if(hub==='NEW_ZEALAND') return !TITLE_EXCLUDE.test(title||'') ? true : score>=55; if(TITLE_EXCLUDE.test(title||'')) return false; if(TITLE_INCLUDE.test(title||'')) return true; return score>=70; }
+function estSalary(title,hub){
+  const base={SEATTLE:140000,GREATER_LA:150000,NEW_ZEALAND:115000}[hub]||140000;
+  const t=(title||'').toLowerCase();
+  const sf=/director|head|principal|lead|senior|sr\.?|manager/.test(t)?1.18:/associate|junior|jr\.?|coordinator/.test(t)?0.82:1.0;
+  return [Math.round(base*sf*0.88/1000)*1000, Math.round(base*sf*1.16/1000)*1000];
+}
+const stripHtml=h=>{ const d=document.createElement('div'); d.innerHTML=String(h||''); return (d.textContent||'').replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim(); };
+async function fpFetchJson(url){
+  let reason='unreachable';
+  const wrappers=[u=>u, u=>'https://corsproxy.io/?url='+encodeURIComponent(u), u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u)];
+  for(const w of wrappers){
+    try{ const r=await fetch(w(url)); if(r.status===404){ return {data:null, reason:'slug 404 — not on this ATS'}; } if(r.ok){ return {data:await r.json(), reason:''}; } reason='HTTP '+r.status; }
+    catch(e){ reason='CORS/network blocked'; }
+  }
+  return {data:null, reason};
+}
+function fpSlug(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,''); }
+function fpGhCands(name,given){ const b=fpSlug(name), ns=b.replace(/space$/,''); return [...new Set([given,b,b+'space',ns,ns+'space',b+'technologies',b+'inc',b+'corp',b+'llc',b+'hq'].filter(Boolean))]; }
+async function fpResolve(name,given,type){
+  for(const tok of fpGhCands(name,given)){
+    const url = `https://boards-api.greenhouse.io/v1/boards/${tok}/jobs`;
+    try{ const r=await fetch(url); if(r.ok){ const j=await r.json(); if(j.jobs&&j.jobs.length) return tok; } }catch(e){}
+  }
+  return null;
+}
+async function fetchBoard(name,slug,type){
+  if(type==='ashby'){
+    const q='query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) { jobBoard: jobBoardWithTeams(organizationHostedJobsPageName: $organizationHostedJobsPageName) { jobPostings { id title locationName employmentType } } }';
+    try{
+      const r=await fetch('https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operationName:'ApiJobBoardWithTeams',variables:{organizationHostedJobsPageName:slug},query:q})});
+      if(r.ok){ const j=await r.json(); const p=((j.data||{}).jobBoard||{}).jobPostings; if(p) return {rows:p, reason:''}; }
+    }catch(e){}
+    return {rows:null, reason:'ashby board not found ('+slug+')'};
+  }
+  if(type==='workday'){
+    const [tenant,server,board]=slug.split('|');
+    const base=`https://${tenant}.${server}.myworkdayjobs.com`;
+    try{
+      const r=await fetch(`${base}/wday/cxs/${tenant}/${board}/jobs`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({limit:20,offset:0,appliedFacets:{},searchText:'space'})});
+      if(r.ok){ const j=await r.json(); return {rows:(j.jobPostings||[]).map(x=>({...x,__base:base,__board:board})), reason:''}; }
+      return {rows:null, reason:'workday HTTP '+r.status};
+    }catch(e){ return {rows:null, reason:'workday CORS-blocked — runs via the daily Action'}; }
+  }
+  if(type==='amazon'){
+    const {data,reason}=await fpFetchJson(`https://www.amazon.jobs/en/search.json?base_query=${encodeURIComponent(slug)}&offset=0&result_limit=100`);
+    if(!data) return {rows:null, reason:reason||'amazon unreachable'};
+    return {rows:(data.jobs||[]), reason:''};
+  }
+  const tok=await fpResolve(name,slug,type);
+  if(!tok) return {rows:null, reason:'no live board (tried '+slug+' + variants)'};
+  const {data,reason}=await fpFetchJson(`https://boards-api.greenhouse.io/v1/boards/${tok}/jobs?content=true`);
+  if(!data) return {rows:null, reason};
+  return { rows:(data.jobs||[]), reason:'' };
+}
+function fpDiagnose(m,svcKeyUsed){
+  m=(m||'').toLowerCase();
+  if(/relation .* does not exist|could not find the table|undefined table/.test(m)) return 'The "jobs" table doesn’t exist yet. Open the Database panel above and run the SQL, then retry.';
+  if(/row-level security|violates row-level|permission denied|not authorized|42501/.test(m)){
+    if(svcKeyUsed && /^sb_publishable_/i.test(svcKeyUsed)) return 'Field 3 is a <b>publishable</b> key (starts sb_publishable_) — that\'s the new read-only key. Go to Supabase → Settings → <b>API Keys</b> (not the old "API" page), find the <b>secret</b> key (starts sb_secret_), click Reveal, and paste THAT in field 3.';
+    return 'Writes are blocked by Row-Level Security. Two likely causes: (1) field 3 isn\'t really the service_role/secret key — on newer projects it starts sb_secret_ (Settings → API Keys → secret → Reveal), on older projects it\'s the long service_role JWT (Settings → API); or (2) THIS Supabase project hasn\'t had the fix SQL run yet — open the Database panel above, click "Copy SQL", paste, and Run it, confirming no red error appears.';
+  }
+  if(/invalid api key|jwt|signature|invalid claim/.test(m)) return 'That key is invalid or expired. Copy it fresh from Supabase → Settings → API Keys (secret) or Settings → API (service_role).';
+  if(/failed to fetch|networkerror|load failed/.test(m)) return 'Could not reach Supabase. Confirm the Project URL is exactly https://<ref>.supabase.co.';
+  if(/column .* does not exist|schema cache|pgrst204|pgrst205/.test(m)) return 'The table is missing a column. Re-run the SQL in the Database panel above.';
+  return null;
+}
+function normalize(item,type,company,slug){
+  let jid=item.id;
+  let title,desc,loc,url;
+  if(type==='greenhouse'){
+    title=(item.title||'').trim(); desc=item.content||''; loc=(item.location||{}).name||'';
+    url=item.absolute_url||`https://job-boards.greenhouse.io/${slug}/jobs/${jid}`;
+  } else if(type==='ashby'){
+    title=(item.title||'').trim(); desc=item.title||''; loc=item.locationName||'';
+    url=`https://jobs.ashbyhq.com/${slug}/${item.id}`;
+  } else if(type==='workday'){
+    const ext=item.externalPath||''; const m=ext.match(/_(R[-\d]+)/);
+    jid=m?m[1]:(ext.slice(-10).replace(/[^a-z0-9]/gi,'')||fpSlug(item.title||''));
+    title=(item.title||'').trim(); desc=item.title||''; loc=item.locationsText||'';
+    url=(item.__base||'')+'/en-US/'+(item.__board||'')+ext;
+  } else if(type==='amazon'){
+    jid=item.id_icims||item.id; title=(item.title||'').trim(); desc=item.description_short||item.title||''; loc=item.normalized_location||item.location||''; url='https://www.amazon.jobs'+(item.job_path||'');
+  } else {
+    title=(item.text||'').trim(); desc=item.descriptionPlain||item.description||''; loc=(item.categories||{}).location||'';
+    url=item.applyUrl||item.hostedUrl||`https://jobs.lever.co/${slug}/${jid}/apply`;
+  }
+  if(!title || !url) return null;
+  const hub=hubOf(loc); if(!hub) return null;
+  const score=alignment(title,desc);
+  const intern=/\b(intern|interns?hip|co-?op|fellow(?:ship)?|summer analyst|student\s+(?:program|worker|employee)|trainee|apprentice|practicum)\b/i.test(title);
+  if(!qualifies(title,score,intern,hub)) return null;
+  const [smin,smax]=estSalary(title,hub);
+  let posted=item.updated_at||item.createdAt||Date.now();
+  if(typeof posted==='number') posted=new Date(posted).toISOString();
+  let age=0; try{ age=Math.max(0,Math.round((Date.now()-new Date(posted))/86400000)); }catch(e){}
+  const techTerms=['Python','MATLAB','Simulink','AWS','Azure','Kubernetes','SQL','Salesforce','Tableau','Jira','Confluence','Terraform'];
+  const bl=(title+' '+desc).toLowerCase();
+  return {
+    id:`${fpSlug(company)}-${jid}`, company, title,
+    location_hub:hub, location:loc||hub.replace(/_/g,' '),
+    salary_range:`$${smin.toLocaleString()} - $${smax.toLocaleString()} (est.)`,
+    salary_min:smin, salary_max:smax,
+    intern_rate:null, intern_weeks:null,
+    is_intern:intern, type:intern?'Internship':'Full-time',
+    match:score, planets:Math.max(0,Math.min(5,Math.round(score/20))), demand:score, posting_age:age,
+    tech:techTerms.filter(t=>bl.includes(t.toLowerCase())).join(','),
+    clearance:'NONE', relocation_flag:false, relocation_note:'—',
+    logo_bg:'#2a4d7a', source:type, status:'active', saved:false, archived:false,
+    url, description:stripHtml(desc).slice(0,4000), timestamp:posted
+  };
+}
+function logLine(t,c){ const el=$('scrapeLog'); el.style.display='block'; const d=document.createElement('div'); if(c)d.style.color=c; d.textContent=t; el.appendChild(d); el.scrollTop=el.scrollHeight; }
+const fpSkipCols=new Set();
+async function fpUpsert(client,row){
+  let r={...row}; for(const c of fpSkipCols) delete r[c];
+  for(let t=0;t<12;t++){
+    const {error}=await client.from('jobs').upsert(r);
+    if(!error) return {ok:true};
+    const msg=error.message||String(error);
+    const mt=msg.match(/could not find the '([^']+)' column|column "?([a-z0-9_]+)"? of/i);
+    const name=mt&&(mt[1]||mt[2]);
+    if(name && (name in r)){ fpSkipCols.add(name); delete r[name]; continue; }
+    return {ok:false, error:msg};
+  }
+  return {ok:false, error:'too many schema mismatches'};
+}
+
+$('scrapeBtn').addEventListener('click',async()=>{
+  clearMsg('msg');
+  const sm=$('scrapeMsg');
+  // validate ALL THREE variables at once
+  if(!validateConn()){ show('scrapeMsg','err','Check field 1 (Project URL) and field 2 (anon key) — they look off.'); return; }
+  const u=$('url').value.trim().replace(/\/$/,''); const svc=$('svc').value.trim();
+  if(svc.length<30){ $('svc').classList.add('bad'); show('scrapeMsg','err','Paste your <b>service_role</b> key in field 3 — saving jobs needs it (the anon key can only read).'); return; }
+  // Decode the JWT and confirm field 3 is REALLY the service_role key (the #1 cause of
+  // "permission denied"). The anon and service_role keys look almost identical but the
+  // decoded "role" claim differs.
+  const svcRole=jwtRole(svc), anonVal=$('key').value.trim(), svcKind=keyKind(svc);
+  if(svcKind==='new-publishable'){
+    $('svc').classList.add('bad');
+    show('scrapeMsg','err','✖ Field 3 is a <b>publishable</b> key (starts sb_publishable_) — that\'s the new read-only key, same role as anon. Copy the <b>secret</b> key instead (starts sb_secret_): Supabase → Settings → API Keys → "secret" (click Reveal). Paste THAT in field 3.');
+    alert('⚠  WRONG KEY TYPE IN FIELD 3\n\nField 3 has a "publishable" key (sb_publishable_...) — read-only, same as anon.\n\nFIX: Supabase → Settings → API Keys → find the "secret" key (starts sb_secret_...) → click Reveal → copy → paste into field 3.');
+    return;
+  }
+  if(svc===anonVal || svcRole==='anon'){
+    $('svc').classList.add('bad');
+    show('scrapeMsg','err','✖ Field 3 is your <b>anon</b> key — that one can only READ, so saving jobs is blocked ("permission denied"). Copy the <b>service_role</b> key instead: Supabase → Settings → API → <b>service_role</b> (the secret one, lower down). Paste THAT in field 3.');
+    alert('⚠  WRONG KEY IN FIELD 3\n\nField 3 needs your SERVICE_ROLE key, but it currently holds your anon key (they look almost the same).\n\nFIX: Supabase → Settings → API → scroll to "service_role" (secret) → copy it → paste into field 3. Then press the button again.');
+    return;
+  }
+  if(svcRole && svcRole!=='service_role'){
+    $('svc').classList.add('bad');
+    show('scrapeMsg','err','✖ Field 3 doesn\'t look like a <b>service_role</b> key (its role is "'+svcRole+'"). Copy the service_role key from Supabase → Settings → API and paste it in field 3.');
+    return;
+  }
+  $('svc').classList.remove('bad'); $('svc').classList.add('good');
+  persist();
+  try{ localStorage.setItem('orbital.svc', svc); }catch(e){}   // let the dashboard Refresh re-run the live scrape
+  // VERIFY THE TABLE FORMAT MATCHES before touching any data — use the service_role key so
+  // Row-Level Security can never cause a false "no match".
+  show('scrapeMsg','info','Checking the table format matches…');
+  const sres=await verifySchema(u, svc || $('key').value.trim());
+  if(!sres.ok){
+    schemaAlert(sres);
+    show('scrapeMsg','err','✖ Stopped — no match. '+(sres.col?('Your table is missing column <b>'+sres.col+'</b>. '):(sres.noTable?'No <span class="mono">jobs</span> table exists yet. ':''))+'Open the <b>Database table + GitHub</b> panel, run the SQL, then press the button again.');
+    return;
+  }
+  const client=window.supabase.createClient(u,svc);
+  const ring=$('ring'), btn=$('scrapeBtn');
+  $('scrapeLog').innerHTML=''; $('progWrap').classList.add('show');
+  ring.classList.add('spin'); ring.classList.remove('done');
+  const setProg=(p)=>{ ring.style.setProperty('--p',p); $('ringPv').textContent=Math.round(p)+'%'; };
+  setProg(0); $('progCount').textContent='0'; $('ringLbl').textContent='Scanning';
+  show('scrapeMsg','info','Scanning '+COMPANIES.length+' live boards for real postings…');
+  btn.disabled=true;
+  fpSkipCols.clear();
+  try{ await client.from('jobs').delete().neq('id','__keep_none__'); logLine('··  cleared previous rows (full refresh)','#7fa8c9'); }catch(e){}
+  let total=0, boards=0, blocked=0, writeErr=null;
+  for(let i=0;i<COMPANIES.length;i++){
+    const [name,slug,type]=COMPANIES[i];
+    $('progSub').textContent='Checking '+name+'…';
+    const {rows:postings,reason}=await fetchBoard(name,slug,type);
+    if(postings===null){ blocked++; logLine('··  '+name+' — skipped ('+reason+')','#c98'); setProg((i+1)/COMPANIES.length*100); continue; }
+    if(!postings.length){ logLine('--  '+name+' — board OK, 0 matching roles'); setProg((i+1)/COMPANIES.length*100); continue; }
+    boards++; let kept=0;
+    for(const it of postings){
+      const row=normalize(it,type,name,slug);
+      if(!row) continue;
+      const w=await fpUpsert(client,row); if(!w.ok){ writeErr=w.error; break; } kept++; total++; $('progCount').textContent=String(total);
+    }
+    logLine((kept?'++  ':'--  ')+name+' — '+kept+' matching role(s) synced', kept?'#39e6a0':null);
+    if(writeErr) break;
+    setProg((i+1)/COMPANIES.length*100);
+  }
+  if(writeErr){
+    ring.classList.remove('spin'); btn.disabled=false; $('ringLbl').textContent='Stopped';
+    const fix=fpDiagnose(writeErr,svc);
+    // Cross-check: does the project ref baked into the key actually match the project ref
+    // in the URL you're connecting to? A key copied from a different Supabase project is a
+    // very common, otherwise-invisible cause of "permission denied".
+    const uRef=urlRef(u), sRef=jwtRef(svc);
+    let refWarn='';
+    if(uRef && sRef && uRef!==sRef){
+      refWarn=`<br><b style="color:#ff9baa">⚠ Project mismatch detected:</b> your URL points to project <span class="mono">${uRef}</span>, but the key in field 3 belongs to project <span class="mono">${sRef}</span>. Keys only work on their OWN project. Go to project <span class="mono">${uRef}</span>'s Settings → API and copy the service_role key FROM THERE.`;
+      logLine('!!  PROJECT MISMATCH: URL ref='+uRef+' vs key ref='+sRef,'#ff7a8a');
+    }
+    logLine('!!  WRITE ERROR: '+writeErr,'#ff7a8a'); if(fix) logLine('    FIX: '+fix,'#caa15a');
+    show('scrapeMsg','err',`✖ Stopped before finishing — nothing more was written.<br><b style="color:#e8eef7">Why:</b> ${writeErr}${fix?`<br><b style="color:#e8eef7">Fix this, then press the button again:</b> ${fix}`:''}${refWarn}`);
+    return;
+  }
+  setProg(100); ring.classList.remove('spin'); ring.classList.add('done');
+  $('ringPv').textContent='100%'; $('ringLbl').textContent='Done'; $('progSub').textContent=total+' real roles written to Supabase';
+  btn.disabled=false;
+  if(total>0){
+    if(fpSkipCols.size) logLine('note: table missing column(s) ['+[...fpSkipCols].join(', ')+'] — wrote without them. Recreate the table from START-HERE.html for full features.','#caa15a');
+    show('scrapeMsg','ok',`✔ Step 1 done — loaded <b>${total}</b> real role(s) from ${boards} browser-reachable board(s). <b>Now turn on GitHub below</b> to pull Blue Origin, Amazon Kuiper &amp; the rest.`);
+    // Browser fetch is only HALF the install. Record it, switch to live, then REQUIRE the
+    // GitHub engine before the dashboard may launch (installComplete is set only after
+    // verifyGithub() confirms server-only rows exist).
+    try{ localStorage.setItem('orbital.scrapeDone', new Date().toISOString()); writeSettings({dataSource:'live'}); }catch(e){}
+    revealGithubGate();
+    await verifyJobs(u);
+  } else {
+    show('scrapeMsg','err',`No rows written. ${blocked} board(s) were blocked by the browser (CORS). The daily GitHub scrape covers those — or confirm the <span class="mono">jobs</span> table exists and the service_role key is correct.`);
+  }
+});
+
+/* ===================== REQUIRED GITHUB GATE =====================
+   GitHub is the primary engine: it's the ONLY way to pull Workday/Amazon
+   boards (Blue Origin, Project Kuiper) that browsers can't reach. Install is
+   NOT complete until we functionally confirm the Action ran — by finding rows
+   in Supabase whose source can only come from the server-side scraper. */
+function revealGithubGate(){
+  const g=$('githubGate'); if(g){ g.style.display='block'; g.scrollIntoView({behavior:'smooth',block:'start'}); }
+}
+async function verifyGithub(){
+  const u=$('url').value.trim().replace(/\/$/,''), k=$('key').value.trim()||$('svc').value.trim();
+  const repo=$('ghRepo')?$('ghRepo').value.trim():'';
+  const gm=$('ghMsg');
+  if(!u||!k){ if(gm){gm.className='msg show err';gm.textContent='Connect Supabase above first.';} return; }
+  if(!/github\.com\//i.test(repo)){ if(gm){gm.className='msg show err';gm.textContent='Paste your GitHub repo URL (looks like https://github.com/you/orbital) so we can confirm it\'s set up.';} return; }
+  if(gm){ gm.className='msg show info'; gm.textContent='Checking your database for jobs only the GitHub engine can fetch (Blue Origin / Kuiper / Workday)…'; }
+  try{
+    const c=window.supabase.createClient(u,k);
+    // server-only signatures: workday/amazon/eightfold/custom can't come from the browser pass
+    const {count,error}=await c.from('jobs').select('*',{count:'exact',head:true}).in('source',['workday','amazon','eightfold','custom']);
+    if(error) throw error;
+    if((count||0)>0){
+      try{ localStorage.setItem('orbital.githubRepo',repo); localStorage.setItem('orbital.installComplete',new Date().toISOString()); }catch(e){}
+      if(gm){ gm.className='msg show ok'; gm.innerHTML=`✔ GitHub engine confirmed — found <b>${count}</b> role(s) that only the daily scraper can reach (Blue Origin, Kuiper, etc.). <b>Install complete.</b>`; }
+      const lb=$('launchBtn'); if(lb){ lb.style.display='block'; lb.scrollIntoView({behavior:'smooth',block:'center'}); }
+    } else {
+      try{ localStorage.setItem('orbital.githubRepo',repo); }catch(e){}
+      if(gm){ gm.className='msg show err'; gm.innerHTML='Not yet — no Blue Origin / Kuiper / Workday rows found, which means the GitHub Action hasn\'t finished a run. Do the 4 steps above (upload files, add the 2 secrets, press <b>Run workflow</b>), wait ~2 min for the green check, then press <b>Verify</b> again.'; }
+    }
+  }catch(e){ if(gm){ gm.className='msg show err'; gm.textContent='Check failed: '+(e.message||e); } }
+}
+
+async function verifyJobs(u){
+  const sm=$('scrapeMsg'); const k=$('key').value.trim()||$('svc').value.trim();
+  const box=document.createElement('div'); box.className='mono'; box.style.cssText='margin-top:12px;font-size:.74rem;border:1px solid var(--line);border-radius:11px;padding:12px;background:rgba(5,8,13,.6)';
+  sm.appendChild(box); box.innerHTML='Verifying live data…';
+  try{
+    const c=window.supabase.createClient(u,k);
+    const {count,error}=await c.from('jobs').select('*',{count:'exact',head:true}); if(error) throw error;
+    const {data}=await c.from('jobs').select('company,title,location,url,location_hub,match').order('posting_age',{ascending:true}).limit(6);
+    const {data:all}=await c.from('jobs').select('location_hub'); const h={}; (all||[]).forEach(r=>h[r.location_hub]=(h[r.location_hub]||0)+1);
+    const rows=(data||[]).map(j=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)"><span><b style="color:#e8eef7">${j.title}</b><br><span style="color:var(--dim)">${j.company} · ${j.location||''} · ${j.match||0}%</span></span><a href="${j.url}" target="_blank" rel="noreferrer" style="color:var(--accent);white-space:nowrap">apply ↗</a></div>`).join('');
+    box.innerHTML=`<div style="color:var(--good);font-weight:600;margin-bottom:5px">✔ ${count??0} live role(s) in Supabase</div><div style="color:var(--dim);margin-bottom:8px">Seattle ${h.SEATTLE||0} · LA ${h.GREATER_LA||0} · NZ ${h.NEW_ZEALAND||0}</div>${rows}<div style="margin-top:12px"><a href="index.html" style="display:inline-block;width:100%;text-align:center;box-sizing:border-box;font-weight:700;color:#04121a;background:linear-gradient(135deg,#37d6e6,#39e6a0);padding:12px;border-radius:11px;text-decoration:none">🚀 Open my dashboard →</a></div>`;
+  }catch(e){ const fix=fpDiagnose(e.message||String(e)); box.innerHTML=`<span style="color:var(--bad)">Verify failed: ${e.message||e}</span>${fix?`<br><span style="color:var(--gold)">Fix: ${fix}</span>`:''}`; }
+}
+</script>
+</body>
+</html>

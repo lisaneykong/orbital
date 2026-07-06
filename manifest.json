@@ -1,0 +1,31 @@
+{
+  "name": "Orbital CRM",
+  "short_name": "OrbitalCRM",
+  "version": "2.1.0",
+  "description": "Premium aerospace & defense recruitment command console. Photographic regional views (Global, Seattle, Los Angeles, New Zealand), planet-ranked roles, salary-first listings & charts, relocation dossiers, budget sandbox, and Supabase-backed live data.",
+  "entry": "index.html",
+  "start_url": "index.html",
+  "setup": "setup.html",
+  "display": "standalone",
+  "background_color": "#04060c",
+  "theme_color": "#37d6e6",
+  "single_source_of_truth": "index.html",
+  "pages": [
+    "index.html",
+    "setup.html",
+    "get-started.html",
+    "implementationguide.html",
+    "featureguide.html"
+  ],
+  "data": {
+    "provider": "supabase",
+    "table": "jobs",
+    "modes": ["auto", "live", "sample"],
+    "seed": "seed_data.json"
+  },
+  "regions": ["Global", "Seattle", "Los Angeles", "New Zealand"],
+  "runs": "100% online — IONOS hosts the website; GitHub Actions runs the scraper in the cloud. Nothing runs locally.",
+  "scripts": {
+    "scraper": "scraper.py (run by GitHub Actions, not locally)"
+  }
+}

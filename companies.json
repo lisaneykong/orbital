@@ -1,0 +1,64 @@
+{
+  "_comment": "Canonical company/ATS source of truth (Improvement #1). scraper.py loads this directly. index.html/setup.html carry their own copy today — syncing them to fetch this file is the next increment (needs an async-load refactor since FP_COMPANIES is used synchronously across many functions).",
+  "greenhouse": {
+    "spacex": "SpaceX",
+    "rocketlab": "Rocket Lab",
+    "relativity": "Relativity Space",
+    "stokespacetechnologies": "Stoke Space",
+    "vast": "Vast Space",
+    "apex": "Apex Space",
+    "vardaspace": "Varda Space Industries",
+    "astranis": "Astranis",
+    "slingshotaerospace": "Slingshot Aerospace",
+    "graviticsinc": "Gravitics",
+    "ursamajor": "Ursa Major",
+    "leolabsinc": "LeoLabs",
+    "trueanomalyinc": "True Anomaly",
+    "outpostspace": "Outpost",
+    "terranorbitalcorporation": "Terran Orbital",
+    "blacksky": "BlackSky",
+    "planetlabs": "Planet Labs",
+    "andurilindustries": "Anduril",
+    "inversionspace": "Inversion Space",
+    "k2spacecorporation": "K2 Space",
+    "muonspace": "Muon Space",
+    "stratolaunch": "Stratolaunch",
+    "capellaspace": "Capella Space",
+    "spaceium": "Spaceium",
+    "albedo": "Albedo",
+    "spinlaunch": "SpinLaunch",
+    "offworld": "OffWorld",
+    "starcloud": "Starcloud",
+    "mithril": "Mithril Technologies",
+    "hubblenetwork": "Hubble Network"
+  },
+  "workday": [
+    {"company": "Blue Origin", "tenant": "blueorigin", "server": "wd5", "board": "BlueOrigin"},
+    {"company": "Sierra Space", "tenant": "sierraspace", "server": "wd1", "board": "Sierra_Space_External_Career_Site"},
+    {"company": "Maxar", "tenant": "maxar", "server": "wd1", "board": "lanterisspace"}
+  ],
+  "lever": [
+    {"company": "E-Space", "token": "espace"},
+    {"company": "Loft Orbital", "token": "loftorbital"},
+    {"company": "Hermeus", "token": "hermeus"},
+    {"company": "Kepler Communications", "token": "kepler"}
+  ],
+  "ashby": [
+    {"company": "Starfish Space", "token": "starfish-space-inc"},
+    {"company": "Hadrian", "token": "hadrian-automation"},
+    {"company": "Impulse Space", "token": "impulse"},
+    {"company": "Constellation Space", "token": "constellationspace"},
+    {"company": "Turion Space", "token": "turion-space"}
+  ],
+  "eightfold": [
+    {"company": "Virgin Galactic", "host": "vgcareers.virgingalactic.com", "domain": "virgingalactic.com"}
+  ],
+  "workable": [
+    {"company": "Umbra", "token": "umbra"},
+    {"company": "Xplore", "token": "xplore-inc"},
+    {"company": "Capella Space", "token": "capellaspace"}
+  ],
+  "amazon": [
+    {"company": "Project Kuiper (Amazon)", "query": "kuiper"}
+  ]
+}

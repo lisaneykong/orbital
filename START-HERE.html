@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Orbital — Start Here</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#05070d; --panel:#0c1320; --panel2:#0f1828; --line:#1d2a3f;
+    --ink:#e8eef7; --dim:#8aa0bf; --faint:#5d728f;
+    --a:#37d6e6; --a2:#5b8cff; --good:#39e6a0; --warn:#ffb454; --gold:#ffd76a;
+  }
+  body{
+    background:radial-gradient(1200px 700px at 70% -10%, #11203a 0%, var(--bg) 55%), var(--bg);
+    color:var(--ink); font-family:'Space Grotesk',system-ui,sans-serif;
+    line-height:1.65; padding:0 20px 100px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+
+  /* hero */
+  .hero{padding:64px 0 32px;text-align:center}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;
+    font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--a);
+    border:1px solid var(--line);background:rgba(55,214,230,.06);padding:7px 14px;border-radius:999px;margin-bottom:22px}
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--a);box-shadow:0 0 10px var(--a)}
+  h1{font-size:2.6rem;font-weight:700;letter-spacing:-.02em;line-height:1.08;margin-bottom:14px}
+  h1 b{color:var(--a)}
+  .sub{font-size:1.08rem;color:var(--dim);max-width:540px;margin:0 auto}
+  .time{margin-top:20px;font-size:.9rem;color:var(--faint)}
+  .time b{color:var(--gold)}
+
+  /* the promise */
+  .promise{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:38px 0 8px}
+  .promise .p{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 14px;text-align:center}
+  .promise .pi{font-size:1.4rem;margin-bottom:6px}
+  .promise .pt{font-size:.82rem;color:var(--dim)}
+  .promise .pt b{color:var(--ink)}
+
+  /* steps */
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:30px;margin:24px 0;position:relative;overflow:hidden}
+  .step:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(var(--a),var(--a2))}
+  .stephead{display:flex;align-items:center;gap:16px;margin-bottom:8px}
+  .num{flex:none;width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
+    font-family:'JetBrains Mono',monospace;font-weight:600;font-size:1.3rem;color:#04121a;
+    background:linear-gradient(135deg,var(--a),var(--a2));box-shadow:0 6px 22px rgba(55,214,230,.3)}
+  .stephead h2{font-size:1.4rem;font-weight:600;letter-spacing:-.01em}
+  .mins{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--faint);margin-left:auto;white-space:nowrap}
+  .step .lead{color:var(--dim);margin:4px 0 20px;padding-left:62px}
+  .step .lead.full{padding-left:0;margin-top:14px}
+
+  ol.todo{list-style:none;counter-reset:t;padding-left:62px}
+  ol.todo>li{counter-increment:t;position:relative;padding:11px 0 11px 40px;border-bottom:1px dashed var(--line)}
+  ol.todo>li:last-child{border-bottom:0}
+  ol.todo>li:before{content:counter(t);position:absolute;left:0;top:11px;width:24px;height:24px;border-radius:50%;
+    background:var(--panel2);border:1px solid var(--line);color:var(--a);font-family:'JetBrains Mono',monospace;
+    font-size:.78rem;display:grid;place-items:center}
+  ol.todo b{color:var(--ink)}
+  ol.todo .hint{display:block;font-size:.86rem;color:var(--faint);margin-top:2px}
+  a.lnk{color:var(--a);text-decoration:none;border-bottom:1px solid rgba(55,214,230,.35)}
+  a.lnk:hover{border-bottom-color:var(--a)}
+
+  /* code block */
+  .codewrap{margin:14px 0 4px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#070c14}
+  .codebar{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:var(--panel2);border-bottom:1px solid var(--line)}
+  .codebar span{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--dim);letter-spacing:.05em}
+  .copybtn{font-family:'Space Grotesk',sans-serif;font-size:.8rem;font-weight:600;color:#04121a;background:var(--a);
+    border:0;border-radius:7px;padding:6px 14px;cursor:pointer;transition:.15s}
+  .copybtn:hover{filter:brightness(1.1)}
+  .copybtn.done{background:var(--good)}
+  pre{padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.7;color:#b9c8dd}
+  pre .k{color:#7fd8ff}
+  pre .c{color:#5d728f;font-style:italic}
+
+  .kv{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap}
+  .kv .cell{flex:1;min-width:220px;background:#070c14;border:1px solid var(--line);border-radius:10px;padding:11px 14px}
+  .kv .cell .kk{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--a);margin-bottom:3px}
+  .kv .cell .vv{font-size:.84rem;color:var(--dim)}
+
+  .note{display:flex;gap:12px;background:rgba(91,140,255,.07);border:1px solid rgba(91,140,255,.25);
+    border-radius:12px;padding:14px 16px;margin:18px 0 0;font-size:.9rem;color:#c5d4ec}
+  .note.warn{background:rgba(255,180,84,.07);border-color:rgba(255,180,84,.28);color:#ffe0b0}
+  .note.good{background:rgba(57,230,160,.07);border-color:rgba(57,230,160,.28);color:#bff5dd}
+  .note .ni{flex:none;font-size:1.1rem;line-height:1.4}
+
+  /* done */
+  .finish{text-align:center;padding:40px 30px;background:linear-gradient(160deg,rgba(57,230,160,.08),rgba(55,214,230,.04));
+    border:1px solid rgba(57,230,160,.3);border-radius:18px;margin-top:32px}
+  .finish .big{font-size:1.6rem;font-weight:700;margin-bottom:8px}
+  .finish .big b{color:var(--good)}
+  .finish p{color:var(--dim);max-width:480px;margin:0 auto 22px}
+  .gobtn{display:inline-block;font-size:1rem;font-weight:600;color:#04121a;background:linear-gradient(135deg,var(--a),var(--good));
+    padding:14px 32px;border-radius:11px;text-decoration:none;box-shadow:0 8px 28px rgba(55,214,230,.28)}
+
+  .faq{margin-top:46px}
+  .faq h3{font-size:1.1rem;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;font-size:.8rem;margin-bottom:14px}
+  details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:0 18px;margin-bottom:10px}
+  summary{padding:15px 0;cursor:pointer;font-weight:500;list-style:none;display:flex;justify-content:space-between;align-items:center}
+  summary::-webkit-details-marker{display:none}
+  summary:after{content:'+';color:var(--a);font-size:1.3rem;font-weight:400}
+  details[open] summary:after{content:'\2013'}
+  details .body{padding:0 0 16px;color:var(--dim);font-size:.92rem}
+  .foot{text-align:center;margin-top:50px;color:var(--faint);font-size:.82rem;font-family:'JetBrains Mono',monospace}
+
+  @media(max-width:620px){
+    h1{font-size:2rem}
+    .promise{grid-template-columns:1fr}
+    .step{padding:22px}
+    .step .lead,ol.todo{padding-left:0}
+    .stephead{flex-wrap:wrap}
+    .mins{margin-left:62px;width:100%}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="badge"><span class="dot"></span> Orbital · Mission Setup</div>
+    <h1>Let's get your job console <b>flying</b>.</h1>
+    <p class="sub">Three steps. No coding. If you can copy and paste, you can do this. Follow them in order, top to bottom.</p>
+    <div class="time">Total time: <b>about 15 minutes</b>, one time only.</div>
+  </div>
+
+  <div class="promise">
+    <div class="p"><div class="pi">🛰️</div><div class="pt"><b>Real space jobs</b><br>pulled automatically</div></div>
+    <div class="p"><div class="pi">🔁</div><div class="pt"><b>Refreshes daily</b><br>on its own, free</div></div>
+    <div class="p"><div class="pi">🔒</div><div class="pt"><b>Only you</b><br>can edit (PIN 1725)</div></div>
+  </div>
+
+  <div class="note">
+    <span class="ni">🧩</span>
+    <div><b>What are these 3 things?</b> Think of it like a fish tank.
+    <b>Supabase</b> is the tank (it holds the jobs). <b>GitHub</b> is the automatic feeder (it drops fresh jobs in every day). <b>IONOS</b> is the room where the tank sits so you can visit it at <b>jobs.lisaney.com</b>. You'll set up one in each step.</div>
+  </div>
+
+  <div class="note good" style="border-width:2px">
+    <span class="ni">🌐</span>
+    <div><b>Everything runs ONLINE. You never run anything on your own computer.</b><br>
+    There's no app to install, no Python, no command window, no “localhost.” You only do two things with the files you downloaded: <b>upload one set to a website host (IONOS)</b> and <b>upload another set to GitHub</b>. After that it all runs in the cloud, by itself.</div>
+  </div>
+
+  <div class="note" style="border-width:2px;border-color:var(--a)">
+    <span class="ni">📦</span>
+    <div><b>Where do the files go? Just ONE place: GitHub.</b>
+      <div style="margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:rgba(57,230,160,.05)">
+        <div style="font-weight:700;color:var(--a2)">Upload everything INSIDE the orbital-crm folder to GitHub (Step 2).</div>
+        <div class="hint" style="margin-top:5px">From there, GitHub does everything: it <b>runs the scraper</b> in the cloud (Step 2) <b>and auto-publishes the website to jobs.lisaney.com</b> through IONOS (Step 3, after a one-time connect). You don't sort files or upload to two places — GitHub holds it all and sends the right parts where they belong.</div>
+      </div>
+      <div class="hint" style="margin-top:9px">There are only ~11 files — drag the entire folder's contents in one go (including the hidden <code>.github</code> folder, which is what makes the automation run).</div>
+    </div>
+  </div>
+
+  <div class="note good" style="border-width:2px">
+    <span class="ni">⚙️</span>
+    <div><b>GitHub is the engine that keeps Orbital alive.</b><br>
+    All three steps matter, but <b>Step 2 (GitHub) is the heart of the system</b> — it's the robot that automatically pulls fresh space jobs into your database every single day, including the big boards like <b>Blue Origin</b> and <b>Amazon Kuiper</b> that can't be reached any other way. Don't skip it. (The “Fetch real jobs” button in Step 3 is just a quick first fill so you see results immediately — GitHub is what keeps them coming.)</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step">
+    <div class="stephead">
+      <div class="num">1</div>
+      <h2>Make the database (Supabase)</h2>
+      <div class="mins">~5 min</div>
+    </div>
+    <p class="lead">This is the box that holds all your jobs. It's free.</p>
+    <ol class="todo">
+      <li><b>Go to <a class="lnk" href="https://supabase.com" target="_blank">supabase.com</a></b> and sign up (use your Google login — fastest).</li>
+      <li><b>Click "New Project."</b> Give it a name like <i>orbital</i>, pick any password, hit Create. Wait ~2 min while it builds.<span class="hint">Grab a coffee — it's setting up your tank.</span></li>
+      <li><b>Open the SQL Editor</b> (left sidebar icon that looks like a database). Click "New query."</li>
+      <li><b>Copy the code below, paste it in, and press "Run."</b> This builds the shelves inside the box. You should see "Success."</li>
+    </ol>
+
+    <div class="codewrap">
+      <div class="codebar"><span>paste this into Supabase → SQL Editor → Run</span><button class="copybtn" data-copy="sql">Copy</button></div>
+<pre id="sql"><span class="c">-- Orbital: build the jobs table. Safe to run more than once.</span>
+<span class="k">create table if not exists</span> public.jobs (
+  idx             <span class="k">bigint generated always as identity</span>,
+  id              <span class="k">text primary key</span>,
+  company         <span class="k">text not null</span>,
+  title           <span class="k">text not null</span>,
+  location_hub    <span class="k">text</span>,
+  location        <span class="k">text</span>,
+  salary_range    <span class="k">text</span>,
+  salary_min      <span class="k">int</span>,
+  salary_max      <span class="k">int</span>,
+  intern_rate     <span class="k">int</span>,
+  intern_weeks    <span class="k">int</span>,
+  is_intern       <span class="k">boolean default</span> false,
+  type            <span class="k">text</span>,
+  match           <span class="k">int</span>,
+  planets         <span class="k">int</span>,
+  demand          <span class="k">int</span>,
+  posting_age     <span class="k">int</span>,
+  tech            <span class="k">text</span>,
+  clearance       <span class="k">text</span>,
+  relocation_flag <span class="k">boolean default</span> false,
+  relocation_note <span class="k">text</span>,
+  logo_bg         <span class="k">text</span>,
+  url             <span class="k">text</span>,
+  timestamp       <span class="k">timestamptz</span>,
+  description     <span class="k">text</span>,
+  requirements    <span class="k">text</span>,
+  source          <span class="k">text</span>,
+  status          <span class="k">text default</span> 'active',
+  saved           <span class="k">boolean default</span> false,
+  archived        <span class="k">boolean default</span> false,
+  created_at      <span class="k">timestamptz default</span> now()
+);
+
+<span class="c">-- let the website READ jobs (but never let strangers change them)</span>
+<span class="k">alter table</span> public.jobs <span class="k">enable row level security</span>;
+<span class="k">drop policy if exists</span> "anon read jobs" <span class="k">on</span> public.jobs;
+<span class="k">create policy</span> "anon read jobs" <span class="k">on</span> public.jobs
+  <span class="k">for select to</span> anon <span class="k">using</span> (true);
+
+<span class="c">-- grant write access so the service_role key can save jobs (fixes "permission denied" /
+--    "violates row-level security policy" if you ever see either of those)</span>
+<span class="k">grant usage on schema</span> public <span class="k">to</span> anon, authenticated, service_role;
+<span class="k">grant select on</span> public.jobs <span class="k">to</span> anon, authenticated;
+<span class="k">grant all privileges on</span> public.jobs <span class="k">to</span> service_role;
+<span class="k">grant insert, update, delete on</span> public.jobs <span class="k">to</span> service_role;
+<span class="c">-- single-user tool: disable row-level security so the service_role key can always write</span>
+<span class="k">alter table</span> public.jobs <span class="k">disable row level security</span>;
+<span class="k">drop policy if exists</span> "service role writes" <span class="k">on</span> public.jobs;
+<span class="k">create policy</span> "service role writes" <span class="k">on</span> public.jobs
+  <span class="k">for all to</span> service_role <span class="k">using</span> (true) <span class="k">with check</span> (true);
+
+<span class="k">create index if not exists</span> jobs_hub_time_idx <span class="k">on</span> public.jobs (location_hub, timestamp <span class="k">desc</span>);</pre>
+    </div>
+
+    <ol class="todo" start="5" style="counter-reset:t 4">
+      <li><b>Get your 2 keys.</b> Go to <i>Settings → API</i>. You'll need three things — keep this tab open for Step 3:
+        <div class="kv">
+          <div class="cell"><div class="kk">Project URL</div><div class="vv">looks like https://abcd.supabase.co</div></div>
+          <div class="cell"><div class="kk">anon public key</div><div class="vv">long code starting "eyJ…"</div></div>
+          <div class="cell"><div class="kk">service_role key</div><div class="vv">another long "eyJ…" (the secret one)</div></div>
+        </div>
+      </li>
+    </ol>
+    <div class="note good"><span class="ni">✅</span><div><b>Step 1 done</b> when the SQL says "Success" and you can see your 3 keys under Settings → API.</div></div>
+    <div class="note"><span class="ni">😌</span><div><b>Saw "relation jobs already exists"?</b> No problem — that just means the table is already built. You're done with Step 1; move on. (This code is safe to run again anytime.)</div></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step">
+    <div class="stephead">
+      <div class="num">2</div>
+      <h2>Turn on the daily auto-feeder (GitHub)</h2>
+      <div class="mins">~5 min</div>
+    </div>
+    <p class="lead">This robot pulls fresh space jobs into your database every day — for free, while you sleep.</p>
+    <ol class="todo">
+      <li><b>Go to <a class="lnk" href="https://github.com" target="_blank">github.com</a></b> and make a free account (or log in).</li>
+      <li><b>Click the "+" top-right → "New repository."</b> Name it <i>orbital</i>. Choose <b>Private</b>. Click "Create repository."<span class="hint">A "repository" is just a folder that lives online.</span></li>
+      <li><b>Upload the Orbital files.</b> On the new repo page click <i>"uploading an existing file,"</i> then open the <span style="font-family:monospace">orbital-crm</span> folder you downloaded, <b>select everything INSIDE it</b>, and drag those items in. Click "Commit changes."
+        <div style="margin:10px 0;border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:rgba(5,8,13,.5)">
+          <div style="font-weight:700;color:var(--a);font-size:.86rem;margin-bottom:6px">Upload the CONTENTS, not the folder itself</div>
+          <div style="font-size:.82rem;color:var(--dim);line-height:1.6;margin-bottom:8px">You want these files at the <b>top level</b> of your repo (so <span style="font-family:monospace">index.html</span> is right there — not buried inside an <span style="font-family:monospace">orbital-crm/</span> subfolder, or the robot can't find <span style="font-family:monospace">.github</span>):</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--a2);line-height:1.85">
+            index.html<br>setup.html<br>START-HERE.html<br>README.txt<br>manifest.json<br>orbital-logo.png<br>scraper.py<br>requirements.txt<br>📁 assets/ &nbsp;<span style="color:var(--dim)">(headshot.png, resume.pdf)</span><br>📁 .github/ &nbsp;<span style="color:var(--gold)">(hidden — workflows/scrape.yml + deploy.yml)</span>
+          </div>
+        </div>
+        <span class="hint">Tip: open the orbital-crm folder, press Ctrl+A (Cmd+A on Mac) to select all, and drag the highlighted files onto the GitHub page.</span>
+        <details style="margin-top:10px">
+          <summary style="cursor:pointer;color:var(--a);font-weight:600;font-size:.9rem">⚠ Didn't see the .github folder? It's hidden — create it by hand (2 min)</summary>
+          <div style="padding:10px 0;color:var(--dim);font-size:.88rem;line-height:1.6">
+            The <span style="font-family:monospace">.github</span> folder starts with a dot, so your computer hides it — and without it the automation can't run. Easiest fix: make the files <b>directly on GitHub</b>, which also creates the folders for you.
+            <ol style="margin:10px 0;padding-left:20px">
+              <li>In your repo: <b>Add file ▾ → Create new file</b>.</li>
+              <li>In the filename box type exactly: <span style="font-family:monospace;color:var(--a2)">.github/workflows/scrape.yml</span> <span class="hint">(the slashes auto-create the folders)</span></li>
+              <li>Paste the <b>Scraper workflow</b> below → <b>Commit changes</b>.</li>
+              <li>Repeat: <b>Add file → Create new file</b> → <span style="font-family:monospace;color:var(--a2)">.github/workflows/deploy.yml</span> → paste the <b>Website-publish workflow</b> → Commit.</li>
+            </ol>
+            <div class="codewrap">
+              <div class="codebar"><span>.github/workflows/scrape.yml</span><button class="copybtn" data-copy="ymlScrape">Copy</button></div>
+<pre id="ymlScrape">name: Orbital daily scrape
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch: {}
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python scraper.py
+      - name: Upload failure log (if any)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-scrapes-log
+          path: failed_scrapes_log.csv
+          if-no-files-found: ignore</pre>
+            </div>
+            <div class="codewrap" style="margin-top:12px">
+              <div class="codebar"><span>.github/workflows/deploy.yml</span><button class="copybtn" data-copy="ymlDeploy">Copy</button></div>
+<pre id="ymlDeploy">name: Publish website to IONOS
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'index.html'
+      - 'setup.html'
+      - 'START-HERE.html'
+      - 'manifest.json'
+      - 'orbital-logo.png'
+      - 'assets/**'
+  workflow_dispatch: {}
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload website to IONOS via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.IONOS_FTP_SERVER }}
+          username: ${{ secrets.IONOS_FTP_USERNAME }}
+          password: ${{ secrets.IONOS_FTP_PASSWORD }}
+          protocol: ftps
+          exclude: |
+            **/.git*
+            **/.github/**
+            scraper.py
+            requirements.txt
+            README.txt
+          server-dir: ./</pre>
+            </div>
+          </div>
+        </details>
+      </li>
+      <li><b>Add your secret keys</b> so the robot can write to your database. Go to <i>Settings → Secrets and variables → Actions → New repository secret</i> and add these two:
+        <div class="kv">
+          <div class="cell"><div class="kk">SUPABASE_URL</div><div class="vv">paste your Project URL from Step 1</div></div>
+          <div class="cell"><div class="kk">SUPABASE_SERVICE_ROLE_KEY</div><div class="vv">paste your service_role key from Step 1</div></div>
+        </div>
+        <span class="hint">Type the names EXACTLY as shown (all caps, with underscores).</span>
+      </li>
+      <li><b>Run it once now.</b> Go to the <i>Actions</i> tab → click <i>"Orbital daily scrape"</i> → <i>"Run workflow."</i> Wait ~2 minutes. Green check = real jobs are now in your database. 🎉</li>
+    </ol>
+    <div class="note"><span class="ni">🤖</span><div>After this, it runs <b>automatically every day</b>. You never have to touch it again. To add fresh jobs anytime, just hit "Run workflow" again.</div></div>
+    <div class="note good"><span class="ni">✅</span><div><b>Step 2 done</b> when the Actions run shows a green checkmark.</div></div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step">
+    <div class="stephead">
+      <div class="num">3</div>
+      <h2>Connect IONOS once — then it auto-publishes</h2>
+      <div class="mins">~5 min</div>
+    </div>
+    <p class="lead">Instead of ever uploading to IONOS by hand, you give GitHub your IONOS login once. After that, GitHub publishes the website to <b>jobs.lisaney.com</b> automatically — every time anything changes.</p>
+    <ol class="todo">
+      <li><b>Get your IONOS FTP login.</b> In <a class="lnk" href="https://ionos.com" target="_blank">IONOS</a> → your hosting → <b>SFTP/FTP access</b>. Note the <b>server/host</b>, <b>username</b>, and <b>password</b> (create a password if it doesn't show one).</li>
+      <li><b>Add them to GitHub</b> (same place as Step 2's secrets): your repo → <b>Settings → Secrets and variables → Actions → New repository secret</b>. Add these three, names EXACTLY:
+        <div class="kv">
+          <div class="cell"><div class="kk">IONOS_FTP_SERVER</div><div class="vv">your IONOS host (e.g. access-xxxx.webspace-data.io)</div></div>
+          <div class="cell"><div class="kk">IONOS_FTP_USERNAME</div><div class="vv">your IONOS FTP username</div></div>
+          <div class="cell"><div class="kk">IONOS_FTP_PASSWORD</div><div class="vv">your IONOS FTP password</div></div>
+        </div>
+      </li>
+      <li><b>Publish it.</b> Repo → <b>Actions</b> tab → <i>“Publish website to IONOS”</i> → <b>Run workflow</b>. In ~1 minute your site is live at jobs.lisaney.com. (From now on it re-publishes itself automatically whenever the repo changes.)</li>
+      <li><b>Open <a class="lnk" href="https://jobs.lisaney.com/setup.html" target="_blank">jobs.lisaney.com/setup.html</a></b>, paste your Supabase <b>Project URL</b> + <b>anon key</b> from Step 1, run the first fetch, and finish the GitHub gate. Log in with PIN <b>1725</b> to edit.</li>
+    </ol>
+    <div class="note good" style="border-width:2px">
+      <span class="ni">✅</span>
+      <div><b>Final check before you call it launched</b> — go to your repo → <b>Settings → Secrets and variables → Actions</b> and confirm all FIVE secrets are listed (names must match exactly, all caps):
+        <div class="kv" style="margin-top:8px">
+          <div class="cell"><div class="kk">SUPABASE_URL</div></div>
+          <div class="cell"><div class="kk">SUPABASE_SERVICE_ROLE_KEY</div></div>
+          <div class="cell"><div class="kk">IONOS_FTP_SERVER</div></div>
+          <div class="cell"><div class="kk">IONOS_FTP_USERNAME</div></div>
+          <div class="cell"><div class="kk">IONOS_FTP_PASSWORD</div></div>
+        </div>
+        <span class="hint">GitHub only shows secret NAMES, never the values — that's expected, it means they're saved. If any are missing, add it (New repository secret) and re-run that workflow once.</span>
+      </div>
+    </div>
+    <div class="note"><span class="ni">🔌</span><div><b>Prefer to upload by hand instead?</b> You can still skip the FTP secrets and just drag these files into your IONOS File Manager: <span style="font-family:monospace">index.html · setup.html · START-HERE.html · manifest.json · orbital-logo.png · assets/</span>. But the auto-publish above means you never have to do that again.</div></div>
+    <div class="note good"><span class="ni">✅</span><div><b>Step 3 done</b> when jobs.lisaney.com shows your space jobs.</div></div>
+  </div>
+
+  <!-- FINISH -->
+  <div class="finish">
+    <div class="big">🚀 You're <b>live</b>.</div>
+    <p>Real space jobs, refreshing every day, with real apply links — all at jobs.lisaney.com. Now go land the mission.</p>
+    <a class="gobtn" href="index.html">Open my console →</a>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq">
+    <h3>If something feels stuck</h3>
+    <details>
+      <summary>The website opens but shows "No Data"</summary>
+      <div class="body">That just means the database is empty so far. Do the GitHub "Run workflow" (Step 2 #5) or hit "Fetch real jobs" on setup.html. Wait 2 minutes, refresh. Jobs will appear.</div>
+    </details>
+    <details>
+      <summary>The GitHub run failed (red X)</summary>
+      <div class="body">Almost always a typo in the secret names. They must be <b>SUPABASE_URL</b> and <b>SUPABASE_SERVICE_ROLE_KEY</b> exactly — all caps, underscores, no spaces. Fix and run again. The run also leaves a "failed-scrapes-log" file you can download if you're curious which boards skipped.</div>
+    </details>
+    <details>
+      <summary>"Fetch real jobs" says some companies were blocked</summary>
+      <div class="body">Totally normal. A few company boards block browsers for security. Those ones come in through the daily GitHub robot instead (Step 2). Between the two, you get everything reachable.</div>
+    </details>
+    <details>
+      <summary>Supabase said "relation jobs already exists"</summary>
+      <div class="body">That's not an error you need to worry about — it just means the jobs table was already created. You're good; move to Step 2. The code is safe to paste and run again anytime without breaking anything.</div>
+    </details>
+    <details>
+      <summary>I forgot my login</summary>
+      <div class="body">The owner PIN is <b>1725</b>. Anyone without it just sees a read-only view — they can look but not change anything.</div>
+    </details>
+    <details>
+      <summary>Do I have to do this every time?</summary>
+      <div class="body">No. This is a one-time setup. After that, the daily robot keeps it fresh forever and you just open jobs.lisaney.com.</div>
+    </details>
+  </div>
+
+  <div class="foot">ORBITAL // COMMAND · built for Lisaney Kong</div>
+</div>
+
+<script>
+  document.querySelectorAll('.copybtn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const el=document.getElementById(btn.dataset.copy);
+      const text=el.textContent;   // textContent works even when inside a collapsed <details>
+      navigator.clipboard.writeText(text).then(()=>{
+        const old=btn.textContent; btn.textContent='Copied ✓'; btn.classList.add('done');
+        setTimeout(()=>{btn.textContent=old;btn.classList.remove('done');},1600);
+      });
+    });
+  });
+</script>
+</body>
+</html>
