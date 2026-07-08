@@ -3,8 +3,25 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>Orbital CRM · Install</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script>
+  // Force a fresh copy of this page once per visit — bypasses any stale cached version
+  // (browser cache, host CDN cache) so fixes shipped to setup.html always take effect
+  // on the live site, not just the sandboxed preview. Cache-busts via a query param and
+  // uses a sessionStorage flag so it reloads exactly once, not in a loop.
+  (function(){
+    var params = new URLSearchParams(location.search);
+    if(!params.has('_fresh')){
+      var url = new URL(location.href);
+      url.searchParams.set('_fresh', Date.now());
+      location.replace(url.toString());
+    }
+  })();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <style>
@@ -46,7 +63,7 @@ h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;letter-spacing:-.01em}
   box-shadow:0 0 26px rgba(55,214,230,.45),inset 0 0 16px rgba(55,214,230,.55);animation:cpulse 3s ease-in-out infinite}
 @keyframes cpulse{50%{box-shadow:0 0 36px rgba(55,214,230,.7),inset 0 0 20px rgba(55,214,230,.8)}}
 .vault .core svg{filter:drop-shadow(0 0 6px rgba(55,214,230,.9))}
-.vault h2{font-family:'Orbitron',sans-serif;font-size:1.1rem;letter-spacing:.34em;text-transform:uppercase;margin-bottom:8px;
+.vault h2{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.1rem;letter-spacing:.34em;text-transform:uppercase;margin-bottom:8px;
   background:linear-gradient(90deg,#9fefff,#37d6e6 60%,#00e6a2);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .vault p{color:var(--muted);font-size:.82rem;margin:0 auto 26px;max-width:330px;letter-spacing:.02em}
 .dots{display:flex;gap:16px;justify-content:center;margin-bottom:30px}
@@ -59,7 +76,7 @@ h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;letter-spacing:-.01em}
 .padframe:before{left:-2px;top:-2px;border-right:0;border-bottom:0}
 .padframe:after{right:-2px;bottom:-2px;border-left:0;border-top:0}
 .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
-.key{position:relative;font-family:'Orbitron',sans-serif;font-size:1.32rem;font-weight:700;color:#bfefff;
+.key{position:relative;font-family:'JetBrains Mono',monospace;font-size:1.32rem;font-weight:700;color:#bfefff;
   background:linear-gradient(158deg,rgba(20,34,50,.92),rgba(8,14,22,.96));border:1px solid rgba(55,214,230,.28);
   clip-path:polygon(13px 0,100% 0,100% calc(100% - 13px),calc(100% - 13px) 100%,0 100%,0 13px);
   padding:17px 0;cursor:pointer;transition:.12s;user-select:none;letter-spacing:.04em;box-shadow:inset 0 0 12px rgba(55,214,230,.08)}
@@ -363,10 +380,10 @@ NOTIFY pgrst, 'reload schema';</pre>
     <input id="url" placeholder="https://your-project-ref.supabase.co" autocomplete="off" spellcheck="false" />
 
     <label>2 · Anon public key <span class="hint">— Settings → API → anon public (lets the site READ jobs)</span></label>
-    <input id="key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…" autocomplete="off" spellcheck="false" />
+    <input id="key" name="orbital_anon_pub_9f3" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" />
 
     <label>3 · Service role key <span class="hint">— Settings → API → service_role (used once, here, to SAVE jobs)</span></label>
-    <input id="svc" placeholder="eyJ…  secret key — stays in this browser only" autocomplete="off" spellcheck="false" />
+    <input id="svc" name="orbital_svc_secret_7k1" placeholder="eyJ…  secret key — stays in this browser only" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" />
     <div id="svcRoleReadout" style="font-size:.78rem;margin-top:4px;min-height:16px"></div>
 
     <button class="hero" id="scrapeBtn">
@@ -941,6 +958,13 @@ $('scrapeBtn').addEventListener('click',async()=>{
   if(!validateConn()){ show('scrapeMsg','err','Check field 1 (Project URL) and field 2 (anon key) — they look off.'); return; }
   const u=$('url').value.trim().replace(/\/$/,''); const svc=$('svc').value.trim();
   if(svc.length<30){ $('svc').classList.add('bad'); show('scrapeMsg','err','Paste your <b>service_role</b> key in field 3 — saving jobs needs it (the anon key can only read).'); return; }
+  // Belt-and-suspenders against browser/password-manager autofill silently swapping these
+  // two similar-looking token fields: refuse to proceed if they're now identical.
+  if(svc === $('key').value.trim()){
+    $('svc').classList.add('bad'); $('key').classList.add('bad');
+    show('scrapeMsg','err','⚠ Fields 2 and 3 currently hold the <b>exact same key</b> — your browser\'s autofill/password manager likely overwrote one. Click into each field, select all (Ctrl/Cmd+A), delete, and re-paste both keys manually. Consider disabling autofill for this page.');
+    return;
+  }
   // Decode the JWT and confirm field 3 is REALLY the service_role key (the #1 cause of
   // "permission denied"). The anon and service_role keys look almost identical but the
   // decoded "role" claim differs.

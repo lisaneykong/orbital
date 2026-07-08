@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
@@ -31,6 +31,7 @@ h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;font-weight:600;margin:0;lett
 ::-webkit-scrollbar-thumb{background:#1e2a3c;border-radius:8px;border:2px solid var(--bg)}
 ::-webkit-scrollbar-track{background:transparent}
 button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--a3);outline-offset:2px;border-radius:6px}
 a{color:inherit;text-decoration:none}
 
 /* ============ APP SHELL ============ */
@@ -73,7 +74,7 @@ a{color:inherit;text-decoration:none}
 .main{min-width:0;display:flex;flex-direction:column}
 /* hero */
 .hero{position:relative;min-height:290px;overflow:hidden;border-bottom:1px solid var(--line)}
-.hero .bg{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.04);filter:saturate(1.35) contrast(1.18) brightness(1.06)}
+.hero .bg{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.04);filter:saturate(1.12) contrast(1.06) brightness(1.02)}
 /* animated sci-fi hero FX */
 .herofx{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
 .herofx .hstars,.herofx .hstars2{position:absolute;inset:0;background-image:radial-gradient(1.4px 1.4px at 12% 30%,#fff,transparent),radial-gradient(1.2px 1.2px at 28% 70%,#cfe6ff,transparent),radial-gradient(1.6px 1.6px at 47% 22%,#fff,transparent),radial-gradient(1.1px 1.1px at 63% 58%,#bcd4ff,transparent),radial-gradient(1.5px 1.5px at 78% 35%,#fff,transparent),radial-gradient(1.2px 1.2px at 88% 72%,#e6f0ff,transparent),radial-gradient(1px 1px at 38% 85%,#fff,transparent);opacity:.6;animation:twinkle 4s ease-in-out infinite}
@@ -84,23 +85,7 @@ a{color:inherit;text-decoration:none}
 @keyframes aurora{0%,100%{transform:translateX(-6%) translateY(0) scale(1) rotate(0deg)}50%{transform:translateX(8%) translateY(6%) scale(1.15) rotate(8deg)}}
 .herofx .hnebula{position:absolute;right:-10%;top:-30%;width:60%;height:120%;background:radial-gradient(closest-side,color-mix(in srgb,var(--a2) 34%,transparent),transparent 70%);filter:blur(54px);opacity:.4;animation:nebula 22s ease-in-out infinite}
 @keyframes nebula{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-8%,8%) scale(1.2)}}
-.herofx .hgrid{position:absolute;inset:0;background-image:linear-gradient(color-mix(in srgb,var(--a3) 12%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--a3) 12%,transparent) 1px,transparent 1px);background-size:46px 46px;-webkit-mask-image:radial-gradient(ellipse 70% 60% at 70% 30%,#000,transparent 75%);mask-image:radial-gradient(ellipse 70% 60% at 70% 30%,#000,transparent 75%);opacity:.35;animation:gridpulse 7s ease-in-out infinite}
-@keyframes gridpulse{0%,100%{opacity:.18}50%{opacity:.4}}
-.herofx .hbeam{position:absolute;right:8%;top:-20%;width:2px;height:140%;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--a3) 50%,transparent),transparent);box-shadow:0 0 30px 6px color-mix(in srgb,var(--a3) 30%,transparent);transform:rotate(14deg);animation:beamsweep 9s ease-in-out infinite}
-@keyframes beamsweep{0%,100%{transform:rotate(14deg) translateX(0);opacity:.3}50%{transform:rotate(10deg) translateX(-120px);opacity:.7}}
-.herofx .hscan{position:absolute;inset:0;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--a3) 16%,transparent),transparent);width:34%;animation:scan 8s linear infinite}
-@keyframes scan{0%{transform:translateX(-120%)}100%{transform:translateX(360%)}}
-/* comet with glowing tail */
-.herofx .comet{position:absolute;top:-8%;left:-8%;width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 14px 4px color-mix(in srgb,var(--a3) 80%,#fff);animation:cometfly 9s ease-in infinite}
-.herofx .comet:before{content:'';position:absolute;right:4px;top:50%;width:180px;height:2px;transform:translateY(-50%) rotate(0deg);transform-origin:right center;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--a3) 85%,#fff))}
-@keyframes cometfly{0%{transform:translate(0,0) rotate(32deg);opacity:0}8%{opacity:1}55%{opacity:1}70%{opacity:0}100%{transform:translate(118vw,72vh) rotate(32deg);opacity:0}}
-/* shooting stars */
-.herofx .shoot{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;box-shadow:0 0 8px 2px #cfe6ff;opacity:0}
-.herofx .shoot:before{content:'';position:absolute;right:2px;top:50%;width:90px;height:1.5px;transform:translateY(-50%);background:linear-gradient(90deg,transparent,#cfe6ff)}
-.herofx .shoot.s1{top:18%;left:30%;animation:shoot 7s linear infinite 1s}
-.herofx .shoot.s2{top:40%;left:60%;animation:shoot 9s linear infinite 4s}
-.herofx .shoot.s3{top:12%;left:80%;animation:shoot 11s linear infinite 7s}
-@keyframes shoot{0%{transform:translate(0,0) rotate(28deg);opacity:0}5%{opacity:1}22%{opacity:1}30%{opacity:0}100%{transform:translate(-340px,180px) rotate(28deg);opacity:0}}
+.herofx .hgrid{position:absolute;inset:0;background-image:linear-gradient(color-mix(in srgb,var(--a3) 12%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--a3) 12%,transparent) 1px,transparent 1px);background-size:46px 46px;-webkit-mask-image:radial-gradient(ellipse 70% 60% at 70% 30%,#000,transparent 75%);mask-image:radial-gradient(ellipse 70% 60% at 70% 30%,#000,transparent 75%);opacity:.22}
 .herofx .streak{position:absolute;top:22%;left:-14%;width:64px;height:64px;filter:drop-shadow(0 0 14px color-mix(in srgb,var(--a3) 75%,transparent));animation:streakfly 16s linear infinite}
 .herofx .streak2{top:60%;width:52px;height:52px;animation:streakfly 22s linear infinite;animation-delay:6s}
 .herofx .streak .sat{display:block;width:100%;height:100%;animation:satspin 6s linear infinite;transform-origin:50% 50%}
@@ -109,22 +94,20 @@ a{color:inherit;text-decoration:none}
 @keyframes rktwobble{0%,100%{transform:rotate(38deg)}50%{transform:rotate(34deg)}}
 .herofx .streak:before{content:'';position:absolute;right:100%;top:50%;width:180px;height:2px;transform:translateY(-50%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--a3) 75%,transparent))}
 @keyframes streakfly{0%{transform:translate(0,0)}100%{transform:translate(140vw,-70px)}}
-@media (prefers-reduced-motion:reduce){.herofx .streak,.herofx .haurora,.herofx .hscan,.herofx .hstars{animation:none}.herofx .streak{display:none}}
+@media (prefers-reduced-motion:reduce){.herofx .streak,.herofx .haurora,.herofx .hnebula,.herofx .hstars,.herofx .hstars2{animation:none}.herofx .streak{display:none}}
 .hero .ov{position:absolute;inset:0}
 .hero .inner{position:relative;z-index:2;padding:26px 30px;display:flex;justify-content:space-between;gap:20px;min-height:208px;align-items:flex-start}
 .hero .eyebrow{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--a3);font-weight:600;margin-bottom:8px}
 .hero h1{font-size:2.5rem;line-height:1.05;letter-spacing:-.02em;padding-left:2px;overflow:visible;text-shadow:0 2px 22px rgba(2,4,10,.85),0 1px 4px rgba(2,4,10,.7)}
 .hero h1 .g{background:linear-gradient(90deg,var(--a3),var(--a));-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:4px}
 .hero .sub{margin-top:10px;color:#cfdbed;font-size:1rem;max-width:56ch;text-shadow:0 1px 12px rgba(0,0,0,.5)}
-.hero .greet{font-size:2.1rem;font-family:'Orbitron',sans-serif;font-weight:700;letter-spacing:.01em}
+.hero .greet{font-size:2.1rem;font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:-.02em}
 /* glassy mission-console HUD (replaces flat planet) */
 .hero .inner{align-items:center}
 .hero-lead{flex:1;min-width:0}
 .herohud{flex:none;width:320px;display:flex;gap:16px;align-items:center;padding:18px;border-radius:18px;
   border:1px solid rgba(120,180,255,.22);background:linear-gradient(160deg,rgba(20,32,52,.55),rgba(8,12,22,.4));
   backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08),0 0 40px color-mix(in srgb,var(--a3) 14%,transparent);position:relative;overflow:hidden}
-.herohud:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--a3) 10%,transparent),transparent);transform:translateX(-100%);animation:hudsheen 6s ease-in-out infinite}
-@keyframes hudsheen{0%{transform:translateX(-100%)}55%,100%{transform:translateX(220%)}}
 .hud-ring{position:relative;width:104px;height:104px;flex:none}
 .hud-ring svg{width:104px;height:104px;transform:rotate(-90deg)}
 .hud-ring .hr-bg,.hud-ring .hr-bg2{fill:none;stroke:rgba(120,160,235,.16);stroke-width:5}
@@ -141,10 +124,9 @@ a{color:inherit;text-decoration:none}
 .hud-row .hk{color:var(--muted);letter-spacing:.08em;font-weight:600}
 .hud-row .hv{font-family:'JetBrains Mono';font-weight:700;color:#eaf1fb}
 .hud-row .hv.hot{color:var(--hot)} .hud-row .hv.ok{color:var(--good)} .hud-row .hv.amber{color:var(--gold)}
-.hud-wave{display:flex;align-items:flex-end;gap:3px;height:22px;margin-top:2px}
-.hud-wave i{flex:1;background:linear-gradient(180deg,var(--a3),var(--a));border-radius:2px;animation:wave 1.3s ease-in-out infinite}
-.hud-wave i:nth-child(odd){animation-duration:1.6s}.hud-wave i:nth-child(3n){animation-duration:1.1s}
-@keyframes wave{0%,100%{height:20%}50%{height:100%}}
+.hud-spark{position:relative;display:flex;align-items:flex-end;gap:3px;height:26px;margin-top:4px;padding-top:8px}
+.hud-spark i{flex:1;min-height:2px;border-radius:2px;background:linear-gradient(180deg,var(--a3),var(--a))}
+.hud-spark .hs-lbl{position:absolute;top:-2px;right:0;font-size:.5rem;letter-spacing:.14em;color:var(--dim);font-family:'JetBrains Mono',monospace}
 @media(max-width:920px){.herohud{display:none}}
 .hero .wx{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
 .wxcard{display:flex;align-items:center;gap:12px;padding:11px 15px;border-radius:var(--r);border:1px solid rgba(255,255,255,.14);
@@ -152,10 +134,20 @@ a{color:inherit;text-decoration:none}
 .wxcard .loc{display:flex;align-items:center;gap:7px;font-weight:600;font-size:.9rem}
 .wxcard .tp{font-family:'JetBrains Mono';font-size:1.5rem;font-weight:600}
 .wxcard .cond{font-size:.74rem;color:var(--muted)}
-.hero .clock{font-size:.78rem;color:#aebaccc;color:#9fb0c9;text-align:right}
+.hero .clock{font-size:.78rem;color:#9fb0c9;text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
 
 /* topbar (global title hero variant uses different) */
 .contentpad{padding:18px 26px 60px;display:flex;flex-direction:column;gap:calc(16px * var(--density,1))}
+/* orchestrated view entrance — one quiet moment, not scattered effects */
+@keyframes viewin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.contentpad.viewin > *{animation:viewin .34s cubic-bezier(.22,.9,.3,1) both}
+.contentpad.viewin > *:nth-child(1){animation-delay:.02s}
+.contentpad.viewin > *:nth-child(2){animation-delay:.07s}
+.contentpad.viewin > *:nth-child(3){animation-delay:.12s}
+.contentpad.viewin > *:nth-child(4){animation-delay:.17s}
+.contentpad.viewin > *:nth-child(n+5){animation-delay:.22s}
+@media (prefers-reduced-motion:reduce){.contentpad.viewin > *{animation:none}}
+.readable-mode .contentpad.viewin > *{animation:none}
 /* Tweaks: Density reshapes spacing + type; Energy adds glow/motion */
 .contentpad .panel .pb{padding:calc(14px * var(--density,1)) calc(18px * var(--density,1)) calc(18px * var(--density,1))}
 .contentpad .stats{gap:calc(12px * var(--density,1))}
@@ -166,7 +158,7 @@ a{color:inherit;text-decoration:none}
 .energy-charged .panel{box-shadow:0 16px 44px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px color-mix(in srgb,var(--a3) 8%,transparent)}
 .energy-charged .stat:hover,.energy-charged .jrow:hover{box-shadow:0 0 24px color-mix(in srgb,var(--a3) 22%,transparent)}
 .energy-charged .logo .mark,.energy-charged .dot{animation-duration:1.6s !important}
-.energy-charged .hero .bg{filter:saturate(1.5) contrast(1.22) brightness(1.08)}
+.energy-charged .hero .bg{filter:saturate(1.25) contrast(1.12) brightness(1.05)}
 .energy-calm *{animation-duration:6s !important}
 .energy-calm .hero .bg{filter:saturate(1.2) contrast(1.1)}
 /* ============ READABLE MODE — astigmatism / low-vision accessibility ============ */
@@ -211,7 +203,7 @@ a{color:inherit;text-decoration:none}
 .stat{position:relative;padding:16px;border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(180deg,var(--panel2),var(--bg2));overflow:hidden}
 .stat .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;margin-bottom:12px}
 .stat .ic svg{width:18px;height:18px}
-.stat .v{font-family:'Orbitron',sans-serif;font-weight:700;font-size:1.55rem;line-height:1;letter-spacing:.01em}
+.stat .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.5rem;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .ticker{overflow:hidden;white-space:nowrap;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(55,214,230,.06),rgba(157,107,255,.04));padding:7px 0;position:relative}
 .ticker:before,.ticker:after{content:'';position:absolute;top:0;bottom:0;width:36px;z-index:1;pointer-events:none}
 .ticker:before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
@@ -497,6 +489,35 @@ a{color:inherit;text-decoration:none}
 .dactions .apply{flex:1;justify-content:center;background:linear-gradient(180deg,var(--a),var(--a2));border:0;color:#fff}
 .dactions .apply:hover{filter:brightness(1.08)}
 .dactions button:hover{border-color:var(--a3)}
+/* ============ COMMAND DECK (⌘K palette) ============ */
+.cmdk-bg{position:fixed;inset:0;z-index:95;background:rgba(2,4,8,.7);backdrop-filter:blur(6px);display:none;align-items:flex-start;justify-content:center;padding:12vh 18px 18px}
+.cmdk-bg.open{display:flex}
+.cmdk{width:min(640px,100%);border:1px solid var(--line2);border-radius:16px;overflow:hidden;
+  background:linear-gradient(180deg,#0c1320,#070b12);box-shadow:0 40px 100px rgba(0,0,0,.75),0 0 0 1px rgba(55,214,230,.08)}
+.cmdk .ci{display:flex;align-items:center;gap:11px;padding:15px 18px;border-bottom:1px solid var(--line)}
+.cmdk .ci .prompt{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--a3);font-size:.95rem;flex:none}
+.cmdk .ci input{flex:1;background:transparent;border:0;outline:none;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.95rem}
+.cmdk .ci input::placeholder{color:var(--dim)}
+.cmdk .ci kbd{font-family:'JetBrains Mono',monospace;font-size:.64rem;color:var(--dim);border:1px solid var(--line2);border-radius:5px;padding:3px 6px;flex:none}
+.cmdk .cl{max-height:min(420px,50vh);overflow-y:auto;padding:8px}
+.cmdk .cgroup{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);padding:10px 12px 5px}
+.cmdk .citem{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:0;border-radius:10px;padding:10px 12px;color:var(--muted);font:inherit;font-size:.88rem;cursor:pointer}
+.cmdk .citem svg{width:16px;height:16px;flex:none;stroke-width:1.8}
+.cmdk .citem .cmain{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmdk .citem .cmain b{color:var(--text);font-weight:600}
+.cmdk .citem .csub{font-size:.72rem;color:var(--dim);flex:none;font-family:'JetBrains Mono',monospace}
+.cmdk .citem.sel{background:linear-gradient(90deg,rgba(55,214,230,.14),rgba(55,214,230,.03));color:var(--text);outline:1px solid rgba(55,214,230,.25)}
+.cmdk .citem.sel .csub{color:var(--a3)}
+.cmdk .cempty{padding:26px 12px;text-align:center;color:var(--dim);font-size:.84rem}
+.cmdk .cfoot{display:flex;gap:14px;padding:9px 16px;border-top:1px solid var(--line);font-size:.64rem;color:var(--dim);font-family:'JetBrains Mono',monospace}
+.cmdk .cfoot b{color:var(--muted);font-weight:600}
+.cmdkbtn{display:flex;align-items:center;gap:7px;font:inherit;font-weight:600;font-size:.78rem;cursor:pointer;color:#9fb0c9;border:1px solid rgba(120,160,235,.22);background:rgba(255,255,255,.03);border-radius:10px;padding:8px 13px;white-space:nowrap}
+.cmdkbtn:hover{color:var(--a3);border-color:rgba(55,214,230,.4)}
+.cmdkbtn kbd{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--dim);border:1px solid var(--line2);border-radius:4px;padding:1px 5px}
+/* keyboard focus ring on job rows */
+.jrow.kfocus,.dtable tr.kfocus td{background:rgba(55,214,230,.07)}
+.jrow.kfocus{outline:2px solid rgba(55,214,230,.45);outline-offset:-2px}
+.dtable tr.kfocus{outline:2px solid rgba(55,214,230,.45);outline-offset:-2px}
 /* share modal */
 .sharecard{padding:24px}
 .sharecard .stag{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--a3);font-weight:700}
@@ -1108,6 +1129,9 @@ let track = 'fulltime';     // fulltime | intern
 let query = '';
 let companyFilter = '';     // click a bar → filter to this company
 let favOnly = false;        // Favorites filter
+let expFilter = '';         // '' | early | mid | senior — real title-based seniority filter
+let salFilter = 0;          // minimum salary floor (0 = any) — real salaryValue() filter
+let sortMode = 'match';     // match | salary | newest — Jobs view sort
 let showArchived = false;   // include roles ≥90 days (archived)
 let dataFallback = false;   // live table empty → showing sample roles
 let jobsShown = 30;         // 30 roles per page; "See more jobs" reveals the next 30
@@ -1737,6 +1761,33 @@ const ICONS={
   search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
 };
 function statIcon(k,c){ return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]||ICONS.jobs}</svg>`; }
+/* chrome icons — replaces emoji in panel headers/buttons for a consistent instrument feel */
+const CICONS={
+  news:'<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 8h3v9a2 2 0 0 1-2 2"/><path d="M7 9h7M7 12h7M7 15h4"/>',
+  climate:'<path d="M10 4a2 2 0 0 1 4 0v9a4 4 0 1 1-4 0z"/><path d="M12 8v8"/><circle cx="12" cy="17" r="1.6"/>',
+  home:'<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+  planet:'<circle cx="12" cy="12" r="4.2"/><ellipse cx="12" cy="12" rx="10" ry="3.4" transform="rotate(-18 12 12)"/>',
+  compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5 13.5 13.5 8.5 15.5 10.5 10.5z"/>',
+  budget:'<path d="M12 2v20M17 6H9.8a3.3 3.3 0 0 0 0 6.6h4.4a3.3 3.3 0 0 1 0 6.6H6"/>',
+  radar:'<path d="M12 12 18.4 7.4"/><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.8"/><path d="M12 3a9 9 0 0 1 8.2 5.3"/>',
+  trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  culture:'<path d="M8 21V8a4 4 0 0 1 8 0v13"/><path d="M4 21h16"/><path d="M8 12h8"/><circle cx="12" cy="4" r="1.4"/>',
+  sat:'<rect x="9" y="9" width="6" height="6" rx="1"/><path d="M2.5 9 7 4.5M17 19.5 21.5 15M4 13.5 10.5 20M13.5 3.5 20 10"/><path d="M12 15v4"/>',
+  chartbar:'<path d="M4 20V10M9 20V4M14 20v-7M19 20V8"/>',
+  rocket:'<path d="M12 2c3 2 5 6 5 11l-2 3H9l-2-3c0-5 2-9 5-11z"/><circle cx="12" cy="9" r="2"/><path d="M7 15l-3 4 4-1M17 15l3 4-4-1M10 20c0 2 2 3 2 3s2-1 2-3"/>',
+  write:'<path d="M4 20h16"/><path d="M14 4l4 4L8 18l-5 1 1-5z"/>',
+  link:'<path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1.5 1.5"/><path d="M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1.5-1.5"/>',
+  grad:'<path d="M2 8.5 12 4l10 4.5-10 4.5-10-4.5Z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>',
+  wrench:'<path d="M14.5 6.5a4 4 0 0 0-5.4 5.1L3 17.7V21h3.3l6.1-6.1a4 4 0 0 0 5.1-5.4L14.3 12.7l-3-3z"/>',
+  laptop:'<rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/>',
+  eye:'<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/>',
+  fire:'<path d="M12 3c1 4 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 2 2 2 0 0-2 0-3 0-5z"/>',
+  doc:'<path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4"/><path d="M9 12h6M9 16h6"/>',
+  luggage:'<rect x="6" y="7" width="12" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M9 11v6M15 11v6"/>',
+  salute:'<circle cx="12" cy="7" r="3.4"/><path d="M5 21c1-4 4-6 7-6s6 2 7 6"/><path d="M15.5 4.5 19 2"/>',
+  megaphone:'<path d="M3 10v4l11 4V6z"/><path d="M14 7.5c2.5.6 4 2.3 4 4.5s-1.5 3.9-4 4.5"/><path d="M6 14v5h3v-4"/>',
+};
+function cic(k,size,color){ return `<svg viewBox="0 0 24 24" width="${size||16}" height="${size||16}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;vertical-align:-2px;color:${color||'var(--a3)'}">${CICONS[k]||ICONS.jobs}</svg>`; }
 
 /* =========================================================================
    DATA SOURCE
@@ -1920,6 +1971,7 @@ const NAVICON={
   map:'<path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.5"/>',
   rocket:'<path d="M12 2c3 2 5 6 5 11l-2 3H9l-2-3c0-5 2-9 5-11z"/><circle cx="12" cy="9" r="2"/><path d="M7 15l-3 4 4-1M17 15l3 4-4-1M10 20c0 2 2 3 2 3s2-1 2-3"/>',
   radar:'<path d="M12 12 L19 7"/><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 3a9 9 0 0 1 8 5"/>',
+  eye:'<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/>',
   gear:'<circle cx="12" cy="12" r="3.4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
 };
 /* ===== Official Orbital wordmark logo — the WORD designed into the mark =====
@@ -1984,9 +2036,6 @@ function heroFX(){
     <div class="haurora"></div>
     <div class="hnebula"></div>
     <div class="hgrid"></div>
-    <div class="hbeam"></div>
-    <div class="comet"></div>
-    <div class="shoot s1"></div><div class="shoot s2"></div><div class="shoot s3"></div>
     <div class="streak"><svg class="sat" viewBox="0 0 100 100" aria-hidden="true">
       <defs>
         <linearGradient id="satPanel" x1="0" y1="0" x2="1" y2="1">
@@ -2117,6 +2166,14 @@ function wireTiltParallax(){
     document.addEventListener('touchend',grant,{once:true});
   }
 }
+function hudSpark(live){
+  // Real signal, not decoration: postings that appeared in each of the last 14 days.
+  const buckets=new Array(14).fill(0);
+  live.forEach(j=>{ const d=daysOnMarket(j); if(d>=0&&d<14) buckets[13-d]++; });
+  const max=Math.max(1,...buckets);
+  const bars=buckets.map(v=>`<i style="height:${Math.max(8,Math.round(v/max*100))}%;opacity:${v?1:.3}" title="${v} posted"></i>`).join('');
+  return `<div class="hud-spark" title="New postings per day · last 14 days">${bars}<span class="hs-lbl">14-DAY FEED</span></div>`;
+}
 function heroHUD(){
   const R=REGIONS[region]||REGIONS.global;
   const live=jobsForRegion();
@@ -2131,7 +2188,7 @@ function heroHUD(){
       <div class="hud-row"><span class="hk">◇ COMPANIES</span><span class="hv">${co}</span></div>
       <div class="hud-row"><span class="hk">◇ HOT (≤7d)</span><span class="hv hot">${hot}</span></div>
       <div class="hud-row"><span class="hk">◇ FEED</span><span class="hv ${dataMode==='live'?'ok':'amber'}">${dataMode==='live'?'LIVE':'SAMPLE'}</span></div>
-      <div class="hud-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      ${hudSpark(live)}
     </div>
   </div>`;
 }
@@ -2167,10 +2224,20 @@ function filterBar(){
   return `<div class="filters">
     <div class="fsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ICONS.search}</svg>
       <input id="search" placeholder="Search jobs, candidates, companies, skills…" value="${esc(query)}"/></div>
-    <div class="fsel"><label>Location</label><select><option>All ${esc(REGIONS[region].short)}</option></select></div>
-    <div class="fsel"><label>Job Category</label><select><option>All Categories</option><option>Engineering</option><option>Data</option><option>Product</option></select></div>
-    <div class="fsel"><label>Experience</label><select><option>All Levels</option><option>Internship</option><option>Mid</option><option>Senior</option></select></div>
-    <div class="fsel"><label>Salary</label><select><option>Any</option><option>$100K+</option><option>$150K+</option><option>$200K+</option></select></div>
+    <div class="fsel"><label>Experience</label><select id="fExp">
+      <option value="" ${expFilter===''?'selected':''}>All levels</option>
+      <option value="early" ${expFilter==='early'?'selected':''}>Early-career</option>
+      <option value="mid" ${expFilter==='mid'?'selected':''}>Mid</option>
+      <option value="senior" ${expFilter==='senior'?'selected':''}>Senior / Lead</option></select></div>
+    <div class="fsel"><label>Min salary</label><select id="fSal">
+      <option value="0" ${salFilter===0?'selected':''}>Any</option>
+      <option value="100000" ${salFilter===100000?'selected':''}>$100K+</option>
+      <option value="150000" ${salFilter===150000?'selected':''}>$150K+</option>
+      <option value="200000" ${salFilter===200000?'selected':''}>$200K+</option></select></div>
+    <div class="fsel"><label>Sort by</label><select id="fSort">
+      <option value="match" ${sortMode==='match'?'selected':''}>Best match</option>
+      <option value="salary" ${sortMode==='salary'?'selected':''}>Highest salary</option>
+      <option value="newest" ${sortMode==='newest'?'selected':''}>Newest first</option></select></div>
     <div class="toggle2"><button class="${track==='fulltime'?'on':''}" data-track="fulltime">Full-time</button><button class="${track==='intern'?'on intern':''}" data-track="intern">Internship</button><button class="${track==='earlycareer'?'on intern':''}" data-track="earlycareer">🎓 Early-Career</button></div>
     <button class="fbtn" id="filtersToggle" title="Show/hide filters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filters</button>
   </div>`;
@@ -2213,6 +2280,7 @@ function locBar(){
       <div class="live" style="display:flex;align-items:center;gap:7px;font-size:.74rem;color:#7385a0;font-family:'JetBrains Mono';white-space:nowrap"><span class="led"></span>${dataMode==='live'?'LIVE · Supabase':'SAMPLE FEED'}</div>
       <div class="clockmini" id="clockMini" style="font-family:'JetBrains Mono';font-size:.74rem;color:#7385a0;white-space:nowrap"></div>
       ${lastSyncLabel()?`<div style="font-family:'JetBrains Mono';font-size:.72rem;color:#5d728f;white-space:nowrap">⟳ Last sync: ${lastSyncLabel()}</div>`:''}
+      <button class="cmdkbtn" id="cmdkBtn" title="Command Deck — jump anywhere, search roles, run actions"><svg viewBox="0 0 24 24" width="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-5-6-5"/><path d="M12 19h8"/></svg><span>Command</span><kbd>⌘K</kbd></button>
       <button class="refreshbtn" id="manualRefresh" title="Refresh roles now (auto-scrapes daily at 6:00 AM CST)" style="display:flex;align-items:center;gap:7px;font:inherit;font-weight:600;font-size:.78rem;cursor:pointer;color:#37d6e6;border:1px solid rgba(55,214,230,.4);background:rgba(55,214,230,.1);border-radius:10px;padding:8px 13px"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg><span>Refresh</span></button>
     </div>
   </div>`;
@@ -2275,9 +2343,9 @@ function newsPanel(limit){
     : !items.length ? `<p class="subtle" style="padding:14px 4px">No articles returned.</p>`
     : `<div class="newslist">${items.map(n=>`<a class="newsrow ${n.hot?'hot':''}" href="${n.url}" target="_blank" rel="noreferrer">
       <div class="nthumb" style="background-image:url('${n.img}')"></div>
-      <div><div class="ntag">${n.hot?'🔥 ':''}${esc(n.tag)}</div><div class="ntitle">${esc(n.title)}</div>
+      <div><div class="ntag">${n.hot?'<b style="color:var(--hot)">▲ </b>':''}${esc(n.tag)}</div><div class="ntitle">${esc(n.title)}</div>
         <div class="nmeta">${esc(n.src)} · ${esc(n.time)}</div></div></a>`).join('')}</div>`;
-  return `<div class="panel"><div class="ph"><h3>📰 Hottest in the Space Industry</h3><span class="va" id="newsRefresh" style="cursor:pointer">↻ refresh</span></div><div class="pb">${body}</div></div>`;
+  return `<div class="panel"><div class="ph"><h3>${cic("news")} Hottest in the Space Industry</h3><span class="va" id="newsRefresh" style="cursor:pointer">↻ refresh</span></div><div class="pb">${body}</div></div>`;
 }
 
 /* ===== Nashville vs target weather compare ===== */
@@ -2290,7 +2358,7 @@ function wxComparePanel(){
     if(w.error) return `<div class="wxc${label==='home'?' home':''}"><div class="place">${w.place}</div><div class="ic">⚠️</div><div class="cd" style="color:var(--dim)">Live weather unavailable</div></div>`;
     return `<div class="wxc${label==='home'?' home':''}"><div class="place">${w.place}${label==='home'?' · home':(region==='global'?'':' · target')}</div><div class="ic">${w.icon}</div><div class="tp">${w.temp}</div><div class="cd">${w.cond}</div><div class="hl">H ${w.hi} · L ${w.lo}</div></div>`;
   };
-  return `<div class="panel"><div class="ph"><h3>🌡️ Climate · Home vs Target</h3><span class="subtle" style="font-size:.7rem">live · Open-Meteo</span></div><div class="pb">
+  return `<div class="panel"><div class="ph"><h3>${cic("climate")} Climate · Home vs Target</h3><span class="subtle" style="font-size:.7rem">live · Open-Meteo</span></div><div class="pb">
     <div class="wxcompare">
       ${card(h,'home')}
       <div class="wxvs">VS</div>
@@ -2303,7 +2371,7 @@ function zillowFeaturePanel(){
   if(region==='global') return '';
   const city = (REGIONS[region]||{}).city || REGIONS[region].short;
   const q = encodeURIComponent(city);
-  return `<div class="panel"><div class="ph"><h3>🏡 Housing Search</h3><span class="subtle" style="font-size:.7rem">real listings · opens in a new tab</span></div><div class="pb">
+  return `<div class="panel"><div class="ph"><h3>${cic("home")} Housing Search</h3><span class="subtle" style="font-size:.7rem">real listings · opens in a new tab</span></div><div class="pb">
     <p class="subtle" style="margin:0 0 12px">There's no live listing data wired in yet, so rather than show a fake sample property, here are direct links to real, current listings in ${esc(city)}:</p>
     <div style="display:flex;flex-wrap:wrap;gap:9px">
       <a class="dbtn" target="_blank" rel="noreferrer" href="https://www.zillow.com/homes/${q}_rb/">Zillow — ${esc(city)} ↗</a>
@@ -2642,7 +2710,7 @@ function radialCompanyRing(title,data,clearBtn){
 
 /* planet guide */
 function planetGuidePanel(){
-  return `<div class="panel"><div class="ph"><h3>🪐 Planet Ranking Guide</h3></div><div class="pb"><div class="prank">${PLANET_GUIDE.map(([n,t,d])=>`<div class="prow"><div class="pp">${planetRow(n)}</div><div class="pt"><b>${t}</b><span>${d}</span></div></div>`).join('')}</div></div></div>`;
+  return `<div class="panel"><div class="ph"><h3>${cic("planet")} Planet Ranking Guide</h3></div><div class="pb"><div class="prank">${PLANET_GUIDE.map(([n,t,d])=>`<div class="prow"><div class="pp">${planetRow(n)}</div><div class="pt"><b>${t}</b><span>${d}</span></div></div>`).join('')}</div></div></div>`;
 }
 
 /* skills */
@@ -2660,7 +2728,7 @@ function relocPanel(){
   const petColor = pet.status==='warn' ? 'var(--bad)' : pet.status==='check' ? 'var(--gold)' : 'var(--good)';
   const petIcon = pet.status==='warn' ? '⚠' : pet.status==='check' ? '⚑' : '✓';
   return `<div class="panel">
-    <div class="ph"><h3>🧭 Relocation Dossier</h3><span class="va">Nashville → ${esc(R.short)}</span></div>
+    <div class="ph"><h3>${cic("compass")} Relocation Dossier</h3><span class="va">Nashville → ${esc(R.short)}</span></div>
     <div class="reloc-hero" style="background-image:url('${r.photo}')"><div class="ov"></div><div class="nm"><b>${r.place}</b><span>from Nashville, TN · ${r.tag}</span></div></div>
     <div class="relsec"><h4>📋 Relocation Notes</h4><p>${esc(r.notes)}</p></div>
     ${r.fromNash?`<div class="relsec"><h4>📐 Relative to Nashville</h4><p>${esc(r.fromNash)}</p></div>`:''}
@@ -2689,7 +2757,7 @@ function relocPanel(){
 
 /* budget sandbox */
 function budgetPanel(){
-  return `<div class="panel budget"><div class="ph"><h3>💸 Budget Sandbox</h3><span class="va">Gross floor</span></div><div class="pb">
+  return `<div class="panel budget"><div class="ph"><h3>${cic("budget")} Budget Sandbox</h3><span class="va">Gross floor</span></div><div class="pb">
     <div class="slider"><label>Detached SFH Rent <b id="bRentV">$2,500</b></label><input type="range" id="bRent" min="1500" max="6000" step="50" value="2500"></div>
     <div class="slider"><label>Auto & Logistics <b id="bCarV">$600</b></label><input type="range" id="bCar" min="0" max="1500" step="25" value="600"></div>
     <div class="slider"><label>Capital Velocity (savings) <b id="bSaveV">$1,500</b></label><input type="range" id="bSave" min="0" max="4000" step="50" value="1500"></div>
@@ -2704,13 +2772,13 @@ function budgetPanel(){
 
 /* comms radar */
 function commsPanel(){
-  return `<div class="panel"><div class="ph"><h3>📡 Comms Radar</h3><span class="va">live</span></div><div class="pb">
+  return `<div class="panel"><div class="ph"><h3>${cic("radar")} Comms Radar</h3><span class="va">live</span></div><div class="pb">
     <ul class="bullets" style="gap:11px">${COMMS[region].map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div></div>`;
 }
 
 /* market momentum = trend chart + short narrative blurb */
 function momentumPanel(title){
-  return `<div class="panel"><div class="ph"><h3>📈 ${title||'Market Momentum'}</h3><span class="va">12-mo trend</span></div><div class="pb">
+  return `<div class="panel"><div class="ph"><h3>${cic("trend")} ${title||'Market Momentum'}</h3><span class="va">12-mo trend</span></div><div class="pb">
     <div class="chart-box sm"><canvas id="trendChart"></canvas></div>
     <p class="momentum-blurb">${esc(MARKET_BLURB[region]||MARKET_BLURB.global)}</p></div></div>`;
 }
@@ -2723,7 +2791,7 @@ function culturePanel(){
       <div class="cbody"><span class="ckind">${esc(b.kind)}</span><b class="ctitle">${esc(b.title)}</b><span class="csub">${esc(b.sub)}</span><span class="cmore">${b.url&&b.url!=='#'?'Open real site ↗':''}</span></div>
     </a>`).join('');
   const city = region==='global'?'Across the Network':REGIONS[region].short;
-  return `<div class="panel culturepanel"><div class="ph"><h3>🎉 City Culture · ${esc(city)}</h3><span class="subtle" style="font-size:.7rem">real sites · opens in a new tab</span></div>
+  return `<div class="panel culturepanel"><div class="ph"><h3>${cic("culture")} City Culture · ${esc(city)}</h3><span class="subtle" style="font-size:.7rem">real sites · opens in a new tab</span></div>
     <div class="pb"><div class="culture">${boxes}</div></div></div>`;
 }
 
@@ -2762,12 +2830,30 @@ function candidatePanel(compact){
    ========================================================================= */
 function viewHead(t,s,tag){ return `<div class="viewhead"><div>${tag?`<div class="vtag">${tag}</div>`:''}<div class="vt">${t}</div><div class="vs">${s}</div></div></div>`; }
 function emptyState(){ return `<div class="empty"><div class="big">Nothing here yet</div><div>Adjust filters, region, or the match floor in settings.</div></div>`; }
-function guestStrip(){ return role==='owner'?'':`<div class="guestbar">👁 <b>Guest mode</b> — read-only. Saving, data entry &amp; settings are locked. <span class="gswitch" id="guestSwitch">Sign in as owner</span></div>`; }
+function guestStrip(){ return role==='owner'?'':`<div class="guestbar">${cic("eye",14)} <b>Guest mode</b> — read-only. Saving, data entry &amp; settings are locked. <span class="gswitch" id="guestSwitch">Sign in as owner</span></div>`; }
 function deployStrip(){
   if(role!=='owner' || dataMode==='live') return '';
   return `<div class="deploybar"><div class="dt"><b>⚡ Quick connect &amp; deploy</b><span>You're on bundled sample data. Add your Supabase URL + key and pick a data source to go live — about 30 seconds.</span></div><button id="deployBtn">Connect database →</button></div>`;
 }
-function sortJobs(list){ return [...list].sort((a,b)=>(b.match||0)-(a.match||0)); }
+function jobSeniorityBand(j){
+  const t=(j.title||'');
+  if(j.type==='Internship' || isEarlyCareer(j)) return 'early';
+  if(/\b(senior|sr\.?|staff|principal|lead|director|head of|manager)\b/i.test(t)) return 'senior';
+  return 'mid';
+}
+function applyJobFilters(list){
+  return list.filter(j=>{
+    if(expFilter && jobSeniorityBand(j)!==expFilter) return false;
+    if(salFilter && salaryValue(j) < salFilter) return false;
+    return true;
+  });
+}
+function sortJobs(list){
+  const l=[...list];
+  if(sortMode==='salary') return l.sort((a,b)=>salaryValue(b)-salaryValue(a));
+  if(sortMode==='newest') return l.sort((a,b)=>daysOnMarket(a)-daysOnMarket(b));
+  return l.sort((a,b)=>(b.match||0)-(a.match||0));
+}
 
 /* ===== DAILY DRILL SERGEANT — rotates with the 6am scraper run ===== */
 const PUSH = [
@@ -2802,7 +2888,7 @@ function pushStrip(){
   if(role!=='owner') return '';
   const p=dailyPush();
   return `<div class="pushbar" id="pushBar">
-    <div class="pushic">🫡</div>
+    <div class="pushic">${cic("salute",20)}</div>
     <div class="pusht"><b style="color:#37d6e6">${esc(p[0])}</b><span style="color:#37d6e6">${esc(p[1])}</span></div>
     <div class="pushtag">DAILY ORDERS · resets 6:00 AM</div>
   </div>`;
@@ -2826,7 +2912,7 @@ function dashboardView(){
           ${commsPanel()}
         </div>
       </div>
-      <div class="fullwidth">${jobListPanel(jobs,'🔥 Hot Jobs · All Regions',{paginate:true,va:'Open Jobs'})}</div>`;
+      <div class="fullwidth">${jobListPanel(jobs,'Hot Jobs · All Regions',{paginate:true,va:'Open Jobs'})}</div>`;
   }
   return `${guestStrip()}${deployStrip()}${pushStrip()}
     ${statCards()}
@@ -2846,7 +2932,7 @@ function dashboardView(){
         ${commsPanel()}
       </div>
     </div>
-    <div class="fullwidth" id="rolesAnchor">${jobListPanel(jobs,`🔥 Open Roles in ${REGIONS[region].short}`,{paginate:true,va:'Open Jobs'})}</div>`;
+    <div class="fullwidth" id="rolesAnchor">${jobListPanel(jobs,`Open Roles in ${REGIONS[region].short}`,{paginate:true,va:'Open Jobs'})}</div>`;
 }
 
 function jobTable(jobs){
@@ -2864,7 +2950,7 @@ function jobTable(jobs){
   </tr>`).join('')}</tbody></table></div>`;
 }
 function jobsView(){
-  let jobs=sortJobs(jobsForRegion());
+  let jobs=sortJobs(applyJobFilters(jobsForRegion()));
   if(favOnly) jobs=jobs.filter(j=>savedJobs.has(j.id));
   const total=jobs.length;
   if(jobsShown>total) jobsShown=Math.max(PAGE_SIZE,Math.ceil(total/PAGE_SIZE)*PAGE_SIZE);
@@ -2889,7 +2975,7 @@ function featuredInternshipBanner(jobs){
     const sig=internshipSignals(j);
     const left=Math.max(0,45-daysOnMarket(j));
     return `<button class="featslide" data-dossier="${j.id}" style="animation-delay:${i*5}s">
-      <span class="featbadge">🚀 Featured Internship</span>
+      <span class="featbadge">${cic("rocket",12)} Featured Internship</span>
       <span class="feattitle">${esc(j.title)}</span>
       <span class="featco">${esc(j.company)} · ${esc((REGIONS[j.region]||REGIONS[region]).short)}</span>
       <span class="featmeta">
@@ -2919,7 +3005,7 @@ function internshipsView(){
   const favPill=`<button class="fbtn" id="favPill" style="${favOnly?'border-color:var(--gold);color:var(--gold);background:rgba(245,197,96,.08)':''}">★ Favorites${savedJobs.size?` (${savedJobs.size})`:''}</button>`;
   return `${guestStrip()}${viewHead('Internships','Every real internship posting, with citizenship/clearance requirements, hardware-vs-software track, and estimated apply-by dates · '+jobs.length+' results','Early-Career Radar')}
     ${featuredInternshipBanner(jobs)}
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 4px">${statChip('No citizenship req.',jobs.length-itarCount,'var(--good)')}${statChip('ITAR / citizenship req.',itarCount,'var(--bad)')}${statChip('Clearance req.',clearCount,'var(--gold)')}${statChip('🔧 Hardware',hwCount,'var(--a3)')}${statChip('💻 Software',swCount,'var(--a2)')}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 4px">${statChip('No citizenship req.',jobs.length-itarCount,'var(--good)')}${statChip('ITAR / citizenship req.',itarCount,'var(--bad)')}${statChip('Clearance req.',clearCount,'var(--gold)')}${statChip('Hardware',hwCount,'var(--a3)')}${statChip('Software',swCount,'var(--a2)')}</div>
     <div style="display:flex;gap:8px;margin:2px 0 -6px">${favPill}</div>
     ${panelHtml}`;
 }
@@ -2944,14 +3030,14 @@ function candidatesView(){
       <div class="cs"><h4>Core Skills</h4><div class="chips">${OWNER.skills.map(s=>`<span class="skchip">${esc(s)}</span>`).join('')}</div></div>
       <div class="cs"><h4>Profile Summary</h4><p style="font-size:.86rem;color:#c8d6ea;line-height:1.6;margin:0">${esc(OWNER.blurb)}</p></div>
       <div class="cs" style="border-bottom:0">
-        <h4>🛰 Résumé</h4>
+        <h4>${cic("sat",14)} Résumé</h4>
         <p class="subtle" style="margin:0 0 9px">Your active résumé powers matching + every role's "Convert résumé." Upload a fresh PDF anytime your skills level up.</p>
         <label class="upload" id="resumeDropP"><input type="file" id="resumeFileP" accept="application/pdf" hidden>
-          <span class="upic">🚀</span>
+          <span class="upic">${cic("rocket",22)}</span>
           <span class="uptext" id="resumeNameP">${esc('Current: '+resumeName())}</span>
         </label>
         <div id="resumeActionsP" style="display:flex;gap:8px;margin-top:9px">
-          <button class="dbtn" id="resumeViewP">📄 View current</button>
+          <button class="dbtn" id="resumeViewP">${cic("doc",14)} View current</button>
           <button class="dbtn" id="resumeClearP">↺ Reset to default</button>
         </div>
         <div class="savemsg" id="resumeMsgP"></div>
@@ -2973,7 +3059,7 @@ function pipelineView(){
     ${arr.map(card).join('')}
     ${!arr.length?'<div class="subtle" style="padding:8px;font-size:.78rem">Empty</div>':''}</div>`;
   return `${guestStrip()}${viewHead('My Applications','Tracked as a Systems-Engineering V-Model — requirements down the left, verification up the right','V-Model')}
-    <div class="panel"><div class="ph"><h3>🛰️ Application V-Model</h3><span class="va">left = define · right = verify</span></div>
+    <div class="panel"><div class="ph"><h3>${cic("sat")} Application V-Model</h3><span class="va">left = define · right = verify</span></div>
       <div class="pb"><div class="vmodel-legend">Requirement Analysis → S&OP / Concept Design → Component Verification (screens) → Mission Validation (offer) — each role advances down then up the V.</div>
       <div class="kanban">
         ${col('① Requirement Analysis','Interested · fit the spec',saved)}
@@ -3016,7 +3102,7 @@ function skillRankPanel(){
   }).join('');
   const covered = market.filter(d=>{const nl=d[0].toLowerCase();return bank.some(b=>b.includes(nl)||nl.includes(b)||nl.split(' ')[0]===b.split(' ')[0]);}).length;
   const pct = Math.round(covered/market.length*100);
-  return `<div class="panel"><div class="ph"><h3>📊 In-Demand Skills vs. Your Profile</h3><span class="va" style="color:${matchColor(pct)}">${pct}% coverage</span></div>
+  return `<div class="panel"><div class="ph"><h3>${cic("chartbar")} In-Demand Skills vs. Your Profile</h3><span class="va" style="color:${matchColor(pct)}">${pct}% coverage</span></div>
     <div class="pb">
       <p class="subtle" style="margin:0 0 12px">The market's most-wanted skills in ${esc(REGIONS[region].short)}, side by side with where they sit in your profile. You cover <b style="color:${matchColor(pct)}">${covered} of the top ${market.length}</b> — lean into those, and weave the gaps into your resume.</p>
       <div class="srow shead"><div class="srank">Rank</div><div class="sname">Skill</div><div class="stk">Market demand</div><div class="sdem"></div><div class="syou">Your standing</div></div>
@@ -3045,11 +3131,11 @@ function strategyView(){
     ['Target applications',5,3],['Warm outreaches',5,2],['Follow-ups sent',4,4],['Networking touches',3,1],
   ];
   return `${guestStrip()}${viewHead('Strategy','Your get-hired playbook + live hiring-process tracker','Mission Plan')}
-    <div class="panel"><div class="ph"><h3>🚀 The Get-Hired Playbook</h3><span class="va">your edge</span></div>
+    <div class="panel"><div class="ph"><h3>${cic("rocket")} The Get-Hired Playbook</h3><span class="va">your edge</span></div>
       <div class="pb"><div class="playgrid">${plays.map(p=>`<div class="playcard"><div class="pic">${p.ic}</div><b>${esc(p.t)}</b><span>${esc(p.d)}</span></div>`).join('')}</div></div></div>
-    <div class="panel"><div class="ph"><h3>🛰️ Hiring Process · 6 Phases</h3><span class="va">where every role stands</span></div>
+    <div class="panel"><div class="ph"><h3>${cic("sat")} Hiring Process · 6 Phases</h3><span class="va">where every role stands</span></div>
       <div class="pb"><div class="phaseline">${phases.map(p=>`<div class="phase ${p.done?'done':''}"><div class="pnum">${p.done?'✓':p.n}</div><div class="pbody"><b>${esc(p.t)}</b><span>${esc(p.d)}</span></div></div>`).join('')}</div></div></div>
-    <div class="panel"><div class="ph"><h3>📈 This Week's Mission Targets</h3><span class="va">stay relentless</span></div>
+    <div class="panel"><div class="ph"><h3>${cic("trend")} This Week's Mission Targets</h3><span class="va">stay relentless</span></div>
       <div class="pb">${weekly.map(([t,goal,done])=>`<div class="wkrow"><span class="wkn">${esc(t)}</span><div class="wktk"><i style="width:${Math.round(done/goal*100)}%;background:${done>=goal?'var(--good)':'var(--a3)'}"></i></div><span class="wkc">${done}/${goal}</span></div>`).join('')}
         <p class="subtle" style="margin:12px 0 0">Hit these every week and momentum compounds. A scrub waits for the perfect role — you manufacture luck through volume + precision.</p></div></div>`;
 }
@@ -3065,14 +3151,14 @@ function outreachView(){
     ['Resume (PDF)','#','📄'],['LinkedIn','https://www.linkedin.com/','in'],['S&OP case study','#','📊'],['Salesforce architecture deck','#','🗂'],
   ];
   return `${guestStrip()}${viewHead('Outreach','Turn a saved role into a warm conversation','Channels')}
-    <div class="panel"><div class="ph"><h3>🛰️ Multi-Channel Staging Dock</h3><span class="va">work top-down</span></div>
+    <div class="panel"><div class="ph"><h3>${cic("sat")} Multi-Channel Staging Dock</h3><span class="va">work top-down</span></div>
       <div class="pb"><div class="dockrow">${channels.map((c,i)=>`<div class="dockcard" style="--dc:${c.color}"><div class="dn">${i+1}</div><div class="di">${c.ic}</div><b>${esc(c.k)}</b><span>${esc(c.tip)}</span></div>${i<channels.length-1?'<div class="dockarrow">→</div>':''}`).join('')}</div>
         <p class="subtle" style="margin:12px 2px 0">Always try left-to-right: a warm alumni intro converts far better than a cold recruiter ping.</p></div></div>
     ${alumniPanel()}
-    <div class="panel"><div class="ph"><h3>✍️ Pain-Letter Generator</h3><span class="va" id="copyPain">Copy</span></div>
+    <div class="panel"><div class="ph"><h3>${cic("write")} Pain-Letter Generator</h3><span class="va" id="copyPain">Copy</span></div>
       <div class="pb"><p class="subtle" style="margin:0 0 10px">A problem-first opener that leads with the company's pain, then proves you've solved it. Swap {COMPANY}/{ROLE}/{NAME} and send.</p>
         <textarea id="painText" class="painbox" readonly>${esc(painLetter)}</textarea></div></div>
-    <div class="panel"><div class="ph"><h3>🔗 Portfolio Quick-Links</h3></div>
+    <div class="panel"><div class="ph"><h3>${cic("link")} Portfolio Quick-Links</h3></div>
       <div class="pb"><div class="linkbtns">${portfolio.map(p=>`<a href="${p[1]}" target="_blank">${p[2]} ${esc(p[0])}</a>`).join('')}</div>
         <p class="subtle" style="margin:10px 2px 0">Drop these into any message in two clicks. ${role==='owner'?'':'(Read-only in guest mode.)'}</p></div></div>`;
 }
@@ -3108,18 +3194,18 @@ function alumniPanel(){
         <b style="color:#e8eef7">${esc(a.name)}</b> <span class="subtle">· ${esc(a.relationship)}</span>
         <div class="subtle" style="font-size:.8rem">${esc(a.title)}${a.title?' at ':''}<b style="color:var(--a3)">${esc(a.company)}</b></div>
       </div>
-      ${a.linkedinUrl?`<a href="${esc(a.linkedinUrl)}" target="_blank" rel="noreferrer" class="minibtn" style="text-decoration:none">🔗 Profile</a>`:''}
+      ${a.linkedinUrl?`<a href="${esc(a.linkedinUrl)}" target="_blank" rel="noreferrer" class="minibtn" style="text-decoration:none">${cic("link",12)} Profile</a>`:''}
       <select data-alumni-status="${a.id}" style="background:rgba(5,8,13,.6);border:1px solid var(--line);border-radius:8px;color:${statusColor[a.status]||'var(--muted)'};font:inherit;font-size:.78rem;font-weight:600;padding:6px 9px">
         ${ALUMNI_STATUSES.map(s=>`<option value="${s}" ${s===a.status?'selected':''}>${s}</option>`).join('')}
       </select>
       <button class="minibtn" data-alumni-del="${a.id}" title="Remove" style="color:var(--a4)">✕</button>
     </div>`).join('');
-  return `<div class="panel"><div class="ph"><h3>🎓 Alumni Network</h3><span class="va">${list.length} contact${list.length===1?'':'s'} logged</span></div>
+  return `<div class="panel"><div class="ph"><h3>${cic("grad")} Alumni Network</h3><span class="va">${list.length} contact${list.length===1?'':'s'} logged</span></div>
     <div class="pb">
       <p class="subtle" style="margin:0 0 12px">Log alumni you find at target companies here — every contact automatically surfaces on that company's job dossiers. Can't scrape LinkedIn directly, but the search link below finds real Embry-Riddle alumni at any company in one click.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
         <input id="alumniCoSearch" placeholder="Company to search (e.g. Rocket Lab)" style="flex:1;min-width:180px;font:inherit;font-size:.85rem;color:var(--text);background:rgba(5,8,13,.6);border:1px solid var(--line);border-radius:10px;padding:9px 12px">
-        <button class="dbtn primary" id="alumniSearchBtn" style="flex:none">🔎 Find alumni →</button>
+        <button class="dbtn primary" id="alumniSearchBtn" style="flex:none">Find alumni →</button>
       </div>
       ${role==='owner'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
         <input id="alName" placeholder="Name" style="font:inherit;font-size:.85rem;color:var(--text);background:rgba(5,8,13,.6);border:1px solid var(--line);border-radius:10px;padding:9px 12px">
@@ -3144,7 +3230,7 @@ function eventsView(){
     {t:'Space Development Agency — News & Events', s:'sda.mil', why:'Government contract awards + related industry days — hiring waves often follow.', url:'https://www.sda.mil/news/'},
   ];
   return `${guestStrip()}${viewHead('Event Radar','Real conference &amp; hiring-event listings for the space industry','Tactical')}
-    <div class="panel"><div class="ph"><h3>📡 Real Event &amp; Conference Listings</h3><span class="va">opens in a new tab</span></div>
+    <div class="panel"><div class="ph"><h3>${cic("radar")} Real Event &amp; Conference Listings</h3><span class="va">opens in a new tab</span></div>
       <div class="pb"><div style="display:flex;flex-direction:column;gap:10px">${links.map(l=>`
         <a href="${l.url}" target="_blank" rel="noreferrer" style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 16px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:inherit;background:rgba(255,255,255,.02)">
           <span><span style="display:block;font-weight:600;font-size:.92rem;color:#e8eef7">${esc(l.t)}</span><span style="font-size:.78rem;color:var(--dim)">${esc(l.s)} · ${esc(l.why)}</span></span>
@@ -3162,13 +3248,13 @@ function alertsView(){
     const relocN=rows.filter(j=>j.reloc && j.reloc!=='—').length;
     const floorN=[...savedJobs].map(findJobById).filter(j=>j && salaryValue(j)>=targetSalary()).length;
     const internN=rows.filter(j=>j.type==='Internship').length;
-    if(hotN) AL.push({ic:'🔥',c:'var(--hot)',b:hotN+' hot role'+(hotN===1?'':'s')+' in '+REGIONS[region].short,s:'Posted in the last 7 days'});
-    if(relocN) AL.push({ic:'🧳',c:'var(--gold)',b:relocN+' relocation-sponsored role'+(relocN===1?'':'s'),s:'Full package or housing mentioned in the posting'});
-    if(floorN) AL.push({ic:'💰',c:'var(--good)',b:floorN+' saved role'+(floorN===1?'':'s')+' clear your salary floor',s:'Above your $'+(targetSalary()/1000).toFixed(0)+'K target'});
-    if(internN) AL.push({ic:'🎓',c:'var(--a3)',b:internN+' internship'+(internN===1?'':'s')+' currently open',s:'See the Internships tab for deadlines'});
-    if(!AL.length) AL.push({ic:'📡',c:'var(--dim)',b:'No active signals right now',s:'Check back after the next scrape, or widen your match floor'});
+    if(hotN) AL.push({ic:cic('fire',16,'var(--hot)'),c:'var(--hot)',b:hotN+' hot role'+(hotN===1?'':'s')+' in '+REGIONS[region].short,s:'Posted in the last 7 days'});
+    if(relocN) AL.push({ic:cic('luggage',16,'var(--gold)'),c:'var(--gold)',b:relocN+' relocation-sponsored role'+(relocN===1?'':'s'),s:'Full package or housing mentioned in the posting'});
+    if(floorN) AL.push({ic:cic('budget',16,'var(--good)'),c:'var(--good)',b:floorN+' saved role'+(floorN===1?'':'s')+' clear your salary floor',s:'Above your $'+(targetSalary()/1000).toFixed(0)+'K target'});
+    if(internN) AL.push({ic:cic('grad',16),c:'var(--a3)',b:internN+' internship'+(internN===1?'':'s')+' currently open',s:'See the Internships tab for deadlines'});
+    if(!AL.length) AL.push({ic:cic('radar',16,'var(--dim)'),c:'var(--dim)',b:'No active signals right now',s:'Check back after the next scrape, or widen your match floor'});
   } else {
-    AL=[{ic:'📡',c:'var(--dim)',b:'Connect Supabase to see real alerts',s:'Alerts are derived from your live job data'}];
+    AL=[{ic:cic('radar',16,'var(--dim)'),c:'var(--dim)',b:'Connect Supabase to see real alerts',s:'Alerts are derived from your live job data'}];
   }
   return `${guestStrip()}${viewHead('Alerts','Signals worth acting on','Notifications')}
     <div class="panel"><div class="pb"><div class="alertlist">${AL.map(a=>`<div class="alertrow" style="border-left-color:${a.c}"><div class="aic" style="background:${a.c}22">${a.ic}</div><div><b>${esc(a.b)}</b><span>${esc(a.s)}</span></div></div>`).join('')}</div></div></div>`;
@@ -3215,7 +3301,7 @@ function earlyCareerWidget(){
       <span style="flex:none;text-align:right;white-space:nowrap;padding-left:14px;border-left:1px solid var(--line)"><span style="display:block;font-size:.74rem;color:${urgent?'var(--a4)':'var(--a3)'};font-weight:700">${left===0?'Closing':'~'+left+'d left'}</span><span style="font-size:.68rem;color:var(--dim)">est. by ${close}</span></span>
     </button>`;
   }).join('');
-  return `<div class="panel" style="margin-bottom:18px"><div class="ph"><h3 style="display:flex;align-items:center;gap:8px">🎓 Early-Career &amp; Internship Radar</h3><span class="subtle" style="font-size:.72rem">est. deadlines · ${items.length} open</span></div>
+  return `<div class="panel" style="margin-bottom:18px"><div class="ph"><h3 style="display:flex;align-items:center;gap:8px">${cic("grad")} Early-Career &amp; Internship Radar</h3><span class="subtle" style="font-size:.72rem">est. deadlines · ${items.length} open</span></div>
     <div class="pb" style="display:flex;flex-direction:column;gap:9px">${card}</div></div>`;
 }
 function viewBody(){
@@ -3243,12 +3329,13 @@ function render(){
   $('#root').innerHTML = `<div class="spacebg"><div class="stars"></div><div class="stars2"></div><div class="grid"></div></div>
   <div class="app nav-collapsed" id="app" style="grid-template-columns:74px 1fr">
     ${sidebar()}
-    <div class="main">${mtop}${locBar()}${showHero?hero():''}<div class="contentpad" id="content">${view==='dashboard'?earlyCareerWidget():''}${viewBody()}
+    <div class="main">${mtop}${locBar()}${showHero?hero():''}<div class="contentpad viewin" id="content">${view==='dashboard'?earlyCareerWidget():''}${viewBody()}
       ${copyrightHTML()}
     </div></div>
     <div class="scrim" id="scrim"></div>
   </div>
   ${drawerHTML()}
+  ${cmdkHTML()}
   <div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
   ${gateHTML()}`;
   wire();
@@ -3436,7 +3523,7 @@ function startCountdown(){
 /* =========================================================================
    DOSSIER + SHARE MODALS
    ========================================================================= */
-function findJob(id){ return jobsForRegion().find(j=>j.id===id) || JOBS.find(j=>j.id===id); }
+function findJob(id){ return findJobById(id); }
 /* full job-detail model — summary, day-in-the-life, culture, salary breakdown vs standard of living */
 function jobDetail(j){
   const arch=archetypeFor(j);
@@ -4513,7 +4600,7 @@ function showScanOverlay(){
   const el=document.createElement('div');
   el.id='scanOverlay';
   el.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(4,6,12,.72);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;transition:opacity .4s ease';
-  el.innerHTML=`<div style="position:relative;width:min(360px,80vw);text-align:center;font-family:'Orbitron',sans-serif">
+  el.innerHTML=`<div style="position:relative;width:min(360px,80vw);text-align:center;font-family:'Space Grotesk',sans-serif">
     ${generativeNebula('scan')}
     <div style="position:relative;z-index:1;padding:26px 20px;border:1px solid rgba(55,214,230,.35);border-radius:14px;background:rgba(8,12,20,.55);overflow:hidden">
       <div style="position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--a3),transparent);animation:scanbeam 1.6s ease-in-out infinite"></div>
@@ -4550,9 +4637,12 @@ function wireSwipeRegion(){
   }, {passive:true});
 }
 
-function refreshContent(){
+function refreshContent(animate){
   const c=$('#content'); if(!c) return;
+  c.classList.remove('viewin');
   c.innerHTML = viewBody()+copyrightHTML();
+  if(animate){ void c.offsetWidth; c.classList.add('viewin'); }
+  kfocusIdx=-1;
   rewireContent(); drawCharts(); initBudget(); startCountdown();
 }
 let autoScrapeTimer;
@@ -4675,9 +4765,14 @@ function wire(){
   };
   document.querySelectorAll('[data-track]').forEach(b=>b.onclick=()=>{ track=b.dataset.track; refreshContent(); });
   const ft=$('#filtersToggle'); if(ft) ft.onclick=()=>{ document.querySelectorAll('.filters .fsel').forEach(s=>{ s.style.display = s.style.display==='none'?'':'none'; }); ft.classList.toggle('on'); };
+  const fe=$('#fExp'); if(fe) fe.onchange=()=>{ expFilter=fe.value; jobsShown=PAGE_SIZE; refreshContent(); };
+  const fs=$('#fSal'); if(fs) fs.onchange=()=>{ salFilter=+fs.value; jobsShown=PAGE_SIZE; refreshContent(); };
+  const fo=$('#fSort'); if(fo) fo.onchange=()=>{ sortMode=fo.value; refreshContent(); };
   // deploy banner → settings
   const dep=$('#deployBtn'); if(dep) dep.onclick=openDrawer;
   const mrf=$('#manualRefresh'); if(mrf) mrf.onclick=()=>doRefresh(mrf);
+  const ckb=$('#cmdkBtn'); if(ckb) ckb.onclick=()=>openCmdk();
+  const ckbg=$('#cmdkBg'); if(ckbg) ckbg.onclick=e=>{ if(e.target===ckbg) closeCmdk(); };
   rewireContent();
   // settings fab + drawer
   const fab=$('#settingsFab'); if(fab) fab.onclick=openDrawer;
@@ -4686,7 +4781,6 @@ function wire(){
   wireDrawer();
   // modal close
   const mb=$('#modalBg'); if(mb) mb.onclick=e=>{ if(e.target.id==='modalBg') closeModal(); };
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal(); closeDrawer(); } });
 }
 function rewireContent(){
   // inline list filter bar
@@ -4827,6 +4921,106 @@ function wireDrawer(){
     setTimeout(()=>{ render(); openDrawer(); },700);
   };
 }
+
+/* =========================================================================
+   COMMAND DECK — ⌘K palette. Jump anywhere, search live roles, run actions.
+   ========================================================================= */
+let cmdkSel=0, cmdkItems=[];
+function cmdkHTML(){
+  return `<div class="cmdk-bg" id="cmdkBg"><div class="cmdk">
+    <div class="ci"><span class="prompt">ORBITAL ▸</span><input id="cmdkInput" placeholder="Jump to a view, search roles, run an action…" autocomplete="off" spellcheck="false"/><kbd>esc</kbd></div>
+    <div class="cl" id="cmdkList"></div>
+    <div class="cfoot"><span><b>↑↓</b> navigate</span><span><b>↵</b> select</span><span><b>esc</b> close</span></div>
+  </div></div>`;
+}
+function cmdkIndex(q){
+  q=(q||'').trim().toLowerCase();
+  const score=t=>{ t=t.toLowerCase(); if(!q) return 1; if(t.startsWith(q)) return 3; if(t.includes(q)) return 2; return 0; };
+  const items=[];
+  // views
+  NAV.forEach(([label,ic,key])=>{
+    if(key==='settings') return;
+    const sc=score(label); if(!sc) return;
+    items.push({group:'Go to', icon:NAVICON[ic]||ICONS.jobs, label, sub:'view', sc:sc+1, run:()=>{ view=key; render(); }});
+  });
+  // actions
+  const acts=[
+    ['Open Settings','gear','drawer',()=>openDrawer()],
+    ['Refresh live data','⟳','scrape',()=>{ const b=$('#manualRefresh'); doRefresh(b); }],
+    [ (settings.readableMode?'Disable':'Enable')+' Readable Mode','eye','display',()=>{ settings.readableMode=!settings.readableMode; persistSettings(); render(); }],
+  ];
+  REGION_ORDER.forEach(r=>{ if(r!==region) acts.push(['Switch region → '+REGIONS[r].label,'map','region',()=>setRegion(r)]); });
+  acts.forEach(([label,ic,sub,run])=>{
+    const sc=score(label); if(!sc) return;
+    items.push({group:'Actions', icon:NAVICON[ic]||ICONS.place, label, sub, sc, run});
+  });
+  // live roles (only when typing — keeps the default list scannable)
+  if(q.length>=2){
+    let pool=[]; try{ const cf=companyFilter; companyFilter=''; pool=jobsForRegion(); companyFilter=cf; }catch(e){}
+    pool.forEach(j=>{
+      const sc=score(j.title+' '+j.company); if(!sc) return;
+      items.push({group:'Roles', icon:ICONS.jobs, label:j.title, sub:j.company+' · '+(j.match||0)+'%', sc, run:()=>openDossier(j.id)});
+    });
+  }
+  items.sort((a,b)=>b.sc-a.sc);
+  return items.slice(0,14);
+}
+function cmdkRender(){
+  const list=$('#cmdkList'); if(!list) return;
+  if(!cmdkItems.length){ list.innerHTML='<div class="cempty">No matches. Try a view name, a role title, or a company.</div>'; return; }
+  let html='', lastGroup='';
+  cmdkItems.forEach((it,i)=>{
+    if(it.group!==lastGroup){ html+=`<div class="cgroup">${it.group}</div>`; lastGroup=it.group; }
+    const icon=it.icon.startsWith('<')?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${it.icon}</svg>`:`<span style="width:16px;text-align:center;flex:none">${it.icon}</span>`;
+    html+=`<button class="citem ${i===cmdkSel?'sel':''}" data-ck="${i}">${icon}<span class="cmain"><b>${esc(it.label)}</b></span><span class="csub">${esc(it.sub)}</span></button>`;
+  });
+  list.innerHTML=html;
+  document.querySelectorAll('[data-ck]').forEach(b=>{ b.onclick=()=>cmdkRun(+b.dataset.ck); b.onmousemove=()=>{ if(cmdkSel!==+b.dataset.ck){ cmdkSel=+b.dataset.ck; cmdkRender(); } }; });
+  const sel=list.querySelector('.citem.sel'); if(sel) sel.scrollIntoView({block:'nearest'});
+}
+function cmdkRun(i){ const it=cmdkItems[i]; if(!it) return; closeCmdk(); it.run(); }
+function openCmdk(){
+  const bg=$('#cmdkBg'); if(!bg) return;
+  bg.classList.add('open'); cmdkSel=0;
+  const inp=$('#cmdkInput'); inp.value=''; cmdkItems=cmdkIndex(''); cmdkRender();
+  inp.oninput=()=>{ cmdkSel=0; cmdkItems=cmdkIndex(inp.value); cmdkRender(); };
+  setTimeout(()=>inp.focus(),10);
+}
+function closeCmdk(){ const bg=$('#cmdkBg'); if(bg) bg.classList.remove('open'); }
+/* ---- keyboard: ⌘K palette, j/k row navigation, Enter opens dossier ---- */
+let kfocusIdx=-1;
+function kfocusRows(){ return [...document.querySelectorAll('.jrow[data-dossier],.jrow[data-job],tr[data-job],.dtable tr[data-job]')]; }
+function kfocusMove(dir){
+  const rows=kfocusRows(); if(!rows.length) return;
+  rows.forEach(r=>r.classList.remove('kfocus'));
+  kfocusIdx=Math.min(rows.length-1,Math.max(0,kfocusIdx+dir));
+  const r=rows[kfocusIdx]; r.classList.add('kfocus'); r.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function kfocusOpen(){
+  const rows=kfocusRows(); const r=rows[kfocusIdx]; if(!r) return;
+  const id=r.dataset.dossier||r.dataset.job; if(id) openDossier(id);
+}
+(function globalKeys(){
+  if(window.__orbitalKeys) return; window.__orbitalKeys=true;
+  document.addEventListener('keydown',e=>{
+    const cmdkOpen=$('#cmdkBg')&&$('#cmdkBg').classList.contains('open');
+    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); cmdkOpen?closeCmdk():openCmdk(); return; }
+    if(cmdkOpen){
+      if(e.key==='Escape'){ e.preventDefault(); closeCmdk(); }
+      else if(e.key==='ArrowDown'){ e.preventDefault(); cmdkSel=Math.min(cmdkItems.length-1,cmdkSel+1); cmdkRender(); }
+      else if(e.key==='ArrowUp'){ e.preventDefault(); cmdkSel=Math.max(0,cmdkSel-1); cmdkRender(); }
+      else if(e.key==='Enter'){ e.preventDefault(); cmdkRun(cmdkSel); }
+      return;
+    }
+    if(e.key==='Escape'){ closeModal(); closeDrawer(); return; }
+    // j/k navigation only when not typing in a field
+    const tag=(document.activeElement&&document.activeElement.tagName)||'';
+    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||e.metaKey||e.ctrlKey||e.altKey) return;
+    if(e.key==='j'){ e.preventDefault(); kfocusMove(1); }
+    else if(e.key==='k'){ e.preventDefault(); kfocusMove(-1); }
+    else if(e.key==='Enter'){ const f=document.querySelector('.kfocus'); if(f){ e.preventDefault(); kfocusOpen(); } }
+  });
+})();
 
 /* =========================================================================
    BOOT
