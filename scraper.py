@@ -435,6 +435,30 @@ def log_failure(company, url, error):
 # --------------------------------------------------------------------
 # Row builder (full CRM schema + enrichment)
 # --------------------------------------------------------------------
+VERTICAL_RE = {
+    # Python mirror of the dashboard's VERTICAL_RE (index.html) — keep the two in sync.
+    # Classified at ingest against the FULL description (before the 4000-char storage
+    # truncation), so the stored signal can be richer than client-side re-parsing.
+    "gnc": re.compile(
+        r"\bgnc\b|guidance|orbital mechanics|astrodynamic|flight dynamics|matlab|simulink|"
+        r"\bstk\b|trajector|orbit determination|attitude (control|determination)", re.I),
+    "ground": re.compile(
+        r"ground segment|ground station|ground software|ground system|\blinux\b|\bunix\b|"
+        r"\bpython\b|c\+\+|\baws\b|\bazure\b|\bcloud\b|devops|constellation op", re.I),
+    "mission": re.compile(
+        r"telemetry|hardware.?in.?the.?loop|\bhitl\b|anomal(y|ies)|mission assurance|"
+        r"validation|verification|error log|diagnostic", re.I),
+}
+
+
+def classify_verticals(title, description):
+    """Domain-vertical classification (guide §4: GNC / Ground Segment / Mission Assurance).
+    Returns a comma-joined key string, or "" when classification ran but nothing matched —
+    the empty string tells the dashboard *not* to fall back to client-side re-parsing."""
+    text = f"{title or ''} {description or ''}"
+    return ",".join(k for k, rx in VERTICAL_RE.items() if rx.search(text))
+
+
 def internship_signals(title, description):
     """Python mirror of the dashboard's internshipSignals() — parsed once at scrape time
     and stored as real columns so filtering/sorting can happen without re-parsing text
@@ -640,6 +664,7 @@ def build_row(company, ats_id, title, location, url, source, description="", pos
         "intern_skills": sig["intern_skills"],
         "apply_deadline": sig["apply_deadline"],
         "program_start": sig["program_start"],
+        "verticals": classify_verticals(title, description),
     }
     return row
 

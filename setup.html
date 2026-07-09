@@ -319,8 +319,12 @@ create table public.jobs (
   intern_skills   text,
   apply_deadline  timestamptz,
   program_start   timestamptz,
+  verticals       text,
   created_at      timestamptz default now()
 );
+-- Upgrade-in-place for tables created before the verticals column existed
+-- ("create table if not exists" silently no-ops on an old table — this doesn't):
+alter table public.jobs add column if not exists verticals text;
 alter table public.jobs enable row level security;
 drop policy if exists "anon read jobs" on public.jobs;
 create policy "anon read jobs" on public.jobs
