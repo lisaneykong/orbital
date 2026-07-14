@@ -14,11 +14,18 @@ name: Orbital daily scrape
 on:
   schedule:
     - cron: "0 12 * * *"   # 12:00 UTC daily (~6am CST / 7am CDT)
-  workflow_dispatch: {}     # manual "Run workflow" button
+  workflow_dispatch:        # manual "Run workflow" button
+    inputs:
+      mode:
+        description: "full = normal scrape · diagnose = fast per-ATS + Supabase health check"
+        type: choice
+        default: full
+        options: [full, diagnose]
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    timeout-minutes: 25    # a healthy run is ~1 min; anything past 25 is a hang, kill it
     steps:
       - uses: actions/checkout@v4
 
@@ -33,7 +40,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: python scraper.py
+        run: python scraper.py ${{ inputs.mode == 'diagnose' && '--diagnose' || '' }}
 
       - name: Upload failure log (if any)
         if: always()
