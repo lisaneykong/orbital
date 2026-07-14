@@ -41,7 +41,7 @@ not fabricated) · ⏳ Deferred/On hold
 - ✅ Fixed CA/LA region bug — Bay Area/NorCal cities no longer miscounted as Greater LA.
 - ✅ Systems Engineering roles widened into scope (was too PM/ops-narrow).
 - ✅ Internship title-detection widened (co-op, fellowship, summer analyst, trainee, apprentice, practicum).
-- ✅ 120-day archive window for internships (vs. 45-day for full-time).
+- ✅ 270-day (~9-month) archive window for internships (vs. 45-day for full-time) — postings open roughly 9 months before the program runs.
 - ✅ Real internship pay/duration extraction from posting text (was always "estimate," even when real numbers were stated).
 - 🟡 Ashby/Workday/Amazon company tokens — verified where checked this session; not every one of the ~50 companies has been individually re-verified in the very latest pass.
 
@@ -106,7 +106,7 @@ not fabricated) · ⏳ Deferred/On hold
 |---|---|---|
 | **Dashboard** | Mission control — the one glance that tells you where things stand today. | Hero (region art + greeting), live launch countdown, Early-Career &amp; Internship Radar widget (dashboard-only), Top Hiring Companies (live), salary/days-on-market scatterplot (live), KPI stat cards (live counts), live space-industry news. |
 | **Jobs** | The main hunting ground — every qualifying full-time role. | Filterable/sortable list (region, relocation, sort), numbered pagination + See All, real Apply links, match %, salary, days-listed. |
-| **Internships** | Dedicated early-career hunting ground — different rhythm than full-time (posted further ahead, different signals matter). | Featured rotating banner, ITAR/clearance/track filters, sort by deadline or program start date, 120-day window, real pay when published. |
+| **Internships** | Dedicated early-career hunting ground — different rhythm than full-time (posted further ahead, different signals matter). | Featured rotating banner, ITAR/clearance/track filters, sort by deadline or program start date, 270-day (~9-month) window, real pay when published. |
 | **My Profile** | Your living identity in the system. | Photo, name/title, core skills (from résumé), profile summary, résumé upload/view/reset (synced with Settings), LinkedIn URL. |
 | **Companies** | Know who's hiring before you apply. | Real company list with live open-role counts, hiring bars. |
 | **My Applications** | Track exactly where every role stands — a systems-engineering "V-Model." | Requirement Analysis (saved) → Concept Design (applied, real timestamps) → Verification (interviewing) → Mission Validation (offer). |

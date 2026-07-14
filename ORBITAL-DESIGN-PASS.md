@@ -240,6 +240,222 @@ new `verticals` column (comma-joined keys, e.g. `"gnc,ground"`).
   + `index.html` + `setup.html`, then trigger a scrape. Chip counts on the
   Internships view will populate from ingest-time classification.
 
+## 14. Cross-device tracking sync (operations-doc wishlist #4 — done)
+
+Saves, dismissals, "I Applied" history, and their metadata/timestamps now sync
+through a single-row `user_state` table in Supabase, so your phone and laptop
+finally show the same checkmarks.
+
+- **Model:** one row keyed `tracking`, whole-payload last-write-wins by
+  timestamp. A device only adopts the remote copy when it's strictly newer
+  than its own last sync; the first device to sync seeds the table with its
+  existing history. Pushes are debounced (1.2s) after every save / dismiss /
+  applied toggle; pulls happen at boot and on owner unlock — so unlocking on
+  a brand-new device inherits everything.
+- **Privacy:** owner-only in BOTH directions. Guests never read your
+  tracking (verified: with owner data on the server, a guest session loads
+  zero items), never write (zero server writes observed), and don't even see
+  the sync indicator.
+- **Honest tradeoff, stated in the SQL:** the site ships only the public
+  anon key, so `user_state` grants anon INSERT/UPDATE **on itself only** —
+  the jobs table stays read-only to anon, and no DELETE is granted. Someone
+  who extracts the public key could scribble on one row of job-ID bookmarks;
+  for a single-user tool holding no sensitive data, that's the accepted cost
+  of sync without shipping the service key.
+- **Graceful degradation:** no table yet / network down → status falls back
+  to local-only silently, changes keep persisting to localStorage, nothing
+  breaks. A live indicator in the sidebar data-status card shows
+  synced / syncing / local-only / error.
+- **Verified in real Chromium:** device A (localhost) saves a role → device B
+  (separate origin = separate localStorage) boots fresh and inherits it with
+  the indicator reading "Tracking synced across devices"; guest privacy and
+  the 13-view regression all pass with zero page errors.
+- **To activate:** re-run the setup SQL (it now creates `user_state`), or run
+  just that block from setup.html in the Supabase SQL editor. No scraper or
+  workflow changes needed.
+
+## 15. Internships page — live instrument build-out (v6)
+
+The page previously leaned on reference panels; in the off-season with few live
+postings it read as empty. It now carries six real-data instruments, each
+verified in headless Chromium on desktop and mobile (zero overflow, zero page
+errors):
+
+- **Season Timeline** — the recruiting year as a 12-month instrument band
+  (primary window green, late window gold, off-cycle dim) with a computed
+  "you are here" marker and a live T-minus countdown to Aug 1. Replaces the
+  text-only season strip.
+- **Deadline Radar** — the soonest apply-by dates from the actually loaded
+  rows, as D-day countdowns (urgency-colored ≤7d / ≤21d), each row opening
+  the dossier. Real parsed deadlines vs 45-day estimates are labeled
+  "(est.)" per row via a single `deadlineFor()` accessor.
+- **Signals Breakdown** — live percentage bars computed from the real parsed
+  badges of whatever is on the board: citizenship-open vs ITAR vs clearance,
+  hardware/software track, housing stipends stated, graduate-level (MS/PhD)
+  eligibility.
+- **Mission Prep checklist** — every line checked against actual app state
+  (résumé + extracted skill count, LinkedIn URL, saved/applied internships,
+  device sync status), each unmet item linking to its fix. Off-cycle months
+  become runway instead of dead air.
+- **My Internship Pipeline** — your own saved/applied internships with real
+  applied dates, from tracking data. Renders only when it has content.
+- **Early-career scope toggle** — widens the page to the codebase's native
+  `earlycareer` track: real new-grad / associate / entry-level full-time
+  postings previously invisible here, with a live count on the toggle.
+- **Season-aware empty state** — zero postings now explains itself (off-cycle
+  reality + the scope toggle + the directory) instead of a bare "no results."
+
+**Consistency fix found along the way:** the 70% match firewall exempted
+internships and early-career rows only when they were *live* — sample-mode
+internships were silently gated, hiding 11 of the 17 sample internships and
+making the page look emptier than the data was. Both `spaceQualifies` and
+`jobsForRegion` now exempt internships and the early-career view in any data
+mode, matching the codebase's own stated intent. Verified by injection test:
+a new-grad row flows through scope toggle → list → radar → dossier.
+
+## 16. Internship scan window widened to 9 months (270 days)
+
+Internships are posted roughly 9 months before the program runs, so the old
+120-day archive gate was silently discarding valid, still-open postings.
+Changed in one authoritative place each:
+
+- `isArchived()` — internships now kept **270 days** (full-time stays 45d).
+- `deadlineFor()` — when no real deadline is parsed from the posting, the
+  labeled "(est.)" fallback for internships is now posting-date + 270d,
+  matching the true application-window length, instead of +45d.
+- Doc references (the audit's 120-day mentions) updated to match.
+
+Verified in Chromium by injection: a 200-day-old internship — dead under the
+old gate — renders in the list and the Deadline Radar with an honest
+estimated deadline 70 days out. The scraper needed no change: it stores every
+posting with its age and only ever records *real* parsed deadlines; the
+window is purely a dashboard read-time policy.
+
+## 17. Tailoring Copilot (v8)
+
+Per-role gap analysis inside every dossier, between the REAL posting text and
+your REAL extracted skills. The core engine is local and fully transparent —
+every verdict traceable to a line of the posting:
+
+- **Requirement extraction** pulls the requirement-shaped lines out of the
+  actual description (capped at 14) and marks each HIT (with the specific
+  skills of yours that matched, shown inline) or GAP. Matching is full-phrase
+  OR distinctive-token (6+ chars, generic words like "management" stoplisted),
+  so "Payload Integration" hits an "integration and test campaigns" line
+  without generic-word false positives. Verified: a realistic ops posting
+  scores 4/7 covered with correct per-line attributions.
+- **"Adopt their language"** — domain terms the posting uses that your skills
+  list doesn't, with the explicit caveat: only claim what's true.
+- **Copy this analysis** exports a plain-text tailoring brief.
+- **AI drafting (optional)**: 3 résumé-bullet rewrites in their terminology +
+  a cover note, under a hard no-fabrication instruction. Runs through a new
+  shared `aiComplete()` transport: Claude-artifact bridge when present, else
+  a user-supplied Anthropic API key (stored locally only, never synced),
+  else a clear inline key prompt.
+
+**Two latent bugs fixed on the way:** the AI Re-Score feature had never
+worked on the deployed site — (a) it called `window.claude.complete`, which
+only exists inside Claude.ai artifacts, and (b) its button was wired in
+`rewireContent`, which never sees modal content, so the click was dead. It
+now runs through `aiComplete()` and the document-level delegated click
+handler, same as the copilot buttons.
+
+## 18. Follow-Up Cadence Engine (v8)
+
+Every "I Applied" timestamp becomes a discipline: **D+7** first follow-up due,
+**D+14** second touch, **D+21 silent** = flagged as ghosted so the energy gets
+redeployed. All numbers derive from your real applied timestamps.
+
+- **Cadence panel** at the top of My Applications: D+N counter per role, due
+  state, a status selector (applied / responded / interview / offer /
+  rejected — non-applied statuses exit the cadence), and a **"Copy follow-up
+  + log"** button that puts a role-specific follow-up email on your clipboard
+  and logs the touch in one click (verified: due state clears immediately).
+- **Alerts integration**: due follow-ups and ghost flags surface at the TOP
+  of the Alerts view in any data mode — they're your tracking data, not pool
+  statistics, so they outrank and survive the sample-mode branch (which was
+  found to wholesale-reassign the alert list; cadence entries now inject
+  after it).
+- **Synced**: `appStatus` and `followups` ride the existing cross-device
+  tracking sync.
+
+Verified end-to-end in Chromium: time-traveled applications at D+8 / D+15 /
+D+22 produce the correct three due states, copy+log interpolates the real
+role title and advances the cadence, status changes exit cleanly, alerts
+lead with the ghost flag, and the 13-view regression passes with zero page
+errors.
+
+## 19. Mobile dense mode (v9)
+
+Role rows on phones were ~1.5 per screen; now ~11-12. At <=720px the 7-column
+job table and the .jrow cards (internships list) each become a 2-line entry:
+line 1 = title (ellipsized) + match % + save/dismiss; line 2 = company +
+salary. Location/reloc/planets/extra chips hidden — tap the row for the
+dossier. The early-career widget gets the same 2-line grid. The dense media
+block MUST remain LAST in the stylesheet (it wins the cascade over base
+.dtable rules at ~line 1092). Also fixed en route: deadline math unified on
+deadlineFor() everywhere (widget + featured banner + sort had stale 45-day
+estimates), the dashboard widget no longer vanishes on refreshContent, and
+the Jobs subtitle's stale "90 days" copy corrected. Measured in Chromium at
+412x915: dtable 62px avg (12/screen), jrow 68px avg (11/screen), zero
+horizontal overflow, zero page errors, 13-view regression clean.
+
+## 20. Epic regional hero banners (v10)
+
+Each region's hero now merges its photo backdrop with a generative neon
+skyline (inline SVG, zero external assets): Space Needle + Rainier for
+Seattle, downtown towers + palms for LA, Sky Tower + harbor line for NZ, and
+an orbital-arc gantry composite for Global — each with edge glow, a glossy
+water reflection, and the region's accent palette. Layered beneath a glassy
+live-status strip (backdrop-blur chips with a gloss sheen) built for the
+landing mind-flow: orient -> status -> act. Every chip is a real computed
+number — live roles in the region, internships, roles posted <=48h, the next
+upcoming deadline as D-x, and the current season phase — and every chip
+navigates (jobs / internships) on tap. Verified across all four regions in
+one Chromium pass: correct per-region skyline, real per-region counts, chip
+navigation working, zero page errors.
+
+## 21. Cinematic hero motion (v11)
+
+The satellite and rocket read as clip art because of the MOTION, not the
+shading: linear fly-across streaks, a pinwheel spin, a cartoon wobble. All
+replaced with film language, pure CSS: both objects are now anchored in
+composition (rule-of-thirds right side); the satellite station-keeps along a
+38s shallow drift arc with a gentle attitude sway; the rocket holds a patient
+14s ascent drift with a 1-degree tilt breathe and a stepped engine-burn
+glow flicker; the skyline gets a 70s parallax drift; and the hero gains a
+radial vignette for frame depth. prefers-reduced-motion now freezes the
+objects in place instead of hiding them. Verified in one Chromium pass:
+all five animation tracks applied, both objects anchored on-screen, zero
+page errors.
+
+## 22. Text-a-role sharing + mobile perfection pass (v12)
+
+**Sharing flow, both directions verified on a simulated fresh phone:**
+- Sharer: a new "Share via text / apps" button invokes the native OS share
+  sheet (Web Share API) with a composed summary — title @ company, salary,
+  location, and the #share link. No-API fallback copies text+link for
+  pasting into any messenger.
+- Recipient: tapping the texted link on a phone that has NEVER seen Orbital
+  bypasses the install gate and PIN entirely and lands on a mobile-first
+  read-only role page: gradient backdrop, full role dossier content, a
+  sticky bottom action bar with a 48px full-width Apply button (thumb-reach,
+  safe-area aware), and an "Explore Orbital" path. Dead links (role filled/
+  archived since sharing) get a graceful "no longer listed" card instead of
+  dumping the friend into the app.
+- Honest limitation: link previews in iMessage/WhatsApp show the site's
+  generic card, not per-role imagery — per-role OG tags would need
+  server-side rendering, which the static-hosting architecture deliberately
+  avoids.
+
+**Platform-wide mobile hardening:** iOS zoom-on-focus killed (16px inputs),
+touch-action:manipulation + tap-highlight removal on all controls,
+safe-area-inset padding on bottom bars, the dossier modal becomes a
+full-screen sheet on phones with a sticky 40px glass close button, and
+save/dismiss buttons meet minimum touch-target sizes within the dense rows.
+Verified in one Chromium pass at 412x915: fresh-device share render, dead
+link, native sheet payload, zero overflow, zero errors.
+
 ## Honest follow-ups (not done)
 
 1. The remaining ~157 unique inline styles are one-off layout tweaks —

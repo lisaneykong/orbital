@@ -325,6 +325,21 @@ create table public.jobs (
 -- Upgrade-in-place for tables created before the verticals column existed
 -- ("create table if not exists" silently no-ops on an old table — this doesn't):
 alter table public.jobs add column if not exists verticals text;
+
+-- ============ CROSS-DEVICE TRACKING (saves / dismissals / applied) ============
+-- One row keyed 'tracking', last-write-wins by timestamp. HONEST TRADEOFF: the
+-- browser only ships the public anon key, so this table grants anon INSERT/UPDATE
+-- on itself (and ONLY itself — the jobs table stays read-only to anon). Anyone who
+-- extracts the public key could scribble on this one row of job-ID bookmarks; for a
+-- single-user tool holding no sensitive data, that is the accepted cost of sync
+-- without shipping the service key. No DELETE granted.
+create table if not exists public.user_state (
+  k          text primary key,
+  v          jsonb,
+  updated_at timestamptz default now()
+);
+grant select, insert, update on public.user_state to anon, authenticated, service_role;
+alter table public.user_state disable row level security;
 alter table public.jobs enable row level security;
 drop policy if exists "anon read jobs" on public.jobs;
 create policy "anon read jobs" on public.jobs

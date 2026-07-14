@@ -29,7 +29,7 @@ Credentials (priority order):
 The SERVICE ROLE key is required for writes and must stay server-side.
 """
 
-import os
+import os, sys
 import re
 import csv
 import json
@@ -965,6 +965,7 @@ def execute_scrub():
             except Exception as exc:
                 print(f"   !! {company} [{source}]: {exc}")
                 log_failure(company, source, exc)
+                _RUN_FAILURES.append((company, source, str(exc)[:120]))
 
     # de-duplicate by id (same role can surface twice, e.g. BO greenhouse+workday)
     dedup = {row["id"]: row for row in payload}
@@ -997,10 +998,31 @@ def execute_scrub():
         for i in range(0, len(payload), 100):
             chunk = payload[i:i + 100]
             _upsert_with_autoheal(chunk)
+    # ---- Diagnostic summary: readable in the Actions log itself (no artifact download) ----
+    by_src = {}
+    for r in payload: by_src[r["source"]] = by_src.get(r["source"], 0) + 1
     print(f"\n>>> Complete. {len(payload)} clean row(s) from {ok_boards} board(s) "
-          f"upserted into '{TABLE}'. Failures (if any) -> failed_scrapes_log.csv\n")
+          f"upserted into '{TABLE}'.")
+    print(f">>> Rows by source: {by_src or '(none)'}")
+    if _RUN_FAILURES:
+        print(f">>> {len(_RUN_FAILURES)} board(s) FAILED — top errors:")
+        from collections import Counter
+        histo = Counter(re.sub(r"https?://\S+", "<url>", e) for _, _, e in _RUN_FAILURES)
+        for err, n in histo.most_common(5):
+            print(f"      {n}x  {err}")
+        for co, src, err in _RUN_FAILURES[:10]:
+            print(f"      - {co} [{src}]: {err}")
+        print(">>> Full list -> failed_scrapes_log.csv artifact")
+    missing_srcs = {"workday", "amazon"} - set(by_src)
+    if missing_srcs and ok_boards:
+        print(f">>> WARNING: zero rows from {sorted(missing_srcs)} — those ATS families are "
+              f"failing silently. Run the workflow with mode=diagnose to probe each family.")
+    if ok_boards == 0:
+        print(">>> FATAL: every board failed — exiting 1 so the run shows red.")
+        raise SystemExit(1)
 
 
+_RUN_FAILURES = []   # (company, source, error) tuples for the end-of-run summary
 _SKIP_COLS = set()   # columns the live table is missing; learned once, applied to all rows
 
 
@@ -1028,5 +1050,58 @@ def _upsert_with_autoheal(chunk):
     log_failure("SUPABASE_UPSERT", TABLE, "too many schema mismatches")
 
 
+def diagnose():
+    """Fast health probe: one endpoint per ATS family + Supabase read/write, PASS/FAIL
+    per line, done in under a minute. Run via Actions -> Run workflow -> mode=diagnose."""
+    print(">>> ORBITAL DIAGNOSE — probing one endpoint per family\n")
+    checks = [
+        ("greenhouse", "GET",  "https://boards-api.greenhouse.io/v1/boards/spacex/jobs", None),
+        ("lever",      "GET",  "https://api.lever.co/v0/postings/kepler?mode=json&limit=1", None),
+        ("ashby",      "POST", "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
+         {"operationName": "ApiJobBoardWithTeams",
+          "variables": {"organizationHostedJobsPageName": "apex.space"}, "query": ASHBY_QUERY}),
+        ("workday",    "POST", "https://blueorigin.wd5.myworkdayjobs.com/wday/cxs/blueorigin/BlueOrigin/jobs",
+         {"limit": 1, "offset": 0, "appliedFacets": {}}),
+    ]
+    failures = 0
+    for fam, method, url, body in checks:
+        try:
+            kw = {"timeout": 15}
+            if body is not None:
+                kw["headers"] = {"Content-Type": "application/json", "Accept": "application/json"}
+                kw["data"] = json.dumps(body)
+            r = SESSION.request(method, url, **kw)
+            ok = r.status_code == 200
+            print(f"   {'PASS' if ok else 'FAIL'}  {fam:11s} HTTP {r.status_code}"
+                  + ("" if ok else f"  <- this family is blocked/broken from this runner"))
+            failures += 0 if ok else 1
+        except Exception as exc:
+            print(f"   FAIL  {fam:11s} {type(exc).__name__}: {str(exc)[:90]}")
+            failures += 1
+    try:
+        supabase.table(TABLE).select("id").limit(1).execute()
+        print(f"   PASS  supabase-read")
+    except Exception as exc:
+        print(f"   FAIL  supabase-read  {str(exc)[:110]}"); failures += 1
+    try:
+        supabase.table("user_state").upsert({"k": "diagnose-probe", "v": {"ts": 0}}).execute()
+        print(f"   PASS  supabase-write (user_state probe row)")
+    except Exception as exc:
+        print(f"   WARN  supabase-write  {str(exc)[:110]}  (run the user_state SQL if not set up)")
+    print(f"\n>>> Diagnose complete — {failures} hard failure(s).")
+    raise SystemExit(1 if failures else 0)
+
+
 if __name__ == "__main__":
-    execute_scrub()
+    try:
+        if "--diagnose" in sys.argv:
+            diagnose()
+        else:
+            execute_scrub()
+    except SystemExit:
+        raise
+    except Exception:
+        import traceback
+        print("\n>>> CRASH — unhandled exception (this is the root cause):")
+        traceback.print_exc()
+        raise SystemExit(1)

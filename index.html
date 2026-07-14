@@ -90,15 +90,32 @@ a{color:inherit;text-decoration:none}
 .herofx .hnebula{position:absolute;right:-10%;top:-30%;width:60%;height:120%;background:radial-gradient(closest-side,color-mix(in srgb,var(--a2) 34%,transparent),transparent 70%);filter:blur(54px);opacity:.4;animation:nebula 22s ease-in-out infinite}
 @keyframes nebula{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-8%,8%) scale(1.2)}}
 .herofx .hgrid{position:absolute;inset:0;background-image:linear-gradient(color-mix(in srgb,var(--a3) 12%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--a3) 12%,transparent) 1px,transparent 1px);background-size:46px 46px;-webkit-mask-image:radial-gradient(ellipse 70% 60% at 70% 30%,#000,transparent 75%);mask-image:radial-gradient(ellipse 70% 60% at 70% 30%,#000,transparent 75%);opacity:.22}
-.herofx .streak{position:absolute;top:22%;left:-14%;width:64px;height:64px;filter:drop-shadow(0 0 14px color-mix(in srgb,var(--a3) 75%,transparent));animation:streakfly 16s linear infinite}
-.herofx .streak2{top:60%;width:52px;height:52px;animation:streakfly 22s linear infinite;animation-delay:6s}
-.herofx .streak .sat{display:block;width:100%;height:100%;animation:satspin 6s linear infinite;transform-origin:50% 50%}
-.herofx .streak .rkt{display:block;width:100%;height:100%;animation:rktwobble 2.4s ease-in-out infinite}
+/* CINEMATIC MOTION: objects are anchored in composition (no screensaver fly-through).
+   Satellite: slow station-keeping drift on a shallow arc + gentle attitude sway.
+   Rocket: patient ascent drift + engine-light flicker. All long ease curves. */
+.herofx .streak{position:absolute;top:16%;right:9%;left:auto;width:74px;height:74px;
+  filter:drop-shadow(0 0 16px color-mix(in srgb,var(--a3) 65%,transparent));
+  animation:satdrift 38s ease-in-out infinite alternate}
+.herofx .streak2{top:auto;bottom:18%;right:24%;width:56px;height:56px;
+  animation:rktascend 14s cubic-bezier(.45,.05,.35,1) infinite alternate}
+.herofx .streak .sat{display:block;width:100%;height:100%;animation:satsway 26s ease-in-out infinite alternate;transform-origin:50% 50%}
+.herofx .streak .rkt{display:block;width:100%;height:100%;animation:rkttilt 9s ease-in-out infinite alternate}
+.herofx .streak2{filter:drop-shadow(0 6px 18px rgba(138,92,255,.45));animation-name:rktascend,rktburn;animation-duration:14s,1.7s;animation-timing-function:cubic-bezier(.45,.05,.35,1),steps(2,end);animation-iteration-count:infinite,infinite;animation-direction:alternate,normal}
+@keyframes satdrift{0%{transform:translate(0,0) }50%{transform:translate(-26px,14px)}100%{transform:translate(-48px,4px)}}
+@keyframes satsway{from{transform:rotate(-4deg)}to{transform:rotate(3deg)}}
+@keyframes rktascend{from{transform:translateY(10px)}to{transform:translateY(-14px)}}
+@keyframes rkttilt{from{transform:rotate(-1.2deg)}to{transform:rotate(1.4deg)}}
+@keyframes rktburn{0%{filter:drop-shadow(0 7px 16px rgba(138,92,255,.38)) drop-shadow(0 12px 26px rgba(127,216,255,.18))}100%{filter:drop-shadow(0 8px 22px rgba(138,92,255,.55)) drop-shadow(0 14px 30px rgba(127,216,255,.3))}}
+/* cinematic frame: vignette + slow skyline parallax */
+.hero:after{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 30%,transparent 55%,rgba(2,4,9,.55) 100%)}
+.skyline{animation:skydrift 70s ease-in-out infinite alternate}
+@keyframes skydrift{from{transform:translateX(-8px)}to{transform:translateX(8px)}}
 @keyframes satspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes rktwobble{0%,100%{transform:rotate(38deg)}50%{transform:rotate(34deg)}}
 .herofx .streak:before{content:'';position:absolute;right:100%;top:50%;width:180px;height:2px;transform:translateY(-50%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--a3) 75%,transparent))}
 @keyframes streakfly{0%{transform:translate(0,0)}100%{transform:translate(140vw,-70px)}}
-@media (prefers-reduced-motion:reduce){.herofx .streak,.herofx .haurora,.herofx .hnebula,.herofx .hstars,.herofx .hstars2{animation:none}.herofx .streak{display:none}}
+@media (prefers-reduced-motion:reduce){.herofx .streak,.herofx .streak2,.herofx .streak .sat,.herofx .streak .rkt,.herofx .haurora,.herofx .hnebula,.herofx .hstars,.herofx .hstars2,.skyline{animation:none}}
 .hero .ov{position:absolute;inset:0}
 .hero .inner{position:relative;z-index:2;padding:26px 30px;display:flex;justify-content:space-between;gap:20px;min-height:208px;align-items:flex-start}
 .hero .eyebrow{font-size:var(--fs-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--a3);font-weight:600;margin-bottom:8px}
@@ -284,12 +301,75 @@ a{color:inherit;text-decoration:none}
 .dirlive:hover{background:color-mix(in srgb,var(--good) 16%,transparent)}
 .dirfind{font-weight:600;font-size:var(--fs-sm);color:var(--a3);text-decoration:none;border:1px solid var(--line2);border-radius:999px;padding:6px 12px;white-space:nowrap;flex:none}
 .dirfind:hover{border-color:var(--a3)}
-@media(max-width:720px){
-  .dirrow{flex-wrap:wrap;gap:6px 14px}
-  .dirname{flex:1 1 auto}
-  .dirfocus{flex:1 1 100%;order:3}
-  .season .stext{min-width:0}
-}
+/* ---- season timeline ---- */
+.tl-band{flex:1 1 100%;display:flex;gap:3px;margin-top:10px}
+.tl-m{position:relative;flex:1;height:26px;border-radius:4px;display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:var(--fs-nano);color:rgba(234,241,251,.55)}
+.tl-m.p-off{background:#232e42}
+.tl-m.p-open{background:color-mix(in srgb,var(--good) 32%,#1a2436)}
+.tl-m.p-late{background:color-mix(in srgb,var(--gold) 30%,#1a2436)}
+.tl-m.tl-now{outline:2px solid var(--a3);outline-offset:1px;color:var(--text);font-weight:700}
+.tl-dot{position:absolute;top:-7px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:var(--a3);box-shadow:0 0 8px var(--a3)}
+.tl-legend{flex:1 1 100%;display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:var(--fs-2xs);color:var(--dim)}
+.tl-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.tl-legend .tl-count{margin-left:auto;font-family:'JetBrains Mono',monospace;color:var(--a3)}
+.tl-legend .tl-count b{font-weight:700}
+/* ---- widget grid ---- */
+.igrid{display:grid;grid-template-columns:1fr 1fr;gap:calc(16px * var(--density,1))}
+/* ---- deadline radar / pipeline rows ---- */
+.ddl-row{display:flex;align-items:center;gap:13px;width:100%;text-align:left;background:transparent;border:0;border-top:1px solid var(--line);padding:10px 2px;cursor:pointer;font:inherit;color:var(--muted)}
+.ddl-row:first-of-type{border-top:0}
+.ddl-row:hover .ddl-main b{color:var(--a3)}
+.ddl-d{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:var(--fs-rg);flex:0 0 52px;font-variant-numeric:tabular-nums}
+.ddl-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ddl-main b{color:var(--text);font-weight:600;font-size:var(--fs-md);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ddl-main span{font-size:var(--fs-xs);color:var(--dim)}
+.ddl-date{flex:none;font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);color:var(--muted)}
+.ddl-date i{color:var(--dim);font-style:normal}
+/* ---- signal bars ---- */
+.sb-row{margin-bottom:11px}
+.sb-top{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--fs-sm);color:var(--muted);margin-bottom:5px}
+.sb-top b{font-family:'JetBrains Mono',monospace;font-weight:700}
+.sb-top b i{font-style:normal;color:var(--dim);font-weight:500}
+.sb-track{height:7px;border-radius:999px;background:rgba(255,255,255,.05);overflow:hidden}
+.sb-fill{height:100%;border-radius:999px;transition:width .5s cubic-bezier(.22,.9,.3,1)}
+.sb-note{margin-top:4px;font-size:var(--fs-2xs);color:var(--a3)}
+/* ---- prep checklist ---- */
+.prep-row{display:flex;align-items:center;gap:11px;padding:8px 0;border-top:1px solid var(--line)}
+.prep-row:first-of-type{border-top:0}
+.prep-ic{font-weight:700;font-size:var(--fs-rg);flex:none;width:18px;text-align:center}
+.prep-l{flex:1;font-size:var(--fs-md);color:var(--text)}
+.prep-fix{flex:none;font-size:var(--fs-xs);color:var(--a3);text-decoration:none;font-weight:600}
+/* ---- tailoring copilot ---- */
+.cp-score{font-size:var(--fs-rg);color:var(--text);margin-bottom:10px}
+.cp-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+.cp-row:first-of-type{border-top:0}
+.cp-ic{flex:none;font-weight:700;width:16px;text-align:center}
+.cp-line{flex:1;font-size:var(--fs-sm);color:var(--muted);line-height:1.5}
+.cp-hit{flex:none;max-width:130px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-2xs);color:var(--good);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cp-hit.gap{color:var(--gold)}
+.cp-mirror{margin-top:12px;font-size:var(--fs-sm);color:var(--muted)}
+.cp-mirror b{color:var(--text)}
+.cp-terms{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.cp-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.cp-aiout{margin-top:12px;border:1px solid var(--line2);border-radius:var(--rs);padding:12px;background:rgba(5,9,16,.5)}
+.cp-aiout pre{margin:0 0 9px;white-space:pre-wrap;font-family:'Inter Tight',sans-serif;font-size:var(--fs-md);color:#cfdcec;line-height:1.6}
+/* ---- follow-up cadence ---- */
+.cad-row{display:flex;align-items:center;gap:13px;padding:10px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.cad-row:first-of-type{border-top:0}
+.cad-d{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:var(--fs-rg);flex:0 0 52px;color:var(--muted);font-variant-numeric:tabular-nums}
+.cad-main{flex:1;min-width:180px;display:flex;flex-direction:column;gap:3px}
+.cad-main b{color:var(--text);font-weight:600;font-size:var(--fs-md)}
+.cad-main span{font-size:var(--fs-xs);color:var(--dim)}
+.cad-due{font-size:var(--fs-xs);font-weight:600}
+.cad-due.due{color:var(--gold)}
+.cad-due.ghost{color:var(--bad)}
+.cad-ok{font-size:var(--fs-xs);color:var(--good)}
+.cad-acts{display:flex;gap:8px;align-items:center;flex:none;flex-wrap:wrap}
+.cad-sel{font:inherit;font-size:var(--fs-xs);color:var(--text);background:rgba(5,9,16,.6);border:1px solid var(--line2);border-radius:var(--rx);padding:6px 8px}
+/* ---- scope toggle ---- */
+.fbtn.scope-on{border-color:color-mix(in srgb,var(--a3) 55%,transparent);color:var(--a3);background:color-mix(in srgb,var(--a3) 9%,transparent)}
+
 .cdcell{flex:1;min-width:58px;text-align:center;border:1px solid rgba(120,160,235,.2);border-radius:var(--r);padding:10px 6px;background:rgba(4,7,13,.5)}
 .cdcell b{display:block;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:var(--fs-d4);font-weight:700;color:#eaf1fb;line-height:1}
 .cdcell b.acc{color:var(--a3)}
@@ -1200,6 +1280,119 @@ a{color:inherit;text-decoration:none}
   .wxcompare{grid-template-columns:1fr}
   .wxvs{padding:4px}
 }
+
+/* Mobile dense mode — must stay LAST in the stylesheet to win the cascade over base .dtable rules */
+@media(max-width:720px){
+  /* ---- DENSE ROLE ROWS: the 7-column table becomes a 2-line entry (~52px), ~10 per screen ---- */
+  .dtable thead{display:none}
+  .dtable, .dtable tbody{display:block}
+  .dtable tr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;column-gap:10px;row-gap:2px;
+    align-items:center;padding:8px 2px;border-top:1px solid var(--line)}
+  .dtable tr:first-child{border-top:0}
+  .dtable td{display:block;padding:0;border:0;background:none}
+  .dtable td:nth-child(1){grid-area:1/1/2/2;min-width:0}
+  .dtable td:nth-child(5){grid-area:1/2/2/3;white-space:nowrap}
+  .dtable td:nth-child(7){grid-area:1/3/2/4;white-space:nowrap}
+  .dtable td:nth-child(2){grid-area:2/1/3/2;min-width:0}
+  .dtable td:nth-child(4){grid-area:2/2/3/4;text-align:right;white-space:nowrap}
+  .dtable td:nth-child(3),.dtable td:nth-child(6){display:none}  /* location + reloc: tap the row for the dossier */
+  .dtable .ti b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--fs-md)}
+  .dtable .ti span{display:none}
+  .dtable .co{font-size:var(--fs-xs);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+  .dtable .co .lg{width:15px;height:15px;font-size:.42rem;border-radius:4px;flex:none}
+  .dtable .salcell{font-size:var(--fs-xs)}
+  .dtable td:nth-child(5) b{font-size:var(--fs-xs)}
+  .dtable .savebtn{padding:2px 6px;font-size:var(--fs-sm)}
+  /* ---- early-career widget: same 2-line density ---- */
+  .ecitem{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:2px;padding:8px 10px;align-items:center}
+  .ecitem>span:nth-child(1){display:none}                        /* vertical INTERNSHIP tag: gone */
+  .ecitem>span:nth-child(2){grid-area:1/1/2/2;min-width:0}
+  .ecitem>span:nth-child(2)>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ecitem>span:nth-child(2)>span:first-child{font-size:var(--fs-md) !important}
+  .ecitem>span:nth-child(3){grid-area:1/2/2/3}
+  .ecitem>span:nth-child(3)>span:first-child{font-size:var(--fs-xs) !important}
+  .ecitem>span:nth-child(4){grid-area:2/1/3/3;display:flex;gap:8px;align-items:baseline;text-align:left;
+    padding-left:0;border-left:0;justify-content:flex-end}
+  .ecitem>span:nth-child(4)>span{display:inline !important;font-size:var(--fs-2xs) !important}
+  /* ---- jrow cards (jobListPanel lists: internships etc.) → same 2-line density ---- */
+  .jrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;column-gap:10px;row-gap:2px;
+    padding:8px 4px;align-items:center;border-radius:0}
+  .jrow .jlogo{display:none}
+  .jrow .jmain,.jrow .jright{display:contents}
+  .jrow .jtitle{grid-area:1/1/2/2;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--fs-md)}
+  .jrow .jtitle .postedage{display:none}
+  .jrow .jco{grid-area:2/1/3/2;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--fs-xs);color:var(--dim)}
+  .jrow .jco b{font-weight:600}
+  .jrow .jsalary{grid-area:1/2/2/3;font-size:var(--fs-xs);white-space:nowrap}
+  .jrow .jactions{grid-area:1/3/2/4;display:flex;gap:4px}
+  .jrow .jactions .minibtn{padding:2px 7px;font-size:var(--fs-sm)}
+  .jrow .jactions .minibtn[data-dossier],.jrow .jactions .minibtn[data-share]{display:none}
+  .jrow .planets{display:none}
+  .jrow .jmeta{grid-area:2/2/3/4;justify-self:end;margin:0;gap:0}
+  .jrow .jmeta .chip,.jrow .jmeta .srcbadge,.jrow .jmeta .rtag{display:none}
+  .jrow .jmeta .chip.mchip{display:inline-flex;padding:0;border:0;background:none;font-size:var(--fs-xs);font-weight:700}
+  .jrow:before,.jrow:after{display:none}
+  .igrid{grid-template-columns:1fr}
+  .dirrow{flex-wrap:wrap;gap:6px 14px}
+  .dirname{flex:1 1 auto}
+  .dirfocus{flex:1 1 100%;order:3}
+  .season .stext{min-width:0}
+}
+
+/* ---- Epic hero layer: neon skyline + glass status strip (v10) ---- */
+.skyline{position:absolute;left:0;right:0;bottom:0;width:100%;height:46%;z-index:1;pointer-events:none;
+  filter:drop-shadow(0 0 14px rgba(55,214,230,.25))}
+.hero .bg{z-index:0}
+.hero .ov{z-index:2}
+.hero .inner{z-index:3}
+.hstat{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  padding:10px 26px 12px;background:linear-gradient(180deg,transparent,rgba(4,8,16,.55) 40%)}
+.hchip{position:relative;overflow:hidden;font:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  font-size:var(--fs-xs);color:var(--muted);padding:7px 13px;border-radius:999px;
+  border:1px solid rgba(140,180,255,.22);background:rgba(10,16,28,.45);
+  backdrop-filter:blur(10px) saturate(1.3);-webkit-backdrop-filter:blur(10px) saturate(1.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09), 0 4px 18px rgba(0,0,0,.35);transition:border-color .15s,color .15s}
+.hchip:after{content:'';position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.10) 44%,transparent 58%);pointer-events:none}
+.hchip b{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text)}
+.hchip:hover{border-color:var(--a3);color:var(--text)}
+.hchip.fresh b{color:var(--good)}
+.hchip.season-good{border-color:color-mix(in srgb,var(--good) 40%,transparent);color:var(--good)}
+.hchip.season-gold{border-color:color-mix(in srgb,var(--gold) 40%,transparent);color:var(--gold)}
+.hchip.season-a3{border-color:color-mix(in srgb,var(--a3) 40%,transparent);color:var(--a3)}
+@media(max-width:720px){
+  .skyline{height:38%}
+  .hstat{padding:8px 12px 10px;gap:6px}
+  .hchip{padding:5px 10px;font-size:var(--fs-2xs)}
+}
+
+/* ---- v12: shared-role page mobile-first + platform mobile hardening ---- */
+.sharedpage{min-height:100vh;min-height:100dvh;background:
+  radial-gradient(140% 90% at 50% -10%,rgba(91,140,255,.16),transparent 60%),
+  linear-gradient(180deg,#070b14,#04060c)}
+.sharedwrap{max-width:760px;margin:0 auto;padding:14px 14px calc(26px + env(safe-area-inset-bottom))}
+.sharedbar{display:flex;align-items:center;justify-content:space-between;padding:10px 2px 14px}
+.sharedpage .modal{border-radius:var(--rl);box-shadow:0 22px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06)}
+.sharedpage .dactions{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,rgba(6,9,16,.92) 30%);
+  padding:14px 0 calc(6px + env(safe-area-inset-bottom));display:flex;gap:10px}
+.sharedpage .apply{flex:1;justify-content:center;min-height:48px;font-size:var(--fs-rg)}
+.sharedpage .dbtn{min-height:48px}
+@media(max-width:720px){
+  .sharedwrap{padding:10px 10px calc(20px + env(safe-area-inset-bottom))}
+  .sharedpage .dossier-top h2{font-size:var(--fs-d4)}
+  .sharedpage .dgrid2{grid-template-columns:1fr}
+}
+/* platform-wide mobile hardening */
+button,a,select,.hchip,.minibtn,.savebtn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+@media(max-width:720px){
+  input,select,textarea{font-size:16px !important}   /* prevents iOS zoom-on-focus */
+  .mobilenav,.bottomnav{padding-bottom:calc(6px + env(safe-area-inset-bottom))}
+  #modal.modal{position:fixed;inset:0;width:100%;max-width:none;height:100%;max-height:none;border-radius:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  #modal .mx{position:sticky;top:8px;float:right;z-index:20;background:rgba(10,16,28,.85);backdrop-filter:blur(8px);
+    width:40px;height:40px;display:grid;place-items:center;border-radius:999px;border:1px solid var(--line2)}
+  .dactions .apply{min-height:46px}
+  .jrow .jactions .minibtn,.dtable .savebtn{min-height:32px;min-width:34px}
+}
 </style>
 </head>
 <body>
@@ -1238,6 +1431,7 @@ let expFilter = '';         // '' | early | mid | senior — real title-based se
 let salFilter = 0;          // minimum salary floor (0 = any) — real salaryValue() filter
 let sortMode = 'match';     // match | salary | newest — Jobs view sort
 let internVertical = '';    // '' | gnc | ground | mission — internship domain vertical (guide §4)
+let internScope = 'intern';  // 'intern' | 'early' — widen the page to real new-grad/entry roles
 let showArchived = false;   // include roles ≥90 days (archived)
 let dataFallback = false;   // live table empty → showing sample roles
 let jobsShown = 30;         // 30 roles per page; "See more jobs" reveals the next 30
@@ -1387,7 +1581,10 @@ function spaceQualifies(j){
   // floor / pure-admin roles. The narrow ops/program titles are preferred but not required —
   // a career-changer can pivot into many non-eng roles at a space company.
   if(TITLE_EXCLUDE.test(t)) return false;
-  if((j.match||0) < 70) return false;                // 70% match firewall (full-time only)
+  // 70% match firewall (full-time only) — early-career titles are exempt, mirroring the
+  // intern exception above and the earlycareer track's floor exemption for live rows:
+  // a career-changer's new-grad/associate on-ramps shouldn't be gated by seniority-tuned scoring.
+  if((j.match||0) < 70 && !EARLY_CAREER_RE.test(t)) return false;
   return true;
 }
 function sourceBadge(j){
@@ -1768,13 +1965,13 @@ function toggleSave(id){
   if(!canEdit())return guestBlock();
   const j = (typeof liveJobs!=='undefined' && dataMode==='live') ? (liveJobs||[]).map(mapLiveJob).find(x=>x.id===id) : JOBS.find(x=>x.id===id);
   if(savedJobs.has(id)){ savedJobs.delete(id); saveMeta('orbital.savedMeta',id,null); } else { savedJobs.add(id); if(j) saveMeta('orbital.savedMeta',id,j); }
-  localStorage.setItem('orbital.saved',JSON.stringify([...savedJobs])); clearMatchCache(); routeRender();
+  localStorage.setItem('orbital.saved',JSON.stringify([...savedJobs])); clearMatchCache(); pushTracking(); routeRender();
 }
 function toggleDismiss(id){
   if(!canEdit())return guestBlock();
   const j = (typeof liveJobs!=='undefined' && dataMode==='live') ? (liveJobs||[]).map(mapLiveJob).find(x=>x.id===id) : JOBS.find(x=>x.id===id);
   if(dismissedJobs.has(id)){ dismissedJobs.delete(id); saveMeta('orbital.dismissedMeta',id,null); } else { dismissedJobs.add(id); if(j) saveMeta('orbital.dismissedMeta',id,j); }
-  localStorage.setItem('orbital.dismissed',JSON.stringify([...dismissedJobs])); clearMatchCache(); routeRender();
+  localStorage.setItem('orbital.dismissed',JSON.stringify([...dismissedJobs])); clearMatchCache(); pushTracking(); routeRender();
 }
 function toggleApplied(id){
   if(!canEdit())return guestBlock();
@@ -1786,11 +1983,111 @@ function toggleApplied(id){
     if(j) saveMeta('orbital.appliedMeta',id,j);
     try{ const dates=JSON.parse(localStorage.getItem('orbital.appliedDates')||'{}'); dates[id]=new Date().toISOString(); localStorage.setItem('orbital.appliedDates',JSON.stringify(dates)); }catch(e){}
   }
-  localStorage.setItem('orbital.applied',JSON.stringify([...appliedJobs])); routeRender();
+  localStorage.setItem('orbital.applied',JSON.stringify([...appliedJobs])); pushTracking(); routeRender();
 }
 function guestBlock(){ alert('Guest mode is read-only. Sign in as the owner to save, edit, or change settings.'); }
+
+/* =========================================================================
+   CROSS-DEVICE TRACKING SYNC — saves / dismissals / applied history live in
+   Supabase (user_state table, one row, last-write-wins by timestamp) so your
+   phone and laptop finally agree. Owner-only in both directions: guests never
+   read or write your tracking. Falls back silently to local-only when the
+   table doesn't exist yet or the network is down.
+   ========================================================================= */
+const SYNC_LS_KEYS=['orbital.saved','orbital.dismissed','orbital.applied','orbital.savedMeta','orbital.dismissedMeta','orbital.appliedMeta','orbital.appliedDates','orbital.appStatus','orbital.followups'];
+let syncStatus='local';   // local | syncing | synced | no-table | error
+let syncTimer=null;
+function syncClient(){ return (typeof sb!=='undefined' && sb && SB_URL && SB_KEY) ? sb : null; }
+function trackingPayload(){
+  const o={ts:Date.now()};
+  SYNC_LS_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) o[k]=v; });
+  return o;
+}
+function adoptTracking(v){
+  SYNC_LS_KEYS.forEach(k=>{ if(typeof v[k]==='string') localStorage.setItem(k, v[k]); });
+  savedJobs=new Set(JSON.parse(localStorage.getItem('orbital.saved')||'[]'));
+  dismissedJobs=new Set(JSON.parse(localStorage.getItem('orbital.dismissed')||'[]'));
+  appliedJobs=new Set(JSON.parse(localStorage.getItem('orbital.applied')||'[]'));
+  localStorage.setItem('orbital.syncTs', String(v.ts||0));
+}
+function paintSyncStatus(){
+  const el=document.getElementById('syncStatus'); if(!el) return;
+  const map={local:['#7385a0','Local-only tracking'],syncing:['var(--gold)','Syncing…'],
+             synced:['var(--good)','Tracking synced across devices'],
+             'no-table':['#7385a0','Sync table not set up — tracking is local-only'],
+             error:['var(--bad)','Sync error — changes kept locally']};
+  const [c,t]=map[syncStatus]||map.local;
+  el.innerHTML=`<span class="dsdot" style="background:${c};box-shadow:0 0 7px ${c}"></span><span style="font-size:var(--fs-2xs);color:var(--dim)">${t}</span>`;
+}
+function pushTracking(){
+  if(role!=='owner') return;
+  const c=syncClient(); if(!c){ syncStatus='local'; paintSyncStatus(); return; }
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(async()=>{
+    try{
+      syncStatus='syncing'; paintSyncStatus();
+      const payload=trackingPayload();
+      const {error}=await c.from('user_state').upsert({k:'tracking', v:payload, updated_at:new Date().toISOString()});
+      if(error) throw error;
+      localStorage.setItem('orbital.syncTs', String(payload.ts));
+      syncStatus='synced';
+    }catch(e){
+      syncStatus=/does not exist|relation|schema cache|42P01/i.test(String(e&&e.message||e))?'no-table':'error';
+    }
+    paintSyncStatus();
+  },1200);
+}
+async function pullTracking(){
+  if(role!=='owner') return;
+  const c=syncClient(); if(!c){ syncStatus='local'; paintSyncStatus(); return; }
+  try{
+    const {data,error}=await c.from('user_state').select('v').eq('k','tracking').maybeSingle();
+    if(error) throw error;
+    const localTs=+(localStorage.getItem('orbital.syncTs')||0);
+    if(data && data.v && (+data.v.ts||0) > localTs){
+      adoptTracking(data.v); clearMatchCache(); routeRender();
+    } else if(!data && (savedJobs.size||dismissedJobs.size||appliedJobs.size)){
+      pushTracking();   // first device to sync seeds the table with its history
+    }
+    syncStatus='synced';
+  }catch(e){
+    syncStatus=/does not exist|relation|schema cache|42P01/i.test(String(e&&e.message||e))?'no-table':'error';
+  }
+  paintSyncStatus();
+}
 // AI semantic re-score — reads the REAL posting text + real résumé summary through Claude
 // for a second, semantic opinion alongside the transparent keyword-based match score.
+/* Shared AI transport. Priority: Claude-artifact bridge (window.claude) -> a user-supplied
+   Anthropic API key (stored locally, never synced) via direct browser access -> clear error.
+   This also FIXES the AI Re-Score on the deployed site: window.claude only exists inside
+   Claude.ai artifacts, so on jobs.lisaney.com it had always failed silently. */
+async function aiComplete(prompt){
+  if(window.claude && window.claude.complete) return await window.claude.complete(prompt);
+  const key=(localStorage.getItem('orbital.anthropicKey')||'').trim();
+  if(!key) throw new Error('NO_AI_KEY');
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,
+      'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+  });
+  if(!r.ok){ const t=await r.text(); throw new Error('API '+r.status+': '+t.slice(0,120)); }
+  const data=await r.json();
+  return (data.content||[]).map(c=>c.text||'').join('\n');
+}
+function aiKeyPromptHTML(boxId){
+  return `<p class="subtle" style="margin:0 0 8px">AI drafting needs a connection. Paste an Anthropic API key &mdash;
+    it stays in this browser's storage only (never synced, never sent anywhere but api.anthropic.com):</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input class="tinput" id="aikey-${boxId}" type="password" placeholder="sk-ant-..." style="flex:1;min-width:200px"/>
+      <button class="dbtn primary" data-savekey="${boxId}">Save &amp; retry</button>
+    </div>`;
+}
+function wireAiKeySave(boxId, retry){
+  const b=document.querySelector(`[data-savekey="${boxId}"]`); if(!b) return;
+  b.onclick=()=>{ const v=(document.getElementById('aikey-'+boxId)||{}).value||'';
+    if(v.trim()){ localStorage.setItem('orbital.anthropicKey', v.trim()); retry(); } };
+}
 async function runAiReScore(id){
   const j = findJobById(id); if(!j) return;
   const box = document.getElementById('airescore-'+id); if(!box) return;
@@ -1800,7 +2097,7 @@ async function runAiReScore(id){
     const resumeText = (OWNER.blurb||'') + ' Skills: ' + (OWNER.skills||[]).join(', ');
     const desc = (j.description||'').slice(0,3000);
     const prompt = `You are helping a candidate assess real job fit. Candidate background: """${resumeText}""" \n\nJob posting — ${j.title} at ${j.company}: """${desc || j.title}"""\n\nRespond with EXACTLY three lines, no extra text:\nSCORE: <0-100 integer>\nVERDICT: <one short sentence — genuine strengths AND gaps>\nWATCHOUT: <one real risk or mismatch to be aware of, or "None obvious">`;
-    const text = await window.claude.complete(prompt);
+    const text = await aiComplete(prompt);
     const scoreM = text.match(/SCORE:\s*(\d{1,3})/i);
     const verdictM = text.match(/VERDICT:\s*(.+)/i);
     const watchM = text.match(/WATCHOUT:\s*(.+)/i);
@@ -1811,7 +2108,12 @@ async function runAiReScore(id){
       ${watchM?`<p style="margin:0;font-size:var(--fs-md);color:var(--gold)">⚠ ${esc(watchM[1])}</p>`:''}
       <p class="subtle" style="margin-top:8px;font-size:var(--fs-2xs)">Semantic read from the full posting — a second opinion alongside (not a replacement for) the ${j.match}% keyword-based match above.</p>`;
   }catch(e){
-    box.innerHTML = `<h4>🧠 AI Semantic Re-Score</h4><p class="subtle" style="color:var(--bad)">Couldn't complete the AI re-score right now (${esc(e.message||'unknown error')}). Try again in a moment.</p>`;
+    if(String(e.message)==='NO_AI_KEY'){
+      box.innerHTML = `<h4>AI Semantic Re-Score</h4>${aiKeyPromptHTML('rescore-'+id)}`;
+      wireAiKeySave('rescore-'+id, ()=>runAiReScore(id));
+    } else {
+      box.innerHTML = `<h4>AI Semantic Re-Score</h4><p class="subtle" style="color:var(--bad)">Couldn't complete the AI re-score right now (${esc(e.message||'unknown error')}). Try again in a moment.</p>`;
+    }
   }
 }
 // Looks up a job by id whether we're in live (Supabase) or sample data mode.
@@ -1845,7 +2147,7 @@ function isEarlyCareer(j){ return j.type==='Internship' || EARLY_CAREER_RE.test(
 function daysOnMarket(j){ return DAY_OVERRIDE[j.id] ?? (j.days!=null ? j.days : 0); }
 function isHot(j){ return daysOnMarket(j)<=7; }
 function within45(j){ return daysOnMarket(j)<=45; }
-function isArchived(j){ const max=(j.type==='Internship')?120:45; return daysOnMarket(j) >= max; }   // interns kept 120d (posted far ahead + variable program windows), others 45d
+function isArchived(j){ const max=(j.type==='Internship')?270:45; return daysOnMarket(j) >= max; }   // interns kept 270d (~9 months: postings open far ahead of program start), others 45d
 function targetSalary(){ return +localStorage.getItem('orbital.targetGross') || 165000; }
 function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function planetRow(n){
@@ -1956,7 +2258,7 @@ function jobsForRegion(){
     if(track==='intern' && j.type!=='Internship') return false;
     if(track==='fulltime' && j.type==='Internship') return false;
     if(track==='earlycareer' && !isEarlyCareer(j)) return false;
-    if((j.match||0) < settings.matchFloor && !(j.live && (j.type==='Internship'||track==='earlycareer'))) return false;   // live internships / early-career view are exempt from the floor
+    if((j.match||0) < settings.matchFloor && j.type!=='Internship' && track!=='earlycareer') return false;   // internships & the early-career view are exempt from the floor (any data mode)
     if(companyFilter && j.company!==companyFilter) return false;
     if(query){
       const hay=`${j.company} ${j.title} ${j.location} ${(j.tech||[]).join(' ')}`.toLowerCase();
@@ -2126,7 +2428,8 @@ function sidebar(){
     <nav class="nav">${nav}</nav>
     <div class="card datastatus ${dataMode==='live'?'live':'sample'}" id="dataStatusCard" style="margin-bottom:8px;cursor:pointer">
       <div class="dsrow"><span class="dsdot"></span>
-        <div style="flex:1;min-width:0"><div class="dsname">${dataMode==='live'?'Live · Supabase':'Sample data'}</div><div class="dssub">${dataMode==='live'?'Connected':'Tap to connect &amp; deploy'}</div></div>
+        <div style="flex:1;min-width:0"><div class="dsname">${dataMode==='live'?'Live · Supabase':'Sample data'}</div><div class="dssub">${dataMode==='live'?'Connected':'Tap to connect &amp; deploy'}</div>
+        ${role==='owner'?'<div class="dsrow" id="syncStatus" style="gap:6px;margin-top:5px"></div>':''}</div>
         <svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:var(--dim)">${NAVICON.gear}</svg>
       </div>
     </div>
@@ -2135,6 +2438,59 @@ function sidebar(){
 }
 
 /* hero per region */
+/* =========================================================================
+   EPIC HERO LAYER — per-region generative neon skylines (no external images)
+   merged over the photo backdrop, plus a glassy live-status strip that serves
+   the landing mind-flow: orient (where) -> status (what's new/urgent) -> act.
+   ========================================================================= */
+function skylineSVG(rgn){
+  const P={
+    seattle:{c1:'#37d6e6',c2:'#5b8cff',path:'M0 96 L40 96 L48 60 L56 96 L120 96 L128 40 L131 34 L134 12 L137 34 L140 40 L148 96 L200 96 L206 70 L214 70 L214 96 L280 96 L288 52 L300 52 L306 96 L360 96 L378 78 L420 64 L470 82 L520 96 L640 96',peak:'M360 96 L400 58 L440 96'},
+    la:{c1:'#ff8a5c',c2:'#c86bff',path:'M0 96 L60 96 L66 58 L84 58 L90 96 L130 96 L136 44 L154 44 L160 96 L210 96 L216 66 L238 66 L244 96 L300 96 L306 50 L330 50 L336 96 L640 96',peak:'M380 96 Q450 60 520 84 L640 96',palm:1},
+    nz:{c1:'#37e0a0',c2:'#37d6e6',path:'M0 96 L100 96 L120 84 L180 84 L200 96 L250 96 L256 30 L259 24 L261 8 L263 24 L266 30 L272 96 L340 96 L360 88 L420 88 L440 96 L640 96',peak:'M420 96 Q520 52 640 88'},
+    global:{c1:'#5b8cff',c2:'#9d6bff',path:'M0 96 L80 96 L86 60 L92 96 L150 96 L156 20 L160 16 L162 6 L166 20 L170 96 L230 96 L236 64 L252 64 L258 96 L330 96 L338 48 L352 48 L358 96 L640 96',peak:'M420 96 Q520 64 640 90',orbit:1},
+  };
+  const k=P[rgn]?rgn:'global', p=P[k];
+  return `<svg class="skyline" viewBox="0 0 640 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="skg-${k}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${p.c1}" stop-opacity=".9"/><stop offset="1" stop-color="${p.c2}" stop-opacity=".25"/>
+      </linearGradient>
+      <linearGradient id="skr-${k}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${p.c1}" stop-opacity=".22"/><stop offset="1" stop-color="${p.c1}" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${p.orbit?`<ellipse cx="480" cy="26" rx="120" ry="26" fill="none" stroke="${p.c2}" stroke-opacity=".5" stroke-dasharray="3 6"/><circle cx="600" cy="22" r="3" fill="${p.c1}"><animate attributeName="opacity" values="1;.3;1" dur="2.4s" repeatCount="indefinite"/></circle>`:''}
+    <path d="${p.peak} L640 96 L0 96 Z" fill="url(#skg-${k})" opacity=".28"/>
+    <path d="${p.path} L640 120 L0 120 Z" fill="#060a14" stroke="url(#skg-${k})" stroke-width="1.6"/>
+    ${p.palm?`<g stroke="${p.c1}" stroke-width="1.4" fill="none" opacity=".85"><path d="M560 96 L560 74"/><path d="M560 74 q-12 -8 -20 -4 M560 74 q12 -8 20 -4 M560 74 q-6 -12 -14 -12 M560 74 q6 -12 14 -12"/></g>`:''}
+    <path d="${p.path}" transform="translate(0,192) scale(1,-1)" fill="url(#skr-${k})" opacity=".5"/>
+  </svg>`;
+}
+function heroStatusStrip(){
+  const R=REGIONS[region]||REGIONS.global;
+  let roles=[], interns=0, fresh=0, nextDl=null;
+  try{
+    const st=track; track='fulltime'; roles=jobsForRegion();
+    track='intern'; const ip=jobsForRegion(); track=st;
+    interns=ip.length;
+    fresh=roles.concat(ip).filter(j=>daysOnMarket(j)<=2).length;
+    const now=Date.now();
+    ip.concat(roles.filter(j=>j.type==='Internship')).forEach(j=>{
+      const d=deadlineFor(j).date.getTime();
+      if(d>now && (!nextDl||d<nextDl)) nextDl=d;
+    });
+  }catch(e){}
+  const dld=nextDl?Math.ceil((nextDl-Date.now())/864e5):null;
+  const season=internSeason();
+  return `<div class="hstat">
+    <button class="hchip" data-nav="jobs"><b>${roles.length}</b> live roles · ${esc(R.short)}</button>
+    <button class="hchip" data-nav="internships"><b>${interns}</b> internships</button>
+    ${fresh?`<button class="hchip fresh" data-nav="jobs"><b>${fresh}</b> new ≤48h</button>`:''}
+    ${dld!=null?`<button class="hchip" data-nav="internships">next deadline <b>D-${dld}</b></button>`:''}
+    <button class="hchip season-${season.cls}" data-nav="internships">${esc(season.label)}</button>
+  </div>`;
+}
 function heroFX(){
   return `<div class="herofx" aria-hidden="true">
     ${generativeNebula('hero')}
@@ -2302,7 +2658,7 @@ function heroHUD(){
 function hero(){
   const R=REGIONS[region];
   if(region==='global'){
-    return `<div class="hero">${heroFX()}<div class="bg" style="background:linear-gradient(120deg,#10204a,#0a0e1c);background-image:url('https://images.unsplash.com/photo-1699541948287-9c8ce85624ce?auto=format&fit=crop&w=1600&q=80');background-size:cover;background-position:center 30%"></div>
+    return `<div class="hero">${heroFX()}${skylineSVG(region)}<div class="bg" style="background:linear-gradient(120deg,#10204a,#0a0e1c);background-image:url('https://images.unsplash.com/photo-1699541948287-9c8ce85624ce?auto=format&fit=crop&w=1600&q=80');background-size:cover;background-position:center 30%"></div>
       <div class="ov" style="background:linear-gradient(100deg,rgba(4,6,12,.86) 22%,rgba(4,6,12,.15) 62%,transparent 82%),linear-gradient(180deg,rgba(4,6,12,.1),rgba(4,6,12,.7))"></div>
       <div class="inner">
         <div class="hero-lead">
@@ -2312,18 +2668,18 @@ function hero(){
           <div class="clock" id="clock"></div>
         </div>
         ${heroHUD()}
-      </div></div>`;
+      </div>${heroStatusStrip()}</div>`;
   }
   const heroBg = {seattle:'linear-gradient(120deg,#0a2a3a,#0c1626)', la:'linear-gradient(120deg,#3a1526,#1a0e18)', nz:'linear-gradient(120deg,#0f2a24,#0a1620)', global:'linear-gradient(120deg,#10204a,#0a0e1c)'}[region]||'#0a0e1c';
   const greet = region==='nz'
     ? `<h1 class="greet">Kia ora, ${esc(ownerFirstName())} <span style="font-size:var(--fs-d3)">👋</span></h1>`
     : `<div class="eyebrow">◂ ${esc(R.city)} · Sector Lock ▸</div><h1>${esc(R.tagline||R.city)}</h1>`;
-  return `<div class="hero">${heroFX()}<div class="bg" style="background:${heroBg};background-image:url('${R.photo}');background-size:cover;background-position:center"></div>
+  return `<div class="hero">${heroFX()}${skylineSVG(region)}<div class="bg" style="background:${heroBg};background-image:url('${R.photo}');background-size:cover;background-position:center"></div>
     <div class="ov" style="background:linear-gradient(100deg,rgba(4,6,12,.9) 28%,rgba(4,6,12,.2) 66%,transparent 86%),linear-gradient(180deg,rgba(4,6,12,.08),rgba(4,6,12,.72))"></div>
     <div class="inner">
       <div class="hero-lead">${greet}<div class="sub">${esc(R.sub)}</div><div class="clock" id="clock"></div></div>
       ${heroHUD()}
-    </div></div>`;
+    </div>${heroStatusStrip()}</div>`;
 }
 
 /* filter bar */
@@ -2678,7 +3034,7 @@ function jobListPanel(jobs, title, opts={}){
       <div class="jmain">
         <div class="jtitle">${esc(j.title)} ${hot?'<span class="hot">HOT</span>':''}<span class="postedage">${daysOnMarket(j)}d listed</span></div>
         <div class="jco"><b>${esc(j.company)}</b> · ${esc(j.location)}</div>
-        <div class="jmeta">${internChip}${internMeta}${relocChip}<span class="chip" style="color:${matchColor(j.match)};border-color:${matchColor(j.match)}55">${matchIcon(j.match)} ${j.match}% match</span>${(j.matchFlags&&j.matchFlags.length)?`<span class="chip" style="color:var(--a4);border-color:var(--a4-soft);background:var(--a4-soft)" title="${esc(j.matchFlags.join(', '))}">⚠ ${j.matchFlags.length} flag${j.matchFlags.length>1?'s':''}</span>`:''}${sourceBadge(j)}${roleTagChips(j)}</div>
+        <div class="jmeta">${internChip}${internMeta}${relocChip}<span class="chip mchip" style="color:${matchColor(j.match)};border-color:${matchColor(j.match)}55">${matchIcon(j.match)} ${j.match}% match</span>${(j.matchFlags&&j.matchFlags.length)?`<span class="chip" style="color:var(--a4);border-color:var(--a4-soft);background:var(--a4-soft)" title="${esc(j.matchFlags.join(', '))}">⚠ ${j.matchFlags.length} flag${j.matchFlags.length>1?'s':''}</span>`:''}${sourceBadge(j)}${roleTagChips(j)}</div>
       </div>
       <div class="jright">
         <div class="jsalary">${salaryLabel(j)}</div>
@@ -2746,11 +3102,7 @@ function applyListFilters(jobs){
 // used elsewhere in the app (posting date + 45 days). Returns a millisecond timestamp so it
 // sorts cleanly — soonest deadline first.
 function effectiveDeadline(j){
-  if(j.type==='Internship'){
-    const sig=internshipSignals(j);
-    if(sig.deadline) return sig.deadline.date.getTime();
-  }
-  return Date.now() + Math.max(0,45-daysOnMarket(j))*86400000;
+  return deadlineFor(j).date.getTime();   // single source of truth (real parsed date, else the 270d/45d estimate)
 }
 // Real parsed program start date; falls back to "far future" so unknown-start roles sort last.
 function effectiveStartDate(j){
@@ -3063,7 +3415,7 @@ function jobsView(){
   const favPill=`<button class="fbtn" id="favPill" style="${favOnly?'border-color:var(--gold);color:var(--gold);background:rgba(245,197,96,.08)':''}">★ Favorites${savedJobs.size?` (${savedJobs.size})`:''}</button>`;
   const archPill=`<button class="fbtn" id="archPill" style="${showArchived?'border-color:var(--a3);color:var(--a3);background:rgba(55,214,230,.08)':''}">🗄 ${showArchived?'Hide archived':'Show archived'}</button>`;
   const seemore = shown<total ? `<div class="seemore"><button class="seemorebtn" id="seeMore">See more jobs<span>roles ${shown+1}–${Math.min(shown+PAGE_SIZE,total)}</span></button></div>` : (total>PAGE_SIZE?`<div class="seemore"><button class="seemorebtn ghost" id="seeLess">Showing all ${total} · collapse</button></div>`:'');
-  return `${guestStrip()}${viewHead('Jobs','Active roles matched to your profile · '+total+' results · postings auto-archive at 90 days','Pipeline Source')}
+  return `${guestStrip()}${viewHead('Jobs','Active roles matched to your profile · '+total+' results · full-time archives at 45 days, internships tracked ~9 months','Pipeline Source')}
     ${filterBar()}
     <div style="display:flex;gap:8px;margin:2px 0 -6px">${favPill}${archPill}</div>
     <div class="panel"><div class="pb">${jobTable(pageJobs)}<div class="listcount" style="text-align:center">Showing ${shown} of ${total} roles</div>${seemore}</div></div>`;
@@ -3077,7 +3429,8 @@ function featuredInternshipBanner(jobs){
   const n=picks.length;
   const slides=picks.map((j,i)=>{
     const sig=internshipSignals(j);
-    const left=Math.max(0,45-daysOnMarket(j));
+    const dlB=deadlineFor(j);
+    const left=Math.max(0,Math.ceil((dlB.date-Date.now())/864e5));
     return `<button class="featslide" data-dossier="${j.id}" style="animation-delay:${i*5}s">
       <span class="featbadge">${cic("rocket",12)} Featured Internship</span>
       <span class="feattitle">${esc(j.title)}</span>
@@ -3111,6 +3464,16 @@ function internVerticals(j){
   if(j.verticals!==undefined && j.verticals!==null) return String(j.verticals).split(',').map(x=>x.trim()).filter(Boolean);
   const text=((j.title||'')+' '+(j.description||'')+' '+((j.tech||[]).join(' ')));
   return Object.keys(VERTICAL_RE).filter(k=>VERTICAL_RE[k].test(text));
+}
+function deadlineFor(j){
+  // One honest accessor: real applyBy field, else a real parsed in-text deadline,
+  // else the project's standard 45-days-from-posting ESTIMATE — always labeled.
+  if(j.applyBy){ const d=new Date(j.applyBy); if(!isNaN(d)) return {date:d, est:false}; }
+  const sig=internshipSignals(j);
+  if(sig.deadline && sig.deadline.date) return {date:sig.deadline.date, est:false};
+  const posted=Date.now()-daysOnMarket(j)*864e5;
+  const win=(j.type==='Internship')?270:45;   // internships accept applications ~9 months ahead of program start
+  return {date:new Date(posted+win*864e5), est:true};
 }
 function internSeason(){
   const now=new Date(), m=now.getMonth(), y=now.getFullYear();
@@ -3189,14 +3552,158 @@ function directoryLiveCount(name){
   return n;
 }
 function dirSearchUrl(name){ return 'https://www.google.com/search?q='+encodeURIComponent(name.replace(/\s*\(.*\)$/,'')+' internships'); }
+/* ---- Season Timeline: the recruiting year as an instrument, "you are here" computed ---- */
+function seasonTimelineWidget(season){
+  const now=new Date(), y=now.getFullYear();
+  const phase=m=> (m>=7&&m<=9)?'p-open' : (m>=10||m===0)?'p-late' : 'p-off';
+  const cells=Array.from({length:12},(_,m)=>{
+    const isNow=m===now.getMonth();
+    return `<div class="tl-m ${phase(m)} ${isNow?'tl-now':''}" title="${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]}${isNow?' — today':''}">
+      <span>${'JFMAMJJASOND'[m]}</span>${isNow?'<i class="tl-dot"></i>':''}</div>`;
+  }).join('');
+  const nextOpen=new Date(y, 7, 1); if(nextOpen<now) nextOpen.setFullYear(y+1);
+  const days=Math.ceil((nextOpen-now)/864e5);
+  return `<div class="season ${season.cls}">
+    <div style="flex:1 1 100%;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <span class="slbl">${season.label}</span><span class="stext">${season.text}</span>
+    </div>
+    <div class="tl-band">${cells}</div>
+    <div class="tl-legend">
+      <span><i style="background:var(--good)"></i>Primary window (Aug–Oct)</span>
+      <span><i style="background:var(--gold)"></i>Late window (Nov–Jan)</span>
+      <span><i style="background:#3a4a63"></i>Off-cycle</span>
+      ${season.phase==='off'?`<span class="tl-count">T-minus <b>${days}d</b> to window open</b></span>`:''}
+    </div>
+  </div>`;
+}
+
+/* ---- Deadline Radar: soonest apply-by dates from the ACTUAL loaded rows ---- */
+function deadlineRadarPanel(jobs){
+  const now=Date.now();
+  const upcoming=jobs.map(j=>({j, dl:deadlineFor(j)}))
+    .filter(x=>x.dl.date.getTime()>now)
+    .sort((a,b)=>a.dl.date-b.dl.date).slice(0,8);
+  let body;
+  if(!upcoming.length){
+    body=`<div class="empty" style="padding:22px 8px"><div class="big">No live apply-by dates on the board</div>
+      <div>Nothing loaded carries an upcoming deadline right now — normal during the off-cycle. The primary posting window opens Aug 1.</div></div>`;
+  } else {
+    body=upcoming.map(({j,dl})=>{
+      const d=Math.ceil((dl.date-now)/864e5);
+      const urg=d<=7?'var(--bad)':d<=21?'var(--gold)':'var(--good)';
+      return `<button class="ddl-row" data-dossier="${j.id}">
+        <span class="ddl-d" style="color:${urg}">D-${d}</span>
+        <span class="ddl-main"><b>${esc(j.title)}</b><span>${esc(j.company)}</span></span>
+        <span class="ddl-date">${dl.date.toLocaleDateString('en-US',{month:'short',day:'numeric'})}${dl.est?' <i>(est.)</i>':''}</span>
+      </button>`;
+    }).join('');
+  }
+  return `<div class="panel"><div class="ph"><h3>${cic("radar")} Deadline Radar</h3><span class="va">${upcoming.length} upcoming</span></div>
+    <div class="pb">${body}</div></div>`;
+}
+
+/* ---- Signals Breakdown: eligibility / track / logistics from the real parsed badges ---- */
+function signalsBreakdownPanel(jobs){
+  const n=jobs.length;
+  if(!n) return `<div class="panel"><div class="ph"><h3>${cic("chartbar")} Signals Breakdown</h3></div>
+    <div class="pb"><div class="empty" style="padding:22px 8px"><div class="big">No rows to analyze</div>
+    <div>Signal bars populate from the real parsed badges of whatever is loaded above.</div></div></div></div>`;
+  const sigs=jobs.map(j=>internshipSignals(j));
+  const bar=(label,count,color,note)=>{
+    const pct=Math.round(count/n*100);
+    return `<div class="sb-row"><div class="sb-top"><span>${label}</span><b style="color:${color}">${count} <i>· ${pct}%</i></b></div>
+      <div class="sb-track"><div class="sb-fill" style="width:${pct}%;background:${color}"></div></div>
+      ${note?`<div class="sb-note">${note}</div>`:''}</div>`;
+  };
+  const itar=sigs.filter(x=>x.itar).length, clear=sigs.filter(x=>x.clearance).length;
+  const hw=sigs.filter(x=>x.track==='Hardware').length, sw=sigs.filter(x=>x.track==='Software').length,
+        both=sigs.filter(x=>x.track==='Hardware + Software').length;
+  const housing=sigs.filter(x=>x.housing).length;
+  const grad=sigs.filter(x=>x.degrees.includes("Master's")||x.degrees.includes('PhD')).length;
+  return `<div class="panel"><div class="ph"><h3>${cic("chartbar")} Signals Breakdown</h3><span class="va">parsed from ${n} real posting${n>1?'s':''}</span></div>
+    <div class="pb">
+      ${bar('Open to all — no citizenship requirement', n-itar, 'var(--good)')}
+      ${bar('ITAR / US-person required', itar, 'var(--bad)')}
+      ${bar('Security clearance mentioned', clear, 'var(--gold)')}
+      ${bar('Hardware track', hw, 'var(--a3)')}
+      ${bar('Software track', sw, 'var(--a2)')}
+      ${both?bar('Hardware + software', both, 'var(--a)'):''}
+      ${bar('Housing / relocation stipend stated', housing, 'var(--good)')}
+      ${bar("Graduate-level eligible (MS/PhD named)", grad, 'var(--a3)', grad?'Directly relevant to the MSO program':'')}
+    </div></div>`;
+}
+
+/* ---- Mission Prep checklist: every line derived from real app state, each with its fix ---- */
+function prepChecklistPanel(internIds){
+  let skills=[]; try{ skills=JSON.parse(localStorage.getItem('orbital.skills')||'[]'); }catch(e){}
+  const hasResume=!!(localStorage.getItem('orbital.resumePdf')||localStorage.getItem('orbital.resumeName'));
+  const li=(localStorage.getItem('orbital.linkedinUrl')||'').trim();
+  const savedInterns=[...savedJobs].filter(id=>internIds.has(id)).length;
+  const appliedInterns=[...appliedJobs].filter(id=>internIds.has(id)).length;
+  const synced=(typeof syncStatus!=='undefined' && syncStatus==='synced');
+  const rows=[
+    [hasResume, `Résumé loaded — ${skills.length} skills feeding the match engine`, 'Update in My Profile', 'candidates'],
+    [!!li, li?'LinkedIn URL on file':'LinkedIn URL not set — recruiters check it first', 'Add in My Profile', 'candidates'],
+    [savedInterns>0, `${savedInterns} internship${savedInterns===1?'':'s'} saved as targets`, 'Save from the list above', null],
+    [appliedInterns>0, `${appliedInterns} internship application${appliedInterns===1?'':'s'} tracked`, 'Mark "I Applied" in a dossier', null],
+    [synced, synced?'Tracking synced across your devices':'Tracking is local to this device', 'Run the user_state SQL in setup', null],
+  ];
+  const done=rows.filter(r=>r[0]).length;
+  return `<div class="panel"><div class="ph"><h3>${cic("compass")} Mission Prep</h3><span class="va">${done}/${rows.length} ready</span></div>
+    <div class="pb">
+      <p class="subtle" style="margin:0 0 10px">Off-cycle months are runway: everything below is checked against your actual data, not a generic to-do list.</p>
+      ${rows.map(([ok,label,fix,nav])=>`<div class="prep-row">
+        <span class="prep-ic" style="color:${ok?'var(--good)':'var(--dim)'}">${ok?'✓':'○'}</span>
+        <span class="prep-l" style="${ok?'':'color:var(--muted)'}">${label}</span>
+        ${ok?'':(nav?`<a class="prep-fix" href="#" data-nav="${nav}">${fix} →</a>`:`<span class="prep-fix" style="cursor:default">${fix}</span>`)}
+      </div>`).join('')}
+    </div></div>`;
+}
+
+/* ---- Personal pipeline: YOUR saved & applied internships, from real tracking data ---- */
+function internPipelinePanel(internIds){
+  let savedMeta={}, appliedMeta={}, dates={};
+  try{ savedMeta=JSON.parse(localStorage.getItem('orbital.savedMeta')||'{}'); }catch(e){}
+  try{ appliedMeta=JSON.parse(localStorage.getItem('orbital.appliedMeta')||'{}'); }catch(e){}
+  try{ dates=JSON.parse(localStorage.getItem('orbital.appliedDates')||'{}'); }catch(e){}
+  const saved=[...savedJobs].filter(id=>internIds.has(id)&&!appliedJobs.has(id));
+  const applied=[...appliedJobs].filter(id=>internIds.has(id));
+  if(!saved.length && !applied.length) return '';
+  const row=(id,meta,stamp)=>{
+    const m=meta[id]||{};
+    return `<button class="ddl-row" data-dossier="${id}">
+      <span class="ddl-main"><b>${esc(m.title||id)}</b><span>${esc(m.company||'')}</span></span>
+      <span class="ddl-date">${stamp||''}</span></button>`;
+  };
+  return `<div class="panel"><div class="ph"><h3>${cic("sat")} My Internship Pipeline</h3><span class="va">${saved.length} targeted · ${applied.length} applied</span></div>
+    <div class="pb">
+      ${applied.length?`<div class="cgroup" style="padding-left:0">Applied</div>`+applied.map(id=>row(id,appliedMeta,(dates[id]?new Date(dates[id]).toLocaleDateString('en-US',{month:'short',day:'numeric'}):''))).join(''):''}
+      ${saved.length?`<div class="cgroup" style="padding-left:0">Targeted</div>`+saved.map(id=>row(id,savedMeta,'')).join(''):''}
+    </div></div>`;
+}
+
 function internshipsView(){
   const savedTrack=track; track='intern';
   if(listFilters.sort==='match') listFilters.sort='deadline';   // sensible default for this page
-  let jobs, allInterns, panelHtml;
+  let jobs, allInterns, panelHtml, earlyExtra=0;
   try{
     allInterns=jobsForRegion();
+    // Scope widener: the codebase's native 'earlycareer' track = internships PLUS real
+    // new-grad / entry-level full-time roles (floor-exempt for live rows) — genuinely
+    // applicable postings that were previously invisible on this page.
+    track='earlycareer';
+    const earlyPool=jobsForRegion();
+    track='intern';
+    const internIds=new Set(allInterns.map(j=>j.id));
+    earlyExtra=earlyPool.filter(j=>!internIds.has(j.id)).length;
+    if(internScope==='early') allInterns=earlyPool;
     jobs = internVertical ? allInterns.filter(j=>internVerticals(j).includes(internVertical)) : allInterns;
-    panelHtml=jobListPanel(jobs,'Internships',{paginate:true,va:'Internships'});
+    panelHtml = jobs.length
+      ? jobListPanel(jobs,'Internships & Early-Career',{paginate:true,va:'Internships'})
+      : `<div class="panel"><div class="pb"><div class="empty"><div class="big">Zero matching postings loaded right now</div>
+          <div>That's an honest count, not a glitch — internship boards run thin between February and July.
+          ${internScope!=='early'&&earlyExtra?`<b>${earlyExtra} real early-career full-time role${earlyExtra>1?'s':''}</b> qualify under the wider scope — flip the toggle above. `:''}
+          Meanwhile the directory below covers every organization worth watching when the Aug 1 window opens.</div></div></div></div>`;
   } finally { track=savedTrack; }
   const itarCount=jobs.filter(j=>internshipSignals(j).itar).length;
   const clearCount=jobs.filter(j=>internshipSignals(j).clearance).length;
@@ -3212,7 +3719,7 @@ function internshipsView(){
   }).join('') + (companyFilter?`<button class="vchip on" data-dirco="${esc(companyFilter)}">✕ ${esc(companyFilter)}</button>`:'');
   const season=internSeason();
   return `${guestStrip()}${viewHead('Internships','Every real internship posting, with citizenship/clearance requirements, hardware-vs-software track, and estimated apply-by dates · '+jobs.length+' results','Early-Career Radar')}
-    <div class="season ${season.cls}"><span class="slbl">${season.label}</span><span class="stext">${season.text}</span></div>
+    ${seasonTimelineWidget(season)}
     ${featuredInternshipBanner(jobs)}
     <div class="filters" style="margin:0">
       <div class="fsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ICONS.search}</svg>
@@ -3220,8 +3727,20 @@ function internshipsView(){
       <div class="vchips">${vchips}${internVertical?`<button class="vchip clear" data-vertical="">✕ Clear</button>`:''}</div>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 4px">${statChip('No citizenship req.',jobs.length-itarCount,'var(--good)')}${statChip('ITAR / citizenship req.',itarCount,'var(--bad)')}${statChip('Clearance req.',clearCount,'var(--gold)')}${statChip('Hardware',hwCount,'var(--a3)')}${statChip('Software',swCount,'var(--a2)')}</div>
-    <div style="display:flex;gap:8px;margin:2px 0 -6px">${favPill}</div>
+    <div style="display:flex;gap:8px;margin:2px 0 -6px;flex-wrap:wrap">
+      <button class="fbtn ${internScope==='intern'?'scope-on':''}" data-iscope="intern">Internships only</button>
+      <button class="fbtn ${internScope==='early'?'scope-on':''}" data-iscope="early">+ Early-career roles${earlyExtra&&internScope!=='early'?` (${earlyExtra})`:''}</button>
+      ${favPill}
+    </div>
     <div id="internList">${panelHtml}</div>
+    <div class="igrid">
+      ${deadlineRadarPanel(jobs)}
+      ${signalsBreakdownPanel(jobs)}
+    </div>
+    <div class="igrid">
+      ${prepChecklistPanel(new Set(allInterns.map(j=>j.id)))}
+      ${internPipelinePanel(new Set(allInterns.map(j=>j.id)))||'<div></div>'}
+    </div>
     ${strategicMatrixPanel(season)}
     ${internDirectoryPanel()}
     ${fellowshipsPanel()}`;
@@ -3300,6 +3819,76 @@ function candidatesView(){
     </div>`;
 }
 
+/* =========================================================================
+   FOLLOW-UP CADENCE ENGINE — every "I Applied" timestamp becomes a discipline:
+   D+7 first follow-up, D+14 second touch, D+21 silent = flagged for redeploying
+   energy. Status + follow-up log are local, synced across devices, and every
+   number on screen derives from your real timestamps.
+   ========================================================================= */
+const APP_STATUSES=['applied','responded','interview','offer','rejected'];
+function appStatusMap(){ try{ return JSON.parse(localStorage.getItem('orbital.appStatus')||'{}'); }catch(e){ return {}; } }
+function followupMap(){ try{ return JSON.parse(localStorage.getItem('orbital.followups')||'{}'); }catch(e){ return {}; } }
+function setAppStatus(id,st){
+  const m=appStatusMap(); m[id]=st; localStorage.setItem('orbital.appStatus',JSON.stringify(m));
+  pushTracking(); refreshContent();
+}
+function logFollowup(id){
+  const m=followupMap(); (m[id]=m[id]||[]).push(Date.now());
+  localStorage.setItem('orbital.followups',JSON.stringify(m));
+  pushTracking(); refreshContent();
+}
+function cadenceState(id){
+  let dates={}; try{ dates=JSON.parse(localStorage.getItem('orbital.appliedDates')||'{}'); }catch(e){}
+  const appliedAt=dates[id]?new Date(dates[id]).getTime():null;
+  if(!appliedAt) return null;
+  const status=appStatusMap()[id]||'applied';
+  const fups=(followupMap()[id]||[]);
+  const days=Math.floor((Date.now()-appliedAt)/864e5);
+  if(status!=='applied') return {days, status, fups:fups.length, due:null};
+  let due=null;
+  if(days>=21) due={label:'Silent 21+ days \u2014 flag as ghosted, redeploy the energy', level:'ghost'};
+  else if(days>=14 && fups.length<2) due={label:'Second follow-up due (D+14)', level:'due'};
+  else if(days>=7 && fups.length<1) due={label:'First follow-up due (D+7)', level:'due'};
+  return {days, status, fups:fups.length, due};
+}
+function followupEmailText(j, n){
+  const me=(function(){ try{ return JSON.parse(localStorage.getItem('orbital.profile')||'{}'); }catch(e){ return {}; } })();
+  const name=me.name||'';
+  if(n>=2) return `Subject: Following up \u2014 ${j.title} application\n\nHi,\n\nI applied for the ${j.title} role at ${j.company} a couple of weeks ago and wanted to follow up once more \u2014 I remain genuinely interested and would welcome the chance to speak. My background in space operations and systems engineering maps closely to what the posting describes, and I'd be glad to share anything further that would help the review.\n\nThank you for your time,\n${name}`;
+  return `Subject: ${j.title} application \u2014 quick follow-up\n\nHi,\n\nI recently applied for the ${j.title} position at ${j.company} and wanted to briefly follow up. The role aligns directly with my focus on space operations and mission integration, and I'm very interested in contributing. Happy to provide any additional information that's useful.\n\nBest regards,\n${name}`;
+}
+function cadencePanel(){
+  const applied=[...appliedJobs];
+  if(!applied.length) return '';
+  let appliedMeta={}; try{ appliedMeta=JSON.parse(localStorage.getItem('orbital.appliedMeta')||'{}'); }catch(e){}
+  const rows=applied.map(id=>({id, j:findJobById(id), meta:appliedMeta[id]||{}, c:cadenceState(id)}))
+    .filter(x=>x.c).sort((a,b)=>{
+      const rank=x=> x.c.due? (x.c.due.level==='ghost'?1:0) : (x.c.status==='applied'?2:3);
+      return rank(a)-rank(b) || b.c.days-a.c.days;
+    });
+  if(!rows.length) return '';
+  const dueCount=rows.filter(x=>x.c.due&&x.c.due.level==='due').length;
+  const ghostCount=rows.filter(x=>x.c.due&&x.c.due.level==='ghost').length;
+  const body=rows.map(({id,j,meta,c})=>{
+    const title=j?j.title:(meta.title||id), company=j?j.company:(meta.company||'');
+    const sel=`<select class="cad-sel" data-cadstatus="${esc(id)}">${APP_STATUSES.map(st=>`<option value="${st}" ${c.status===st?'selected':''}>${st}</option>`).join('')}</select>`;
+    const dueTag=c.due?`<span class="cad-due ${c.due.level}">${c.due.level==='ghost'?'\u26A0 ':''}${esc(c.due.label)}</span>`:
+      (c.status==='applied'?`<span class="cad-ok">on cadence \u00b7 ${c.fups} follow-up${c.fups===1?'':'s'} sent</span>`:
+       `<span class="cad-ok" style="color:var(--a3)">${esc(c.status)}</span>`);
+    const act=(c.status==='applied')?`<button class="dbtn" data-cadmail="${esc(id)}" title="Copies a follow-up email to your clipboard AND logs it">Copy follow-up + log</button>`:'';
+    return `<div class="cad-row" data-cadrow="${esc(id)}">
+      <span class="cad-d">D+${c.days}</span>
+      <span class="cad-main"><b>${esc(title)}</b><span>${esc(company)}</span>${dueTag}</span>
+      <span class="cad-acts">${sel}${act}</span>
+    </div>`;
+  }).join('');
+  return `<div class="panel"><div class="ph"><h3>${cic("radar")} Follow-Up Cadence</h3>
+      <span class="va">${dueCount?`<b style="color:var(--gold)">${dueCount} due</b> \u00b7 `:''}${ghostCount?`<b style="color:var(--bad)">${ghostCount} ghosted</b> \u00b7 `:''}${rows.length} tracked</span></div>
+    <div class="pb">
+      <p class="subtle" style="margin:0 0 10px">D+7 first touch \u00b7 D+14 second \u00b7 D+21 silent = redeploy. Timestamps are your real "I Applied" clicks; the copy button logs the follow-up automatically.</p>
+      ${body}
+    </div></div>`;
+}
 function pipelineView(){
   const saved=[...savedJobs].map(findJobById).filter(Boolean);
   const applied=[...appliedJobs].map(findJobById).filter(Boolean);
@@ -3313,6 +3902,7 @@ function pipelineView(){
     ${arr.map(card).join('')}
     ${!arr.length?'<div class="subtle" style="padding:8px;font-size:var(--fs-sm)">Empty</div>':''}</div>`;
   return `${guestStrip()}${viewHead('My Applications','Tracked as a Systems-Engineering V-Model — requirements down the left, verification up the right','V-Model')}
+    ${cadencePanel()}
     <div class="panel"><div class="ph"><h3>${cic("sat")} Application V-Model</h3><span class="va">left = define · right = verify</span></div>
       <div class="pb"><div class="vmodel-legend">Requirement Analysis → S&OP / Concept Design → Component Verification (screens) → Mission Validation (offer) — each role advances down then up the V.</div>
       <div class="kanban">
@@ -3510,6 +4100,20 @@ function alertsView(){
   } else {
     AL=[{ic:cic('radar',16,'var(--dim)'),c:'var(--dim)',b:'Connect Supabase to see real alerts',s:'Alerts are derived from your live job data'}];
   }
+    // Follow-up cadence: due touches and ghost flags are YOUR tracking data — they render
+  // in any data mode, unshifted to the top (a due follow-up outranks pool statistics).
+  try{
+    let apMeta={}; try{ apMeta=JSON.parse(localStorage.getItem('orbital.appliedMeta')||'{}'); }catch(e){}
+    const cadAL=[];
+    [...appliedJobs].forEach(id=>{
+      const c=cadenceState(id); if(!c||!c.due) return;
+      const jj=findJobById(id), title=jj?jj.title:(apMeta[id]&&apMeta[id].title)||id, co=jj?jj.company:(apMeta[id]&&apMeta[id].company)||'';
+      cadAL.push({ic:cic(c.due.level==='ghost'?'fire':'radar',16,c.due.level==='ghost'?'var(--bad)':'var(--gold)'),
+        c:c.due.level==='ghost'?'var(--bad)':'var(--gold)',
+        b:`${c.due.label} \u2014 ${title}`, s:`${co} \u00b7 applied D+${c.days}${c.fups?` \u00b7 ${c.fups} follow-up(s) sent`:''}`});
+    });
+    if(cadAL.length) AL=cadAL.concat(AL.filter(a=>!String(a.b).startsWith('No active signals')));
+  }catch(e){}
   return `${guestStrip()}${viewHead('Alerts','Signals worth acting on','Notifications')}
     <div class="panel"><div class="pb"><div class="alertlist">${AL.map(a=>`<div class="alertrow" style="border-left-color:${a.c}"><div class="aic" style="background:${a.c}22">${a.ic}</div><div><b>${esc(a.b)}</b><span>${esc(a.s)}</span></div></div>`).join('')}</div></div></div>`;
 }
@@ -3543,16 +4147,16 @@ function earlyCareerWidget(){
     .sort((a,b)=>(daysOnMarket(a)-daysOnMarket(b))).slice(0,4);
   if(!items.length) return '';
   const card=items.map(j=>{
-    const left=Math.max(0,45-daysOnMarket(j));
-    const d=new Date(Date.now()+left*86400000);
-    const close=d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    const dl=deadlineFor(j);
+    const left=Math.max(0,Math.ceil((dl.date-Date.now())/864e5));
+    const close=dl.date.toLocaleDateString(undefined,{month:'short',day:'numeric'});
     const urgent=left<=10;
     const tag=j.type==='Internship'?'Internship':'Early-career';
     return `<button class="ecitem" data-dossier="${j.id}">
       <span style="flex:none;font-size:var(--fs-micro);font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:${j.type==='Internship'?'#8ad6ff':'#9be6c0'};white-space:nowrap;writing-mode:horizontal-tb">${tag}</span>
       <span style="flex:1;min-width:0"><span style="display:block;font-weight:600;font-size:var(--fs-rg);color:#e8eef7;line-height:1.35">${esc(j.title)}</span><span style="font-size:var(--fs-sm);color:var(--dim)">${esc(j.company)} · ${esc((REGIONS[j.region]||REGIONS[region]).short)} · ${daysOnMarket(j)}d listed</span></span>
       <span style="flex:none;text-align:right;white-space:nowrap"><span style="display:block;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:var(--fs-md);color:var(--good)">${salaryLabel(j)}</span><span style="font-size:var(--fs-2xs);color:${matchColor(j.match)};font-weight:700">${j.match}% match</span></span>
-      <span style="flex:none;text-align:right;white-space:nowrap;padding-left:14px;border-left:1px solid var(--line)"><span style="display:block;font-size:var(--fs-xs);color:${urgent?'var(--a4)':'var(--a3)'};font-weight:700">${left===0?'Closing':'~'+left+'d left'}</span><span style="font-size:var(--fs-2xs);color:var(--dim)">est. by ${close}</span></span>
+      <span style="flex:none;text-align:right;white-space:nowrap;padding-left:14px;border-left:1px solid var(--line)"><span style="display:block;font-size:var(--fs-xs);color:${urgent?'var(--a4)':'var(--a3)'};font-weight:700">${left===0?'Closing':'~'+left+'d left'}</span><span style="font-size:var(--fs-2xs);color:var(--dim)">${dl.est?'est. ':''}by ${close}</span></span>
     </button>`;
   }).join('');
   return `<div class="panel" style="margin-bottom:18px"><div class="ph"><h3 style="display:flex;align-items:center;gap:8px">${cic("grad")} Early-Career &amp; Internship Radar</h3><span class="subtle" style="font-size:var(--fs-xs)">est. deadlines · ${items.length} open</span></div>
@@ -4167,6 +4771,100 @@ function alumniDossierWidget(j){
         ${a.linkedinUrl?`<a href="${esc(a.linkedinUrl)}" target="_blank" rel="noreferrer" class="minibtn" style="text-decoration:none">Profile</a>`:''}
       </div>`).join('')}</div></div>`;
 }
+/* =========================================================================
+   TAILORING COPILOT — per-role gap analysis between the REAL posting text and
+   your REAL extracted skills. The core engine is local and fully transparent
+   (every verdict traceable to a line of the posting); AI drafting is an
+   optional layer on top via aiComplete().
+   ========================================================================= */
+function userSkillSet(){
+  let sk=[]; try{ sk=JSON.parse(localStorage.getItem('orbital.skills')||'[]'); }catch(e){}
+  if(!sk.length) sk=(OWNER.skills||[]);
+  return sk.map(x=>String(x).toLowerCase());
+}
+function tailoringAnalysis(j){
+  const desc=(j.description||'');
+  const skills=userSkillSet();
+  // 1) Pull the requirement-shaped lines out of the real posting
+  const lines=desc.split(/\n|(?<=[.;])\s+(?=[A-Z])/).map(l=>l.replace(/^[-*\u2022\s]+/,'').trim())
+    .filter(l=>l.length>25 && l.length<240)
+    .filter(l=>/\b(experience|degree|proficien|familiar|knowledge of|ability to|required|preferred|must|strong|working (with|knowledge)|background in|skills? (in|with)|expertise|understanding of)\b/i.test(l));
+  const reqs=[...new Set(lines)].slice(0,14);
+  // 2) Verdict per requirement: which of YOUR skills appears in it
+  const GENERIC=new Set(['management','operations','business','engineering','analysis','tracking','planning','systems','process','solutions','administration','implementation','ownership','mitigation','scaling','negotiation']);
+  const rows=reqs.map(line=>{
+    const ll=line.toLowerCase();
+    const hits=skills.filter(sk=>{
+      if(sk.length>2 && ll.includes(sk)) return true;                   // full phrase
+      return sk.split(/[^a-z0-9+#]+/).some(tok=>tok.length>=6 && !GENERIC.has(tok) && ll.includes(tok));  // distinctive token
+    });
+    return {line, hits, ok:hits.length>0};
+  });
+  const covered=rows.filter(r=>r.ok).length;
+  // 3) Their language you are not speaking: domain terms in the posting, absent from your skills
+  const LEX=['itar','clearance','matlab','simulink','stk','python','linux','c++','aws','azure','git',
+    'telemetry','gnc','astrodynamics','orbital mechanics','mission assurance','systems engineering',
+    'requirements management','verification','validation','hitl','anomaly','agile','jira','confluence',
+    'mbse','doors','risk management','integration and test','ground segment','constellation',
+    'flight software','propulsion','program management','earned value','stakeholder'];
+  const dl=desc.toLowerCase();
+  const mirror=LEX.filter(t=>dl.includes(t) && !skills.some(sk=>sk.includes(t)||t.includes(sk))).slice(0,10);
+  return {rows, covered, total:rows.length, mirror};
+}
+function copilotHTML(j){
+  const a=tailoringAnalysis(j);
+  if(!a.total && !(j.description||'').length){
+    return `<p class="subtle" style="margin:0">This posting has no description text loaded, so there is nothing real to analyze.
+      Open the original posting via Apply and paste key requirements into your notes instead.</p>`;
+  }
+  const pct=a.total?Math.round(a.covered/a.total*100):0;
+  const rows=a.rows.map(r=>`<div class="cp-row">
+      <span class="cp-ic" style="color:${r.ok?'var(--good)':'var(--gold)'}">${r.ok?'\u2713':'\u25CB'}</span>
+      <span class="cp-line">${esc(r.line)}</span>
+      ${r.ok?`<span class="cp-hit">${esc(r.hits.slice(0,2).join(', '))}</span>`:'<span class="cp-hit gap">gap</span>'}
+    </div>`).join('');
+  const mirror=a.mirror.length?`<div class="cp-mirror"><b>Adopt their language</b> &mdash; terms this posting uses that your r\u00e9sum\u00e9 skills don't:
+      <div class="cp-terms">${a.mirror.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>
+      <p class="subtle" style="margin:6px 0 0">Only claim what's true &mdash; but where you HAVE the experience under a different name, rename it to theirs.</p></div>`:'';
+  return `
+    ${a.total?`<div class="cp-score">You cover <b style="color:${pct>=70?'var(--good)':pct>=40?'var(--gold)':'var(--bad)'}">${a.covered} of ${a.total}</b> requirement lines this posting states (${pct}%)</div>${rows}`:
+      '<p class="subtle" style="margin:0 0 8px">No explicit requirement lines detected in this description &mdash; the language analysis below still applies.</p>'}
+    ${mirror}
+    <div class="cp-actions">
+      <button class="dbtn primary" data-copilot-ai="${esc(j.id)}">Draft tailored bullets + cover note (AI)</button>
+      <button class="dbtn" data-copilot-copy="${esc(j.id)}">Copy this analysis</button>
+    </div>
+    <div id="copilot-ai-${esc(j.id)}"></div>`;
+}
+function copilotPlainText(j){
+  const a=tailoringAnalysis(j);
+  let out=`TAILORING BRIEF \u2014 ${j.title} @ ${j.company}\nCoverage: ${a.covered}/${a.total} stated requirements\n\n`;
+  a.rows.forEach(r=>{ out+=`${r.ok?'[HIT]':'[GAP]'} ${r.line}${r.ok?'  <- '+r.hits.join(', '):''}\n`; });
+  if(a.mirror.length) out+=`\nADOPT THEIR LANGUAGE: ${a.mirror.join(', ')}\n`;
+  return out;
+}
+async function runCopilotAI(id){
+  const j=findJobById(id); if(!j) return;
+  const box=document.getElementById('copilot-ai-'+id); if(!box) return;
+  box.innerHTML='<p class="subtle" style="margin:10px 0 0">Drafting against the real posting\u2026</p>';
+  try{
+    const a=tailoringAnalysis(j);
+    const gaps=a.rows.filter(r=>!r.ok).map(r=>r.line).slice(0,5);
+    const hits=a.rows.filter(r=>r.ok).map(r=>r.line).slice(0,5);
+    const prompt=`You are a career copilot helping tailor an application. STRICT RULE: never invent experience the candidate does not claim; only reframe what is true.\n\nCandidate: ${OWNER.blurb||''}\nSkills: ${userSkillSet().join(', ')}\n\nRole: ${j.title} at ${j.company}\nRequirements they state that the candidate ALREADY covers: ${hits.join(' | ')||'(none detected)'}\nRequirements with NO detected coverage: ${gaps.join(' | ')||'(none)'}\nPosting language to mirror: ${a.mirror.join(', ')||'(none)'}\n\nProduce exactly:\nBULLETS:\n- 3 r\u00e9sum\u00e9 bullet rewrites using THEIR terminology, each grounded ONLY in the candidate's stated skills\nCOVER:\nA 110-130 word cover note, specific to this role, honest about the transition, no clich\u00e9s.`;
+    const text=await aiComplete(prompt);
+    box.innerHTML=`<div class="cp-aiout"><pre>${esc(text)}</pre>
+      <button class="dbtn" data-copyai="${esc(id)}">Copy draft</button></div>`;
+    const cb=box.querySelector('[data-copyai]'); if(cb) cb.onclick=()=>{ navigator.clipboard.writeText(text); cb.textContent='Copied \u2713'; };
+  }catch(e){
+    if(String(e.message)==='NO_AI_KEY'){
+      box.innerHTML=aiKeyPromptHTML('copilot-'+id);
+      wireAiKeySave('copilot-'+id, ()=>runCopilotAI(id));
+    } else {
+      box.innerHTML=`<p class="subtle" style="color:var(--bad);margin:10px 0 0">AI drafting failed: ${esc(e.message||'unknown')}. The local analysis above still stands.</p>`;
+    }
+  }
+}
 function dossierHTML(j){
   const R=REGIONS[j.region]||REGIONS[region];
   const det=jobDetail(j);
@@ -4184,6 +4882,7 @@ function dossierHTML(j){
     ${alumniDossierWidget(j)}
     ${matchBreakdownBlock(j)}
     <div id="airescore-${esc(j.id)}" class="dblock" style="display:none"></div>
+    <div class="dblock cp-block"><h4>Tailoring Copilot</h4>${copilotHTML(j)}</div>
     ${fullDescriptionBlock(j)}
     ${careerImpactBlock(j)}
     <div class="dgrid2">
@@ -4239,6 +4938,7 @@ function shareHTML(j){
       <div class="sr"><span class="k">Match</span><span class="v">${j.match}% · ${j.planets}🪐</span></div>
     </div>
     <div class="copyrow"><input id="shareLink" value="${esc(link)}" readonly><button id="copyBtn">Copy link</button></div>
+    <button class="dbtn primary" id="nativeShare" data-nativeshare="${j.id}" style="margin-top:10px">Share via text / apps</button>
     <button class="dbtn" id="previewShare" data-previewshare="${j.id}" style="margin-top:10px">👁 Preview the read-only view</button>
     <div class="sharenote">Anyone opening this link sees a clean, read-only snapshot of just this role — guest mode is forced, with no editing, filters, pipeline, or account access.</div>
   </div>`;
@@ -4273,6 +4973,16 @@ function sharedRoleView(j){
     </div>
     <div class="copyright" style="margin-top:18px">© ${new Date().getFullYear()} Orbital CRM · Shared read-only role. Sign in for the full console.</div>
   </div></div>`;
+}
+function sharedGoneView(){
+  return `<div class="sharedpage"><div class="sharedwrap" style="max-width:520px">
+    <div class="sharedbar"><a class="logo" href="${location.pathname}" style="padding:0">${orbitalLogo(26)}</a>
+      <span class="robadge">👁 Shared role</span></div>
+    <div class="modal" style="width:100%;margin:0;text-align:center;padding:34px 22px">
+      <h2 style="margin:0 0 10px">This role is no longer listed</h2>
+      <p class="subtle" style="margin:0 0 20px">Space postings move fast — this one has been filled, archived, or rolled off the boards since it was shared.</p>
+      <a class="apply" href="${location.pathname}" style="display:inline-flex">Explore live roles on Orbital →</a>
+    </div></div></div>`;
 }
 function openShare(id){
   const j=findJob(id); if(!j) return;
@@ -4445,6 +5155,7 @@ function setRole(r,email){
   role=r; localStorage.setItem('orbital.role',r);
   if(email){ userEmail=email; localStorage.setItem('orbital.email',email); }
   closeGate(); render();
+  if(r==='owner') pullTracking();   // returning owner on a new device inherits their history
 }
 /* Real Google OAuth via Supabase Auth (production). Falls back to email when
    Supabase isn't connected yet, so the gate always works. */
@@ -4894,7 +5605,7 @@ function wireSwipeRegion(){
 function refreshContent(animate){
   const c=$('#content'); if(!c) return;
   c.classList.remove('viewin');
-  c.innerHTML = viewBody()+copyrightHTML();
+  c.innerHTML = (view==='dashboard'?earlyCareerWidget():'')+viewBody()+copyrightHTML();
   if(animate){ void c.offsetWidth; c.classList.add('viewin'); }
   kfocusIdx=-1;
   rewireContent(); drawCharts(); initBudget(); startCountdown();
@@ -5024,6 +5735,7 @@ function wire(){
   const mrf=$('#manualRefresh'); if(mrf) mrf.onclick=()=>doRefresh(mrf);
   const ckb=$('#cmdkBtn'); if(ckb) ckb.onclick=()=>openCmdk();
   const ckbg=$('#cmdkBg'); if(ckbg) ckbg.onclick=e=>{ if(e.target===ckbg) closeCmdk(); };
+  paintSyncStatus();
   rewireContent();
   // settings fab + drawer
   const fab=$('#settingsFab'); if(fab) fab.onclick=openDrawer;
@@ -5059,6 +5771,16 @@ function rewireContent(){
   const njb=document.querySelector('[data-nav-jobs]'); if(njb) njb.onclick=()=>{ view='jobs'; render(); };
   const fp=$('#favPill'); if(fp) fp.onclick=()=>{ favOnly=!favOnly; jobsShown=PAGE_SIZE; refreshContent(); };
   document.querySelectorAll('[data-vertical]').forEach(b=>b.onclick=()=>{ internVertical=b.dataset.vertical; jobsShown=PAGE_SIZE; refreshContent(); });
+  document.querySelectorAll('[data-iscope]').forEach(b=>b.onclick=()=>{ internScope=b.dataset.iscope; jobsShown=PAGE_SIZE; refreshContent(); });
+  document.querySelectorAll('[data-cadstatus]').forEach(sel=>sel.onchange=()=>setAppStatus(sel.dataset.cadstatus, sel.value));
+  document.querySelectorAll('[data-cadmail]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.cadmail, j=findJobById(id);
+    let meta={}; try{ meta=(JSON.parse(localStorage.getItem('orbital.appliedMeta')||'{}')[id])||{}; }catch(e){}
+    const jj=j||{title:meta.title||id, company:meta.company||''};
+    const n=(followupMap()[id]||[]).length+1;
+    navigator.clipboard.writeText(followupEmailText(jj,n));
+    logFollowup(id);
+  });
   document.querySelectorAll('[data-dirco]').forEach(b=>b.onclick=()=>{ companyFilter=(companyFilter===b.dataset.dirco)?'':b.dataset.dirco; internVertical=''; query=''; jobsShown=PAGE_SIZE; refreshContent(); const el=$('#internList'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); });
   const ap=$('#archPill'); if(ap) ap.onclick=()=>{ showArchived=!showArchived; jobsShown=PAGE_SIZE; refreshContent(); };
   const sm=$('#seeMore'); if(sm) sm.onclick=()=>{ jobsShown+=PAGE_SIZE; refreshContent(); const el=$('#seeMore')||$('#seeLess'); if(el) el.scrollIntoView({block:'center'}); };
@@ -5070,7 +5792,7 @@ function rewireContent(){
   document.querySelectorAll('[data-save]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); toggleSave(b.dataset.save); });
   document.querySelectorAll('[data-dismiss]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); toggleDismiss(b.dataset.dismiss); });
   document.querySelectorAll('[data-applied]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); toggleApplied(b.dataset.applied); });
-  document.querySelectorAll('[data-airescore]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); runAiReScore(b.dataset.airescore); });
+  // [data-airescore] / copilot buttons live in the modal — handled by the delegated document click handler
   // Alumni Network wiring
   const asb=$('#alumniSearchBtn'); if(asb) asb.onclick=()=>{ const c=($('#alumniCoSearch')||{}).value||''; window.open(alumniSearchUrl(c),'_blank'); };
   const aab=$('#alumniAddBtn'); if(aab) aab.onclick=()=>{
@@ -5096,6 +5818,18 @@ document.addEventListener('click',e=>{
   const sh=e.target.closest('[data-share]'); if(sh && e.target.closest('#modal')){ openShare(sh.dataset.share); }
   const nw=e.target.closest('[data-newwin]'); if(nw){ openNewWindow(nw.dataset.newwin); }
   const cvt=e.target.closest('[data-convert]'); if(cvt){ convertResume(cvt.dataset.convert); }
+  const ar=e.target.closest('[data-airescore]'); if(ar){ e.stopPropagation(); runAiReScore(ar.dataset.airescore); }
+  const cai=e.target.closest('[data-copilot-ai]'); if(cai){ e.stopPropagation(); runCopilotAI(cai.dataset.copilotAi); }
+  const cco=e.target.closest('[data-copilot-copy]'); if(cco){ e.stopPropagation();
+    const j=findJobById(cco.dataset.copilotCopy);
+    if(j){ navigator.clipboard.writeText(copilotPlainText(j)); cco.textContent='Copied ✓'; } }
+  const ns=e.target.closest('[data-nativeshare]'); if(ns){
+    const j=findJob(ns.dataset.nativeshare);
+    if(j){ const url=location.origin+location.pathname+'#share='+j.id;
+      const text=`${j.title} @ ${j.company} — ${salaryLabel(j)} · ${j.location}`;
+      if(navigator.share){ navigator.share({title:'Space role: '+j.title, text, url}).catch(()=>{}); }
+      else { navigator.clipboard.writeText(text+'\n'+url); ns.textContent='Copied — paste into a text ✓'; }
+    } }
   const pv=e.target.closest('[data-previewshare]'); if(pv){ location.hash='share='+pv.dataset.previewshare; location.reload(); }
   const cp=e.target.closest('#copyBtn'); if(cp){ const i=$('#shareLink'); i.select(); document.execCommand('copy'); cp.textContent='Copied ✓'; setTimeout(()=>cp.textContent='Copy link',1500); }
   const oc=e.target.closest('[data-copy]'); if(oc){ oc.textContent='Copied ✓'; setTimeout(()=>{const m={linkedin:'🔗 LinkedIn Connection',email:'✉ Cold Email Channel',referral:'🤝 Referral Request'};oc.innerHTML=m[oc.dataset.copy];},1400); }
@@ -5297,6 +6031,7 @@ function kfocusOpen(){
    BOOT
    ========================================================================= */
 (function boot(){
+  setTimeout(()=>{ if(role==='owner') pullTracking(); }, 1500);   // after initData settles
   wireTiltParallax();
   wireSwipeRegion();
   // shared read-only role link → force guest, render just that role
@@ -5325,7 +6060,7 @@ function kfocusOpen(){
   // upgrade to live Supabase data + pick up any Google OAuth session on return
   initData().then(async ()=>{
     await checkSession();
-    if(location.hash.match(/share=([\w-]+)/)){ const j=findJob(RegExp.$1); if(j){ document.getElementById('root').innerHTML=sharedRoleView(j); return; } }
+    if(location.hash.match(/share=([\w-]+)/)){ const jj=findJob(RegExp.$1); document.getElementById('root').innerHTML = jj ? sharedRoleView(jj) : sharedGoneView(); return; }
     render();
     hideScanOverlay();
     const m=location.hash.match(/job=([\w-]+)/); if(m) setTimeout(()=>openDossier(m[1]),200);
