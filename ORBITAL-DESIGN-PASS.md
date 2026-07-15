@@ -456,6 +456,60 @@ save/dismiss buttons meet minimum touch-target sizes within the dense rows.
 Verified in one Chromium pass at 412x915: fresh-device share render, dead
 link, native sheet payload, zero overflow, zero errors.
 
+## 23. Custom hero artwork + role notes/accountability (v13)
+
+**Hero art:** the four Unsplash photo backdrops are replaced with Lisaney's
+custom sci-fi skyline artwork (Seattle / Global / LA / New Zealand), converted
+from ~9MB of PNG to ~4 optimized progressive JPEGs served locally from
+assets/ — faster on mobile than the old remote photos. The v10 generative
+skyline SVG layer is removed (the artwork IS the skyline now); the glass
+status chips, cinematic satellite/rocket motion, and vignette remain layered
+on top.
+
+**Role notes:** every dossier gets an owner-only "My Notes" block — free-text
+per role (recruiter names, referral status, prep, gut feel), saved with a
+timestamp, synced across devices, flagged with a note marker in the cadence
+list. Verified: note persists across dossier close/reopen.
+
+**Progression auto-tracking:** every status change (and the initial
+"I Applied") is timestamped into a per-role history; the full trail
+(applied Jul 2 → responded Jul 9 → interview Jul 12) renders in the cadence
+panel and the dossier. Synced.
+
+**Accountability prompts:** when follow-ups are due or roles have gone
+silent 21+ days, a banner asks about them at the top of every view —
+"Review now" jumps to the cadence panel; "Snooze today" quiets it until
+tomorrow (per device). Verified: banner appears with a due follow-up,
+snooze hides it, history logs applied→responded→interview.
+
+## 24. Static verified intern board (v14)
+
+A hand-verified snapshot of real, currently-open space internships baked onto
+the Internships page (above the strategic matrix), from a live web scan on
+Jul 14 2026. Eight rows across Rocket Lab (Space Operations — the closest
+public match to an MSO profile — plus Systems/Manufacturing/Mechanical),
+SpaceX (Engineering / Software / Business Operations, real Greenhouse req
+links), and Blue Origin (paid + housing program). Each row states who, what,
+where, how to apply (real URL), and pay — tagged [posted] (on the listing,
+per CA/WA transparency law), [reported] (levels.fyi/Glassdoor), or "not
+posted." The panel is explicitly labeled a frozen snapshot; the live job
+list and directory remain the auto-updating layer. Verified in Chromium:
+8 rows, 3 posted + 5 reported pay tags, all apply links valid http(s),
+star row highlighted, zero mobile overflow, zero errors.
+
+NOTE: pay marked [reported] must be confirmed with the recruiter — it is
+crowd-sourced, not from the posting. SpaceX ranges are from the live reqs.
+
+## 25. Honest apply-button labels (v15)
+
+The dossier apply button hard-coded "Apply on {jobSource}", and jobSource
+falls back to "LinkedIn" for any job without a known ATS — so company-page
+and Greenhouse links were mislabeled "Apply on LinkedIn." New applyLabel(j)
+reads the ACTUAL destination URL: "Apply on LinkedIn" only when the link
+truly contains linkedin.com, otherwise a neutral "Apply here" (also for
+empty/# links). Verified: LinkedIn URL → "Apply on LinkedIn"; Greenhouse and
+company career pages → "Apply here".
+
 ## Honest follow-ups (not done)
 
 1. The remaining ~157 unique inline styles are one-off layout tweaks —

@@ -1393,6 +1393,38 @@ button,a,select,.hchip,.minibtn,.savebtn{touch-action:manipulation;-webkit-tap-h
   .dactions .apply{min-height:46px}
   .jrow .jactions .minibtn,.dtable .savebtn{min-height:32px;min-width:34px}
 }
+
+/* ---- v13: notes, progression trail, accountability ---- */
+.notes-ta{width:100%;resize:vertical;min-height:72px;line-height:1.55}
+.notes-ts{font-size:var(--fs-2xs);color:var(--dim);font-weight:500;margin-left:8px}
+.notedot{font-style:normal;font-size:var(--fs-2xs)}
+.cad-trail{display:block;font-family:'JetBrains Mono',monospace;font-size:var(--fs-nano);color:var(--dim);letter-spacing:.02em;margin-top:2px}
+.acct{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);
+  border-radius:var(--r);padding:12px 16px;margin-bottom:4px;
+  background:linear-gradient(100deg,color-mix(in srgb,var(--gold) 9%,transparent),rgba(10,14,24,.5))}
+.acct-t{flex:1;min-width:240px;font-size:var(--fs-md);color:var(--text);line-height:1.5}
+.acct-t b{font-family:'JetBrains Mono',monospace;color:var(--gold)}
+.acct-a{display:flex;gap:8px;flex:none}
+@media(max-width:720px){.acct{padding:10px 12px}.acct-a{width:100%}.acct-a .dbtn{flex:1;justify-content:center}}
+
+/* ---- v14: static verified intern board ---- */
+.sib-row{display:flex;gap:14px;align-items:center;padding:12px 2px;border-top:1px solid var(--line);flex-wrap:wrap}
+.sib-row:first-of-type{border-top:0}
+.sib-row.sib-star{background:linear-gradient(90deg,color-mix(in srgb,var(--a3) 7%,transparent),transparent 70%);border-radius:var(--rs);padding-left:10px;margin-left:-10px}
+.sib-main{flex:1;min-width:230px;display:flex;flex-direction:column;gap:3px}
+.sib-main b{color:var(--text);font-weight:600;font-size:var(--fs-md)}
+.sib-main>span{font-size:var(--fs-xs);color:var(--dim)}
+.sib-note{color:var(--muted) !important;line-height:1.5}
+.sib-side{flex:none;display:flex;flex-direction:column;gap:7px;align-items:flex-end}
+.sib-pay{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);font-weight:700;color:var(--text);white-space:nowrap}
+.sib-pay i{font-style:normal;font-weight:500;color:var(--dim);font-size:var(--fs-2xs)}
+.sib-pay.posted{color:var(--good)}
+.sib-pay.none{color:var(--dim);font-weight:500}
+.sib-apply{text-decoration:none;min-height:34px}
+@media(max-width:720px){
+  .sib-side{flex-direction:row;width:100%;justify-content:space-between;align-items:center}
+  .sib-apply{min-height:40px}
+}
 </style>
 </head>
 <body>
@@ -1442,10 +1474,10 @@ let sb = null, liveJobs = null, dataMode = 'sample';
 
 /* ---------------- seed dataset ---------------- */
 const PHOTOS = {
-  global:'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1900&q=75',
-  seattle:'https://images.unsplash.com/photo-1758514662145-cd1534b6e9d4?auto=format&fit=crop&w=1900&q=75',
-  la:'https://images.unsplash.com/photo-1631473121056-34bbec0dfb3b?auto=format&fit=crop&w=1900&q=75',
-  nz:'https://images.unsplash.com/photo-1600208669687-f19af3638cb9?auto=format&fit=crop&w=1900&q=75',
+  global:'assets/hero-global.jpg',
+  seattle:'assets/hero-seattle.jpg',
+  la:'assets/hero-la.jpg',
+  nz:'assets/hero-nz.jpg',
 };
 const HOUSE = {
   a:'https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=200&q=70',
@@ -1565,6 +1597,14 @@ function careersURL(co,title){
 // derive the job board a listing came from (badge + apply-link context)
 const ATS_SOURCE={'SpaceX':'Greenhouse','Blue Origin':'Greenhouse','Rocket Lab':'Greenhouse','Relativity Space':'Greenhouse','Stoke Space':'Greenhouse','Impulse Space':'Greenhouse','Vast Space':'Greenhouse','Apex Space':'Greenhouse','BlackSky':'Lever','Maxar':'Lever','Spire Global':'Lever','Kepler Communications':'Lever','Boeing':'Careers','Amazon':'Careers','Microsoft':'Careers','Riot Games':'Greenhouse','Snap Inc.':'Careers','Xero':'Careers','Datacom':'Careers','Stats NZ':'Careers','NZX':'LinkedIn'};
 function jobSource(j){ return j.source || ATS_SOURCE[j.company] || 'LinkedIn'; }
+// Button label follows the ACTUAL destination: name LinkedIn only when the link
+// really goes there; otherwise a neutral "Apply here". Never mislabel the target.
+function applyLabel(j){
+  const u=(j.url||'').toLowerCase();
+  if(!u || u==='#') return 'Apply here';
+  if(u.includes('linkedin.com')) return 'Apply on LinkedIn';
+  return 'Apply here';
+}
 // ===== Space-only company + ERAU-aligned title gate (per match/mismatch report) =====
 const SPACE_COMPANIES=new Set(['SpaceX','Blue Origin','Rocket Lab','Relativity Space','Stoke Space','Impulse Space','Vast Space','Apex Space','Astranis','Varda Space','Planet Labs','Sierra Space','Maxar','Spire Global','Kepler Communications','BlackSky','Firefly Aerospace','Starfish Space','Aerojet Rocketdyne','Spaceflight Inc.','Xplore','Gravitics','Dawn Aerospace','Kea Aerospace','Zenno Astronautics','LeoLabs NZ']);
 const SPACE_WORDS=/\b(space|satellite|spacecraft|rocket|launch|orbit|orbital|payload|constellation|aerospace|mission)\b/i;
@@ -1983,7 +2023,7 @@ function toggleApplied(id){
     if(j) saveMeta('orbital.appliedMeta',id,j);
     try{ const dates=JSON.parse(localStorage.getItem('orbital.appliedDates')||'{}'); dates[id]=new Date().toISOString(); localStorage.setItem('orbital.appliedDates',JSON.stringify(dates)); }catch(e){}
   }
-  localStorage.setItem('orbital.applied',JSON.stringify([...appliedJobs])); pushTracking(); routeRender();
+  localStorage.setItem('orbital.applied',JSON.stringify([...appliedJobs])); if(appliedJobs.has(id)) logProgress(id,'applied'); pushTracking(); routeRender();
 }
 function guestBlock(){ alert('Guest mode is read-only. Sign in as the owner to save, edit, or change settings.'); }
 
@@ -1994,7 +2034,7 @@ function guestBlock(){ alert('Guest mode is read-only. Sign in as the owner to s
    read or write your tracking. Falls back silently to local-only when the
    table doesn't exist yet or the network is down.
    ========================================================================= */
-const SYNC_LS_KEYS=['orbital.saved','orbital.dismissed','orbital.applied','orbital.savedMeta','orbital.dismissedMeta','orbital.appliedMeta','orbital.appliedDates','orbital.appStatus','orbital.followups'];
+const SYNC_LS_KEYS=['orbital.saved','orbital.dismissed','orbital.applied','orbital.savedMeta','orbital.dismissedMeta','orbital.appliedMeta','orbital.appliedDates','orbital.appStatus','orbital.followups','orbital.roleNotes','orbital.appHistory'];
 let syncStatus='local';   // local | syncing | synced | no-table | error
 let syncTimer=null;
 function syncClient(){ return (typeof sb!=='undefined' && sb && SB_URL && SB_KEY) ? sb : null; }
@@ -2658,7 +2698,7 @@ function heroHUD(){
 function hero(){
   const R=REGIONS[region];
   if(region==='global'){
-    return `<div class="hero">${heroFX()}${skylineSVG(region)}<div class="bg" style="background:linear-gradient(120deg,#10204a,#0a0e1c);background-image:url('https://images.unsplash.com/photo-1699541948287-9c8ce85624ce?auto=format&fit=crop&w=1600&q=80');background-size:cover;background-position:center 30%"></div>
+    return `<div class="hero">${heroFX()}<div class="bg" style="background:linear-gradient(120deg,#10204a,#0a0e1c);background-image:url('https://images.unsplash.com/photo-1699541948287-9c8ce85624ce?auto=format&fit=crop&w=1600&q=80');background-size:cover;background-position:center 30%"></div>
       <div class="ov" style="background:linear-gradient(100deg,rgba(4,6,12,.86) 22%,rgba(4,6,12,.15) 62%,transparent 82%),linear-gradient(180deg,rgba(4,6,12,.1),rgba(4,6,12,.7))"></div>
       <div class="inner">
         <div class="hero-lead">
@@ -2674,7 +2714,7 @@ function hero(){
   const greet = region==='nz'
     ? `<h1 class="greet">Kia ora, ${esc(ownerFirstName())} <span style="font-size:var(--fs-d3)">👋</span></h1>`
     : `<div class="eyebrow">◂ ${esc(R.city)} · Sector Lock ▸</div><h1>${esc(R.tagline||R.city)}</h1>`;
-  return `<div class="hero">${heroFX()}${skylineSVG(region)}<div class="bg" style="background:${heroBg};background-image:url('${R.photo}');background-size:cover;background-position:center"></div>
+  return `<div class="hero">${heroFX()}<div class="bg" style="background:${heroBg};background-image:url('${R.photo}');background-size:cover;background-position:center"></div>
     <div class="ov" style="background:linear-gradient(100deg,rgba(4,6,12,.9) 28%,rgba(4,6,12,.2) 66%,transparent 86%),linear-gradient(180deg,rgba(4,6,12,.08),rgba(4,6,12,.72))"></div>
     <div class="inner">
       <div class="hero-lead">${greet}<div class="sub">${esc(R.sub)}</div><div class="clock" id="clock"></div></div>
@@ -3682,6 +3722,62 @@ function internPipelinePanel(internIds){
     </div></div>`;
 }
 
+/* =========================================================================
+   STATIC VERIFIED INTERN BOARD — hand-verified postings from a live web scan
+   on Jul 14, 2026. Every row is a real posting or official program page;
+   pay is labeled: [posted] = on the listing (CA/WA transparency laws),
+   [reported] = crowd-sourced (levels.fyi/Glassdoor), or "not posted".
+   This board does NOT auto-update — the scraper + directory stay the live layer.
+   ========================================================================= */
+const STATIC_INTERNS_DATE='Jul 14, 2026';
+const STATIC_INTERNS=[
+  {co:'Rocket Lab',title:'Space Operations Internship — Fall 2026',loc:'Long Beach, CA',
+   pay:'~$25/hr',payKind:'reported',url:'https://rocketlabcorp.com/careers/',
+   note:'Python · Linux · Git · spacecraft ops — the closest public match to an MSO profile. US person · 12 wks · GPA 3.0+',star:1},
+  {co:'Rocket Lab',title:'Systems Engineering Intern — Fall 2026',loc:'Long Beach, CA',
+   pay:'~$25/hr',payKind:'reported',url:'https://rocketlabcorp.com/careers/',
+   note:'Pairs directly with the SysE graduate certificate. US person · 12 wks'},
+  {co:'Rocket Lab',title:'Manufacturing Engineering Intern — Fall 2026',loc:'Long Beach, CA',
+   pay:'~$25/hr',payKind:'reported',url:'https://rocketlabcorp.com/careers/',note:'US person · 12 wks'},
+  {co:'Rocket Lab',title:'Mechanical Engineering Intern — Fall 2026',loc:'Long Beach, CA',
+   pay:'~$25/hr',payKind:'reported',url:'https://rocketlabcorp.com/careers/',note:'US person · 12 wks'},
+  {co:'SpaceX',title:'Engineering Intern — Fall 2026',loc:'Hawthorne CA · Redmond WA · Vandenberg · Starbase + more',
+   pay:'$28–$42/hr',payKind:'posted',url:'https://job-boards.greenhouse.io/spacex/jobs/8403206002',
+   note:'Site placement by team. ITAR US person · 12+ wks · starts Aug/Sep 2026'},
+  {co:'SpaceX',title:'Software Engineering Intern — Fall 2026',loc:'Hawthorne CA · Redmond WA (Starlink)',
+   pay:'$28–$42/hr',payKind:'posted',url:'https://job-boards.greenhouse.io/spacex/jobs/8403219002',
+   note:'Starlink ground/ops software teams hire from this req. ITAR US person · 12+ wks'},
+  {co:'SpaceX',title:'Business Operations Intern — Fall 2026',loc:'Hawthorne, CA',
+   pay:'$21–$26/hr',payKind:'posted',url:'https://job-boards.greenhouse.io/spacex/jobs/8403205002',
+   note:'Ops-side entry without a hard-engineering screen. ITAR US person · 12+ wks'},
+  {co:'Blue Origin',title:'Internship Program (Fall/Summer cycles)',loc:'Kent, WA + other sites',
+   pay:'~$32/hr + ~$3k/mo housing',payKind:'reported',url:'https://www.blueorigin.com/careers/internships',
+   note:'Paid + housing/relocation assistance per official program page. US person · 12–14 wks'},
+];
+function staticInternBoardPanel(){
+  const payTag=r=> r.payKind==='posted' ? `<span class="sib-pay posted">${esc(r.pay)} <i>posted</i></span>`
+    : r.payKind==='reported' ? `<span class="sib-pay">${esc(r.pay)} <i>reported</i></span>`
+    : `<span class="sib-pay none">pay not posted</span>`;
+  const rows=STATIC_INTERNS.map(r=>`<div class="sib-row ${r.star?'sib-star':''}">
+      <div class="sib-main">
+        <b>${r.star?'★ ':''}${esc(r.title)}</b>
+        <span>${esc(r.co)} · ${esc(r.loc)}</span>
+        <span class="sib-note">${esc(r.note)}</span>
+      </div>
+      <div class="sib-side">${payTag(r)}
+        <a class="dbtn primary sib-apply" href="${esc(r.url)}" target="_blank" rel="noopener">Apply ↗</a>
+      </div>
+    </div>`).join('');
+  return `<div class="panel"><div class="ph"><h3>${cic('sat')} Verified Intern Board</h3>
+      <span class="va">static snapshot · hand-verified ${STATIC_INTERNS_DATE}</span></div>
+    <div class="pb">
+      <p class="subtle" style="margin:0 0 12px">Every row below is a real posting or official program page found in a live scan —
+        who, what, where, how to apply, and pay. <b>[posted]</b> = on the listing itself; <b>[reported]</b> = crowd-sourced
+        (levels.fyi / Glassdoor), so verify on the call. This board is frozen at the scan date; the list above and the
+        directory below are the live, auto-updating layer.</p>
+      ${rows}
+    </div></div>`;
+}
 function internshipsView(){
   const savedTrack=track; track='intern';
   if(listFilters.sort==='match') listFilters.sort='deadline';   // sensible default for this page
@@ -3741,6 +3837,7 @@ function internshipsView(){
       ${prepChecklistPanel(new Set(allInterns.map(j=>j.id)))}
       ${internPipelinePanel(new Set(allInterns.map(j=>j.id)))||'<div></div>'}
     </div>
+    ${staticInternBoardPanel()}
     ${strategicMatrixPanel(season)}
     ${internDirectoryPanel()}
     ${fellowshipsPanel()}`;
@@ -3826,10 +3923,43 @@ function candidatesView(){
    number on screen derives from your real timestamps.
    ========================================================================= */
 const APP_STATUSES=['applied','responded','interview','offer','rejected'];
+/* ---- Role notes (owner-only, synced) + progression history + accountability ---- */
+function roleNotes(){ try{ return JSON.parse(localStorage.getItem('orbital.roleNotes')||'{}'); }catch(e){ return {}; } }
+function saveRoleNote(id, text){
+  const m=roleNotes();
+  if(text.trim()) m[id]={t:text.trim(), ts:Date.now()}; else delete m[id];
+  localStorage.setItem('orbital.roleNotes', JSON.stringify(m)); pushTracking();
+}
+function appHistory(){ try{ return JSON.parse(localStorage.getItem('orbital.appHistory')||'{}'); }catch(e){ return {}; } }
+function logProgress(id, status){
+  const h=appHistory(); (h[id]=h[id]||[]).push({ts:Date.now(), st:status});
+  localStorage.setItem('orbital.appHistory', JSON.stringify(h)); pushTracking();
+}
+function progressTrail(id){
+  const h=(appHistory()[id]||[]);
+  if(!h.length) return '';
+  const fmt=t=>new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return `<span class="cad-trail">${h.map(x=>`${esc(x.st)} ${fmt(x.ts)}`).join(' → ')}</span>`;
+}
+function accountabilityStrip(){
+  if(role!=='owner' || view==='pipeline') return '';
+  if(localStorage.getItem('orbital.cadenceSnooze')===new Date().toDateString()) return '';
+  let due=0, ghost=0;
+  try{ [...appliedJobs].forEach(id=>{ const c=cadenceState(id);
+    if(c&&c.due) (c.due.level==='ghost'?ghost++:due++); }); }catch(e){}
+  if(!due && !ghost) return '';
+  return `<div class="acct">
+    <span class="acct-t">⏰ Accountability check: <b>${due}</b> follow-up${due===1?'':'s'} due${ghost?` · <b style="color:var(--bad)">${ghost}</b> gone silent 21+ days`:''}. Applications die of neglect — 5 minutes now keeps them alive.</span>
+    <span class="acct-a"><button class="dbtn primary" data-nav="pipeline">Review now</button>
+    <button class="dbtn" id="acctSnooze">Snooze today</button></span>
+  </div>`;
+}
+
 function appStatusMap(){ try{ return JSON.parse(localStorage.getItem('orbital.appStatus')||'{}'); }catch(e){ return {}; } }
 function followupMap(){ try{ return JSON.parse(localStorage.getItem('orbital.followups')||'{}'); }catch(e){ return {}; } }
 function setAppStatus(id,st){
   const m=appStatusMap(); m[id]=st; localStorage.setItem('orbital.appStatus',JSON.stringify(m));
+  logProgress(id, st);
   pushTracking(); refreshContent();
 }
 function logFollowup(id){
@@ -3878,7 +4008,7 @@ function cadencePanel(){
     const act=(c.status==='applied')?`<button class="dbtn" data-cadmail="${esc(id)}" title="Copies a follow-up email to your clipboard AND logs it">Copy follow-up + log</button>`:'';
     return `<div class="cad-row" data-cadrow="${esc(id)}">
       <span class="cad-d">D+${c.days}</span>
-      <span class="cad-main"><b>${esc(title)}</b><span>${esc(company)}</span>${dueTag}</span>
+      <span class="cad-main"><b>${esc(title)}${roleNotes()[id]?' <i class="notedot" title="has notes">📝</i>':''}</b><span>${esc(company)}</span>${progressTrail(id)}${dueTag}</span>
       <span class="cad-acts">${sel}${act}</span>
     </div>`;
   }).join('');
@@ -4882,6 +5012,12 @@ function dossierHTML(j){
     ${alumniDossierWidget(j)}
     ${matchBreakdownBlock(j)}
     <div id="airescore-${esc(j.id)}" class="dblock" style="display:none"></div>
+    ${role==='owner'?`<div class="dblock notes-block"><h4>📝 My Notes ${roleNotes()[j.id]?`<span class="notes-ts">saved ${new Date(roleNotes()[j.id].ts).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>`:''}</h4>
+      <textarea class="tinput notes-ta" data-noteid="${esc(j.id)}" rows="3" placeholder="Recruiter names, referral status, interview prep, gut feel — anything worth remembering about this one…">${esc((roleNotes()[j.id]||{}).t||'')}</textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+        <button class="dbtn primary" data-savenote="${esc(j.id)}">Save note</button>
+        ${(appHistory()[j.id]||[]).length?`<span class="cad-trail" style="margin-left:auto">${progressTrail(j.id).replace(/^<span[^>]*>|<\/span>$/g,'')}</span>`:''}
+      </div></div>`:''}
     <div class="dblock cp-block"><h4>Tailoring Copilot</h4>${copilotHTML(j)}</div>
     ${fullDescriptionBlock(j)}
     ${careerImpactBlock(j)}
@@ -4908,7 +5044,7 @@ function dossierHTML(j){
       <div class="outreach"><button data-copy="linkedin">🔗 LinkedIn Connection</button><button data-copy="email">✉ Cold Email Channel</button><button data-copy="referral">🤝 Referral Request</button></div></div>
   </div>
   <div class="dactions">
-    <a class="apply" href="${esc(j.url||'#')}" target="_blank" rel="noreferrer">Apply on ${esc(jobSource(j))} ↗</a>
+    <a class="apply" href="${esc(j.url||'#')}" target="_blank" rel="noreferrer">${esc(applyLabel(j))} ↗</a>
     <button data-applied="${j.id}" style="${appliedJobs.has(j.id)?'color:var(--good);border-color:rgba(0,230,162,.4);background:rgba(0,230,162,.08)':''}">${appliedJobs.has(j.id)?'✔ Applied':'📌 I Applied'}</button>
     <button data-airescore="${j.id}" title="Ask Claude to read the full posting vs. your résumé for a semantic fit check">🧠 AI Re-Score</button>
     <button data-convert="${j.id}" title="Generate a tailored résumé PDF"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Convert Résumé</button>
@@ -5605,7 +5741,7 @@ function wireSwipeRegion(){
 function refreshContent(animate){
   const c=$('#content'); if(!c) return;
   c.classList.remove('viewin');
-  c.innerHTML = (view==='dashboard'?earlyCareerWidget():'')+viewBody()+copyrightHTML();
+  c.innerHTML = accountabilityStrip()+(view==='dashboard'?earlyCareerWidget():'')+viewBody()+copyrightHTML();
   if(animate){ void c.offsetWidth; c.classList.add('viewin'); }
   kfocusIdx=-1;
   rewireContent(); drawCharts(); initBudget(); startCountdown();
@@ -5830,7 +5966,11 @@ document.addEventListener('click',e=>{
       if(navigator.share){ navigator.share({title:'Space role: '+j.title, text, url}).catch(()=>{}); }
       else { navigator.clipboard.writeText(text+'\n'+url); ns.textContent='Copied — paste into a text ✓'; }
     } }
-  const pv=e.target.closest('[data-previewshare]'); if(pv){ location.hash='share='+pv.dataset.previewshare; location.reload(); }
+  const sn=e.target.closest('[data-savenote]'); if(sn){
+    const ta=document.querySelector(`[data-noteid="${sn.dataset.savenote}"]`);
+    if(ta){ saveRoleNote(sn.dataset.savenote, ta.value); sn.textContent='Saved ✓'; setTimeout(()=>sn.textContent='Save note',1400); } }
+  const az=e.target.closest('#acctSnooze'); if(az){ localStorage.setItem('orbital.cadenceSnooze', new Date().toDateString()); refreshContent(); }
+    const pv=e.target.closest('[data-previewshare]'); if(pv){ location.hash='share='+pv.dataset.previewshare; location.reload(); }
   const cp=e.target.closest('#copyBtn'); if(cp){ const i=$('#shareLink'); i.select(); document.execCommand('copy'); cp.textContent='Copied ✓'; setTimeout(()=>cp.textContent='Copy link',1500); }
   const oc=e.target.closest('[data-copy]'); if(oc){ oc.textContent='Copied ✓'; setTimeout(()=>{const m={linkedin:'🔗 LinkedIn Connection',email:'✉ Cold Email Channel',referral:'🤝 Referral Request'};oc.innerHTML=m[oc.dataset.copy];},1400); }
 });
