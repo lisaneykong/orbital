@@ -2716,7 +2716,8 @@ function aiKeyPresent(){
 }
 function aiKeyPromptHTML(boxId){
   return `<p class="subtle" style="margin:0 0 8px">AI drafting needs a connection. Paste an Anthropic API key &mdash;
-    it stays in this browser's storage only (never synced, never sent anywhere but api.anthropic.com):</p>
+    it stays in this browser's storage only (never synced, never sent anywhere but api.anthropic.com).
+    You can change or remove it later in <b>Settings &rarr; Claude API Key</b>:</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <input class="tinput" id="aikey-${boxId}" type="password" placeholder="sk-ant-..." style="flex:1;min-width:200px"/>
       <button class="dbtn primary" data-savekey="${boxId}">Save &amp; retry</button>
@@ -7011,11 +7012,14 @@ const ESSAY_PROMPTS=[
   {k:'lead_team',     q:'Tell us about a time you led a cross-functional team.',             tag:'Common'},
   {k:'failure',       q:'Describe a project that failed or slipped. What did you do?',       tag:'Common', verify:true},
   {k:'goals',         q:'What are your career goals? Where do you see yourself in five years?', tag:'Common'},
-  {k:'coursework',    q:'What coursework or projects prepare you for this role?',            tag:'Standard for internships'},
+  {k:'coursework',    q:'What coursework or projects prepare you for this role?',            tag:'Standard for internships', ftTag:'Asked when your training is recent'},
   {k:'dei',           q:'How would you contribute to an inclusive team?',                    tag:'Frequent at large primes'},
   {k:'why_you',       q:'Why should we select you over other candidates?',                   tag:'Occasional'},
   {k:'anything',      q:'Is there anything else you would like us to know?',                 tag:'Almost always an optional field'},
 ];
+function essayIsIntern(j){
+  return !!(j && (j.type==='Internship' || (typeof isEarlyCareer==='function' && isEarlyCareer(j))));
+}
 function essayPromptText(p, j){ return (p.q||'').replace(/\{CO\}/g, j?(j.company||'this company'):'this company'); }
 
 // Every draft below is assembled from OWNER facts only. Company-specific knowledge that
@@ -7106,14 +7110,19 @@ I also try to be specific with credit, because vague praise concentrates natural
 
 I am not going to claim a track record of formal programs. What I offer is someone who remembers being new recently enough to still see the shorthand, and who treats making the work legible as an engineering practice rather than a courtesy.`,
 
-  why_you:
-`I would not tell you to pick me over a candidate with three years of flight hardware experience for a role that needs three years of flight hardware experience. For an internship the comparison is different, so here is the honest case.
+  why_you: essayIsIntern(j) ? `I would not tell you to pick me over a candidate with three years of flight hardware experience for a role that needs three years of flight hardware experience. For an internship the comparison is different, so here is the honest case.
 
 Most applicants in this pool are learning both the domain and the job at once — how a schedule actually works, how to raise a risk, how to talk to a supplier, how to tell a stakeholder something they do not want to hear. I have spent more than a decade doing that second part. Integrated schedules and dependencies in MS Project and JIRA. Requirements gathered across IT, operations and business teams. P&L, vendors and facilities across four locations through to a sale. A startup joined at its initial phase and held through acquisition.
 
 What I am here to learn is the domain, and I have been deliberate rather than casual about it: three graduate credentials at Embry-Riddle, a sole-authored Active Debris Removal capstone with a weighted trade study and a $290.5M lifecycle cost estimate, and selection into NASA's L'SPACE NPWEE Academy for Fall 2026.
 
-The practical version: you will spend less supervision on whether I hit a date, communicate a slip, or follow up with a supplier, and can spend it instead on the technical depth I actually lack. I am also unlikely to treat an internship as a stepping stone. I changed careers to be here.`,
+The practical version: you will spend less supervision on whether I hit a date, communicate a slip, or follow up with a supplier, and can spend it instead on the technical depth I actually lack. I am also unlikely to treat an internship as a stepping stone. I changed careers to be here.` : `If this role needs someone who has already shipped flight hardware, I am not that person, and I would rather say it than let you find out in the second call. Here is the case I can actually make.
+
+The scarce thing I bring is not domain depth, it is a decade of getting cross-functional work to land. Integrated schedules and dependencies in MS Project and JIRA. Requirements gathered across IT, operations and business teams and written so all three could check them. The reporting layer built on the systems I stood up in Salesforce, Tableau and Power BI, so people argued about one set of numbers instead of three. I joined a startup at its initial phase and stayed through its acquisition. Before that I owned P&L, vendors and facilities across four locations through to a sale. I have delivered bad news early enough to still be cheap, repeatedly, which is a habit more than a skill and it takes years to build.
+
+The domain knowledge is graduate coursework, and I will not dress it up as anything else: three credentials at Embry-Riddle, a sole-authored Active Debris Removal capstone with a weighted trade study and a $290.5M lifecycle cost estimate, and selection into NASA's L'SPACE NPWEE Academy for Fall 2026.
+
+So the honest comparison is this. Against a candidate with equivalent flight experience, take them. Against a candidate who still has to learn how to hold a schedule, brief a stakeholder, and chase a supplier, I will cost you less supervision on all of that from the first week.`,
 
   anything:
 `Two things, briefly.
@@ -7160,13 +7169,12 @@ function essayAnswerFor(id, k, j){
 function essaySrcLabel(src){
   if(src==='pasted')   return '<span class="chip" style="color:var(--good);border-color:rgba(55,224,160,.45)">✓ From the real application</span>';
   if(src==='inferred') return '<span class="chip" style="color:var(--a3);border-color:rgba(55,214,230,.45)">◇ Predicted from this posting</span>';
-  return '<span class="chip" style="color:var(--gold);border-color:rgba(245,197,96,.45)" title="These are the questions space internship applications commonly ask. They are NOT read from this company\'s form.">⚠ Likely questions · not confirmed</span>';
+  return '<span class="chip" style="color:var(--gold);border-color:rgba(245,197,96,.45)" title="These are the questions space job and internship applications commonly ask. They are NOT read from this company\'s form.">⚠ Likely questions · not confirmed</span>';
 }
 
 /* ---- the dossier block ---- */
 function essayBlock(j){
-  if(!(j.type==='Internship' || (typeof isEarlyCareer==='function' && isEarlyCareer(j)))) return '';
-  const id=j.id, r=essayRec(id), qs=essayQuestions(id);
+  const id=j.id, r=essayRec(id), qs=essayQuestions(id), intern=essayIsIntern(j);
   const edited=Object.keys(r.answers||{}).length;
   return `<div class="dblock" id="essay-block-${esc(id)}"><h4>✍️ Application essays · ${qs.length} question${qs.length===1?'':'s'}</h4>
     <div class="dtagrow" style="margin:0 0 10px">${essaySrcLabel(r.src)}${edited?`<span class="chip">${edited} edited</span>`:''}</div>
@@ -7185,7 +7193,7 @@ function essayBlock(j){
       return `<div class="essay-q" style="border-top:1px solid var(--line);padding:14px 0 4px">
         <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px">
           <b style="font-size:var(--fs-rg);color:var(--text);flex:1;min-width:220px">${esc(q)}</b>
-          <span class="chip" style="font-size:var(--fs-nano)">${esc(p.tag||'')}</span>
+          <span class="chip" style="font-size:var(--fs-nano)">${esc((!intern&&p.ftTag)?p.ftTag:(p.tag||''))}</span>
         </div>
         ${p.verify?`<p class="subtle" style="margin:0 0 8px;color:var(--gold);font-size:var(--fs-2xs)">Check the specifics against your own memory before sending — this one is drafted from the capacity-planning period on your résumé.</p>`:''}
         ${p.slot?`<p class="subtle" style="margin:0 0 8px;font-size:var(--fs-2xs)">Fill the bracketed slot with a real reason before sending. I can't know which of their programs you follow.</p>`:''}
@@ -7224,11 +7232,12 @@ function essayBackToLikely(id){
 }
 async function essayInfer(id){
   const j=findJobById(id)||findJob(id); if(!j) return;
-  if(!aiKeyPresent()){ scrapeNote('Predicting questions needs an AI key — set one up in the Tailoring Copilot block.'); return; }
+  if(!aiKeyPresent()){ scrapeNote('Predicting questions needs an AI key — add one in Settings → Claude API Key.'); return; }
   scrapeNote('Reading the posting to predict its application questions…');
   try{
     const desc=(j.description||'').slice(0,3000);
-    const prompt=`You are helping a candidate prepare for an internship application. Read this posting and list the open-ended written questions this employer is MOST LIKELY to ask on their application form. Base it on the posting's language, the company type, and standard practice for this sector. Do NOT invent questions that would be unusual for this kind of employer.\n\nPosting — ${j.title} at ${j.company}: """${desc||j.title}"""\n\nReturn ONLY the questions, one per line, no numbering, no preamble, maximum 8.`;
+    const kind=essayIsIntern(j)?'an internship application':'a full-time job application';
+    const prompt=`You are helping a candidate prepare for ${kind}. Read this posting and list the open-ended written questions this employer is MOST LIKELY to ask on their application form. Base it on the posting's language, the company type, and standard practice for this sector. Do NOT invent questions that would be unusual for this kind of employer.\n\nPosting — ${j.title} at ${j.company}: """${desc||j.title}"""\n\nReturn ONLY the questions, one per line, no numbering, no preamble, maximum 8.`;
     const text=await aiComplete(prompt);
     const lines=text.split('\n').map(s=>s.replace(/^\s*[\d.)\-•*]+\s*/,'').trim()).filter(s=>s.length>8).slice(0,8);
     if(!lines.length){ scrapeNote('No questions came back — try again or paste the real ones.'); return; }
@@ -7248,7 +7257,7 @@ async function essayRegen(id,k){
     // No AI available — fall back to the seeded draft for archetype keys.
     const seed=essayDraft(k,j);
     if(seed){ ta.value=seed; essayResetAnswer(id,k); essayRerender(id); scrapeNote('Restored the seeded draft. Live redrafting needs an AI key.'); }
-    else scrapeNote('Drafting a pasted question needs an AI key — set one up in the Tailoring Copilot block.');
+    else scrapeNote('Drafting a pasted question needs an AI key — add one in Settings → Claude API Key.');
     return;
   }
   const prev=ta.value; ta.value='Drafting…'; ta.disabled=true;
@@ -7300,25 +7309,33 @@ function essayExport(id){
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 }
 
-/* ---- standalone view: every internship, essay-readiness at a glance ---- */
+/* ---- standalone view: every open role, essay-readiness at a glance ---- */
 function essaysView(){
-  const savedTrack=track; track='intern';
-  let interns=[];
-  try{ interns=sortJobs(jobsForRegion().filter(x=>x.type==='Internship'||(typeof isEarlyCareer==='function'&&isEarlyCareer(x)))); }catch(e){}
+  const savedTrack=track;
+  let roles=[];
+  try{
+    const seen={};
+    ['fulltime','intern'].forEach(t=>{
+      track=t;
+      try{ jobsForRegion().forEach(j=>{ if(!seen[j.id]){ seen[j.id]=1; roles.push(j); } }); }catch(e){}
+    });
+    roles=sortJobs(roles);
+  }catch(e){}
   track=savedTrack;
+  const interns=roles.filter(x=>essayIsIntern(x));
   const store=essayStore();
-  const started=interns.filter(x=>store[x.id]&&Object.keys(store[x.id].answers||{}).length).length;
-  const confirmed=interns.filter(x=>store[x.id]&&store[x.id].src==='pasted').length;
+  const started=roles.filter(x=>store[x.id]&&Object.keys(store[x.id].answers||{}).length).length;
+  const confirmed=roles.filter(x=>store[x.id]&&store[x.id].src==='pasted').length;
   return `${guestStrip()}
-    ${viewHead('Application Essays','Open-ended questions on internship applications · answers drafted in your voice from your résumé, capstone and ERAU coursework','Essay Bank')}
+    ${viewHead('Application Essays','Open-ended questions on job and internship applications · answers drafted in your voice from your résumé, capstone and ERAU coursework','Essay Bank')}
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin:2px 0 4px">
-      ${qtile(interns.length,'Internships in scope',esc((REGIONS[region]||{}).short||''),'var(--a3)')}
-      ${qtile(ESSAY_PROMPTS.length,'Seeded questions','answers ready before you open a form','var(--gold)')}
+      ${qtile(roles.length,'Roles in scope',esc((REGIONS[region]||{}).short||''),'var(--a3)')}
+      ${qtile(interns.length,'Internship & new-grad','the remainder are full-time roles','var(--a2)')}
       ${qtile(started,'With edits saved','you have changed the draft','var(--good)')}
-      ${qtile(confirmed,'Real prompts pasted','confirmed against the live application','var(--a2)')}
+      ${qtile(confirmed,'Real prompts pasted','confirmed against the live application','var(--gold)')}
     </div>
     <div class="panel"><div class="pb">
-      <p class="subtle" style="margin:0 0 14px;line-height:1.6">The ten seeded questions are the ones space internship applications commonly ask. <b style="color:var(--gold)">They are not read from any company's real form</b> — no application portal exposes its prompts to a scraper. When you open a real application, paste its actual questions into the role's dossier and the drafts re-aim at those. Answers run about 250 words and use only what is on your résumé.</p>
+      <p class="subtle" style="margin:0 0 14px;line-height:1.6">Every role in the console carries this question set in its dossier now — full-time and internship alike. The ten seeded questions are the ones space applications commonly ask. <b style="color:var(--gold)">They are not read from any company's real form</b> — no application portal exposes its prompts to a scraper. When you open a real application, paste its actual questions into the role's dossier and the drafts re-aim at those. Answers run about 250 words and use only what is on your résumé.</p>
       ${ESSAY_PROMPTS.map(p=>`<div style="border-top:1px solid var(--line);padding:12px 0">
         <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
           <b style="font-size:var(--fs-rg);flex:1;min-width:220px">${esc(essayPromptText(p,null))}</b>
@@ -7327,10 +7344,9 @@ function essaysView(){
         <p class="subtle" style="margin:6px 0 0;line-height:1.5;font-size:var(--fs-2xs)">${esc(essayDraft(p.k,null).split('\n')[0].slice(0,180))}…</p>
       </div>`).join('')}
     </div></div>
-    ${interns.length?`<div class="fullwidth">${jobListPanel(interns,'Internships · open a dossier to draft its essays',{paginate:true,va:'Internships'})}</div>`
-      :`<div class="panel"><div class="pb"><div class="empty"><div class="big">No internships loaded</div><div>Nothing internship-shaped is in the current pool for ${esc((REGIONS[region]||{}).short||'this region')}. The seeded answers above are ready regardless — they do not depend on a posting.</div></div></div></div>`}`;
+    ${roles.length?`<div class="fullwidth">${jobListPanel(roles,'All roles · open a dossier to draft its essays',{paginate:true,va:'Jobs'})}</div>`
+      :`<div class="panel"><div class="pb"><div class="empty"><div class="big">No roles loaded</div><div>Nothing is in the current pool for ${esc((REGIONS[region]||{}).short||'this region')}. The seeded answers above are ready regardless — they do not depend on a posting.</div></div></div></div>`}`;
 }
-
 function dossierHTML(j){
   const R=REGIONS[j.region]||REGIONS[region];
   const det=jobDetail(j);
@@ -8139,6 +8155,17 @@ function drawerHTML(){
         <div class="field"><label>Google email with owner access</label><input id="setOwner" placeholder="you@lisaney.com" value="${esc(OWNER_EMAIL)}"></div>
         <p class="subtle">Sign-ins from this address (or any <b>@lisaney.com</b>) get full owner control. Everyone else is read-only.</p>
       </div>
+      <div class="dsec"><h4>🔑 Claude API Key</h4>
+        <p class="subtle" style="margin:0 0 9px;line-height:1.55">Powers <b>Tailored Résumé</b>, bullet rewriting, essay drafting and AI Re-Score. Stored in this browser only — never synced to Supabase, never sent anywhere but api.anthropic.com. Paste a new key here any time you rotate it; saving replaces the old one.</p>
+        <div id="aiKeyState" style="font-size:var(--fs-sm);margin:0 0 9px;line-height:1.5"></div>
+        <div class="field"><label>Anthropic API key <span class="subtle">starts sk-ant-</span></label><input id="setAiKey" type="password" autocomplete="off" placeholder="sk-ant-api03-…"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="dbtn primary" id="saveAiKey" style="flex:1;min-width:110px">Save key</button>
+          <button class="dbtn" id="testAiKey">Test</button>
+          <button class="dbtn" id="clearAiKey">Remove</button>
+        </div>
+        <div class="savemsg" id="aiKeyMsg"></div>
+      </div>
       <div class="dsec"><h4>🛰 Résumé Refresh</h4>
         <p class="subtle" style="margin:0 0 9px">Drop a fresh PDF anytime your skills or network level up — each upload becomes a new revision and instantly powers matching + every role's <b>Convert Résumé</b>.</p>
         <label class="upload" id="resumeDrop"><input type="file" id="resumeFile" accept="application/pdf" hidden>
@@ -8824,6 +8851,49 @@ function wireDrawer(){
   };
   const f=$('#setFloor'); if(f) f.oninput=e=>{ settings.matchFloor=+e.target.value; persistSettings(); const h=e.target.closest('.dsec').querySelector('h4'); h.textContent='Match Floor — '+settings.matchFloor+'%'; };
   if(f) f.onchange=()=>{ render(); openDrawer(); };
+  // ---- Claude API key — set, rotate, test, remove. The field is never pre-filled with
+  // the stored secret; the state line reports what is saved by its last four characters.
+  function aiKeyStateHTML(){
+    const k=(localStorage.getItem('orbital.anthropicKey')||'').trim();
+    const bridge=!!(window.claude && window.claude.complete);
+    if(bridge) return '<span style="color:var(--good)">✓ Running inside Claude — drafting works without a key here.</span> <span class="subtle">'+(k?'A key is also saved for when this site is opened outside Claude.':'Save a key for when this site is opened outside Claude.')+'</span>';
+    if(!k) return '<span style="color:var(--gold)">⚠ No key saved.</span> <span class="subtle">Tailored Résumé, bullet rewriting and essay drafting are off until you add one.</span>';
+    return '<span style="color:var(--good)">✓ Key saved</span> <span class="subtle">· ends ‥'+esc(k.slice(-4))+' · '+k.length+' characters</span>';
+  }
+  function paintAiKeyState(){ const b=$('#aiKeyState'); if(b) b.innerHTML=aiKeyStateHTML(); }
+  paintAiKeyState();
+  const akIn=$('#setAiKey'), akMsg=$('#aiKeyMsg');
+  const akSet=(t,c)=>{ if(akMsg){ akMsg.textContent=t; akMsg.style.color=c; } };
+  const akSave=$('#saveAiKey');
+  if(akSave) akSave.onclick=()=>{
+    const v=(akIn.value||'').trim();
+    if(!v){ akSet('Paste a key first.','var(--gold)'); return; }
+    localStorage.setItem('orbital.anthropicKey', v);
+    akIn.value=''; paintAiKeyState();
+    if(!/^sk-ant-/.test(v)) akSet('Saved, but Anthropic keys normally start with sk-ant- — press Test to check it really works.','var(--gold)');
+    else akSet('Saved. Tailored Résumé and drafting are live.','var(--good)');
+  };
+  const akClear=$('#clearAiKey');
+  if(akClear) akClear.onclick=()=>{
+    localStorage.removeItem('orbital.anthropicKey');
+    if(akIn) akIn.value=''; paintAiKeyState();
+    akSet('Key removed from this browser.','var(--dim)');
+  };
+  const akTest=$('#testAiKey');
+  if(akTest) akTest.onclick=async()=>{
+    const typed=(akIn.value||'').trim();
+    if(typed){ localStorage.setItem('orbital.anthropicKey', typed); akIn.value=''; paintAiKeyState(); }
+    if(!aiKeyPresent()){ akSet('Nothing to test — save a key first.','var(--gold)'); return; }
+    akSet('Testing against api.anthropic.com…','var(--dim)');
+    akTest.disabled=true;
+    try{
+      const r=await aiComplete('Reply with the single word: ready');
+      akSet('✓ Working — the API replied "'+String(r||'').trim().slice(0,24)+'".','var(--good)');
+    }catch(e){
+      akSet('✕ '+(e.message==='NO_AI_KEY'?'No key saved.':e.message),'var(--bad)');
+    }
+    akTest.disabled=false;
+  };
   const sk=$('#saveKeys'); if(sk) sk.onclick=async()=>{
     SB_URL=$('#setUrl').value.trim().replace(/\/$/,''); SB_KEY=$('#setKey').value.trim();
     localStorage.setItem(LS.url,SB_URL); localStorage.setItem(LS.key,SB_KEY);
