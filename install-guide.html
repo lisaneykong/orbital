@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Orbital CRM · What am I setting up?</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#04060c; --panel:#0a1018; --panel2:#0d141e; --line:#1a2536; --line2:#22314a;
+    --text:#e8edf5; --muted:#9fb0c9; --dim:#7385a0;
+    --a:#5b8cff; --a2:#9d6bff; --a3:#37d6e6; --good:#37e0a0; --gold:#f5c560; --bad:#ff6f86;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%}
+  a{color:var(--a3)}
+  a:hover{color:var(--text)}
+  .wrap{max-width:900px;margin:0 auto;padding:34px 22px 90px}
+  header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:26px}
+  .eyebrow{margin:0 0 7px;font-family:'JetBrains Mono',monospace;font-size:.7rem;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--a3)}
+  h1{margin:0 0 8px;font-family:'Space Grotesk',sans-serif;font-size:1.9rem;line-height:1.15;letter-spacing:-.01em}
+  .lede{margin:0;font-size:1.02rem;color:var(--muted);max-width:62ch;text-wrap:pretty}
+  .nav{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
+  .nav a{font-size:.82rem;text-decoration:none;padding:9px 14px;border-radius:999px;
+    border:1px solid var(--line2);background:rgba(6,11,20,.6);color:var(--muted);min-height:44px;
+    display:inline-flex;align-items:center}
+  .nav a:hover{border-color:var(--a3);color:var(--text)}
+  h2{margin:38px 0 12px;font-family:'Space Grotesk',sans-serif;font-size:1.24rem;letter-spacing:-.01em}
+  .plain{max-width:66ch;color:var(--muted);text-wrap:pretty}
+  .plain b{color:var(--text);font-weight:600}
+  .card{border:1px solid var(--line2);border-radius:14px;background:var(--panel);margin:14px 0;overflow:hidden}
+  .card-h{display:flex;align-items:flex-start;gap:13px;padding:16px 18px;border-bottom:1px solid var(--line)}
+  .num{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+    font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:500;
+    background:rgba(55,214,230,.12);border:1px solid rgba(55,214,230,.4);color:var(--a3)}
+  .card-h .t{flex:1;min-width:0}
+  .card-h h3{margin:0 0 3px;font-size:1.02rem;font-weight:600}
+  .card-h .sub{margin:0;font-size:.82rem;color:var(--dim)}
+  .req{flex:none;font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:.08em;
+    text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid}
+  .req.must{color:var(--good);border-color:rgba(55,224,160,.4);background:rgba(55,224,160,.1)}
+  .req.opt{color:var(--dim);border-color:var(--line2)}
+  .card-b{padding:16px 18px}
+  .qa{margin:0 0 14px}
+  .qa dt{font-family:'JetBrains Mono',monospace;font-size:.66rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--a3);margin-bottom:3px}
+  .qa dd{margin:0 0 12px;color:var(--muted);max-width:66ch;text-wrap:pretty}
+  .qa dd b{color:var(--text);font-weight:600}
+  .path{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:0 0 12px;
+    font-family:'JetBrains Mono',monospace;font-size:.76rem;color:var(--text)}
+  .path span{padding:4px 9px;border-radius:6px;background:rgba(120,160,235,.1);border:1px solid var(--line2)}
+  .path i{color:var(--dim);font-style:normal}
+  .looks{font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--gold);
+    background:rgba(245,197,96,.07);border-left:3px solid rgba(245,197,96,.5);
+    padding:8px 12px;margin:0 0 12px;word-break:break-all}
+  .warn{font-size:.84rem;color:#ffc4cd;background:rgba(255,111,134,.08);
+    border-left:3px solid rgba(255,111,134,.55);padding:9px 13px;margin:0 0 12px;max-width:66ch}
+  .test{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding-top:13px;border-top:1px solid var(--line)}
+  .test input{flex:1;min-width:210px;min-height:44px;background:rgba(4,7,13,.7);color:var(--text);
+    border:1px solid var(--line2);border-radius:9px;padding:10px 13px;
+    font-family:'JetBrains Mono',monospace;font-size:.8rem}
+  .test input:focus{outline:0;border-color:var(--a3)}
+  .test button{min-height:44px;cursor:pointer;font:inherit;font-size:.84rem;font-weight:600;
+    padding:10px 18px;border-radius:9px;border:1px solid rgba(55,214,230,.45);
+    background:rgba(55,214,230,.12);color:var(--a3)}
+  .test button:hover{background:rgba(55,214,230,.22)}
+  .res{flex:1 0 100%;font-size:.84rem;line-height:1.55;min-height:0}
+  .res.ok{color:var(--good)}
+  .res.bad{color:var(--bad)}
+  .res.busy{color:var(--dim)}
+  table.sheet{width:100%;border-collapse:collapse;font-size:.86rem;margin:10px 0 0}
+  table.sheet th,table.sheet td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.sheet th{color:var(--dim);font-weight:600;white-space:nowrap}
+  table.sheet td b{color:var(--text)}
+  table.sheet code{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--a3);word-break:break-all}
+  .printbtn{cursor:pointer;font:inherit;font-size:.86rem;font-weight:600;min-height:44px;
+    padding:11px 20px;border-radius:10px;border:1px solid rgba(55,224,160,.45);
+    background:rgba(55,224,160,.12);color:var(--good);margin-top:16px}
+  .printbtn:hover{background:rgba(55,224,160,.2)}
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:.82rem;color:var(--dim)}
+  @media (max-width:640px){
+    h1{font-size:1.5rem}
+    .wrap{padding:24px 16px 70px}
+    .card-h{flex-wrap:wrap}
+  }
+  /* ---- the printable one-page cheat sheet ---- */
+  .cheat{display:none}
+  @media print{
+    @page{margin:14mm}
+    body{background:#fff;color:#111;font-size:11pt}
+    .wrap,header,.nav,h2,.card,.plain,footer,.printbtn,#liveSection{display:none !important}
+    .cheat{display:block;max-width:none;margin:0;padding:0}
+    .cheat h1{font-size:19pt;margin:0 0 2mm;color:#111}
+    .cheat .sub{margin:0 0 6mm;font-size:10pt;color:#555}
+    .cheat h2{display:block;font-size:12pt;margin:6mm 0 2mm;color:#111;
+      border-bottom:1px solid #999;padding-bottom:1mm}
+    .cheat table{width:100%;border-collapse:collapse;font-size:9.5pt}
+    .cheat th,.cheat td{border:1px solid #bbb;padding:2mm 2.5mm;text-align:left;vertical-align:top}
+    .cheat th{background:#f0f0f0;color:#111;white-space:nowrap}
+    .cheat code{font-family:'JetBrains Mono',monospace;font-size:9pt}
+    .cheat .note{font-size:9pt;color:#444;margin:3mm 0 0}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Orbital CRM · Install</p>
+  <h1>What am I setting up, and why?</h1>
+  <p class="lede">Five things get configured, and only the first two are required to see real jobs. Each one below says what it is in plain words, exactly where to click to get it, what it looks like, and a button to check it actually works before you rely on it.</p>
+  <div class="nav">
+    <a href="setup.html">← Back to the install console</a>
+    <a href="index.html">Open the dashboard</a>
+    <a href="#cheatsheet">Printable cheat sheet</a>
+  </div>
+</header>
+
+<p class="plain">The short version: <b>Supabase</b> is the filing cabinet that holds the jobs. <b>GitHub</b> is the robot that goes out every morning at 6am, reads company job boards, and puts what it finds in the cabinet. Your browser only ever reads from the cabinet — it never scrapes anything itself, which is why the site stays fast and works on your phone.</p>
+
+<h2>The two required keys</h2>
+
+<div class="card">
+  <div class="card-h">
+    <span class="num">1</span>
+    <div class="t">
+      <h3>Supabase Project URL</h3>
+      <p class="sub">The address of your filing cabinet</p>
+    </div>
+    <span class="req must">Required</span>
+  </div>
+  <div class="card-b">
+    <dl class="qa">
+      <dt>What it is</dt>
+      <dd>The web address of your own Supabase project. Every job the scraper finds is stored there, and the dashboard reads from it. One project, one URL, and it never changes.</dd>
+      <dt>Where to click</dt>
+    </dl>
+    <div class="path"><span>supabase.com</span><i>→</i><span>your project</span><i>→</i><span>Settings</span><i>→</i><span>Data API</span><i>→</i><span>Project URL</span></div>
+    <div class="looks">https://sgjzwyyhjlfpleaclata.supabase.co</div>
+    <dl class="qa">
+      <dt>Watch out for</dt>
+      <dd>No trailing slash, and no <b>/rest/v1</b> on the end. Just the bare address.</dd>
+    </dl>
+    <div class="test">
+      <input id="urlIn" placeholder="https://xxxx.supabase.co" autocomplete="off" spellcheck="false">
+      <button data-test="url">Check this URL</button>
+      <div class="res" id="urlRes"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-h">
+    <span class="num">2</span>
+    <div class="t">
+      <h3>Supabase anon public key</h3>
+      <p class="sub">The read-only pass your browser carries</p>
+    </div>
+    <span class="req must">Required</span>
+  </div>
+  <div class="card-b">
+    <dl class="qa">
+      <dt>What it is</dt>
+      <dd>A long key that lets a browser <b>read</b> the jobs table and nothing else. It is designed to be public — it ships inside the page, and anyone can see it. That is fine and expected: it cannot write, delete, or read anything private.</dd>
+      <dt>Where to click</dt>
+    </dl>
+    <div class="path"><span>supabase.com</span><i>→</i><span>your project</span><i>→</i><span>Settings</span><i>→</i><span>API Keys</span><i>→</i><span>anon / public</span></div>
+    <div class="looks">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3M… &nbsp;(or) &nbsp;sb_publishable_…</div>
+    <dl class="qa">
+      <dt>Watch out for</dt>
+      <dd>Do not paste the <b>service_role</b> key here. That one can rewrite your whole database, and this value is visible to anyone who views the page.</dd>
+    </dl>
+    <div class="test">
+      <input id="keyIn" placeholder="eyJhbGci… or sb_publishable_…" autocomplete="off" spellcheck="false">
+      <button data-test="key">Check this key reads jobs</button>
+      <div class="res" id="keyRes"></div>
+    </div>
+  </div>
+</div>
+
+<h2>The scraper's own key</h2>
+<p class="plain">This one never touches your browser. It lives in GitHub's secret store, where only the scraper can read it.</p>
+
+<div class="card">
+  <div class="card-h">
+    <span class="num">3</span>
+    <div class="t">
+      <h3>Supabase service_role key</h3>
+      <p class="sub">The write key — GitHub holds it, you never paste it into the site</p>
+    </div>
+    <span class="req must">Required for daily scraping</span>
+  </div>
+  <div class="card-b">
+    <dl class="qa">
+      <dt>What it is</dt>
+      <dd>The key that can <b>write</b> to the jobs table. The scraper needs it to save what it finds. It is a full-access credential, so it goes in exactly one place: GitHub repository secrets.</dd>
+      <dt>Where to get it</dt>
+    </dl>
+    <div class="path"><span>supabase.com</span><i>→</i><span>Settings</span><i>→</i><span>API Keys</span><i>→</i><span>service_role</span><i>(click reveal)</i></div>
+    <dl class="qa">
+      <dt>Where to put it</dt>
+    </dl>
+    <div class="path"><span>your GitHub repo</span><i>→</i><span>Settings</span><i>→</i><span>Secrets and variables</span><i>→</i><span>Actions</span><i>→</i><span>New repository secret</span></div>
+    <dl class="qa">
+      <dt>Name it exactly</dt>
+      <dd><code style="font-family:'JetBrains Mono',monospace;color:var(--a3)">SUPABASE_SERVICE_ROLE_KEY</code> — and add a second secret named <code style="font-family:'JetBrains Mono',monospace;color:var(--a3)">SUPABASE_URL</code> holding the same URL from step 1.</dd>
+    </dl>
+    <div class="warn"><b>Never paste this key into this website, the setup console, or any field in your browser.</b> If it ever ends up in a page, anyone who visits can rewrite your database. Rotate it in Supabase if that happens.</div>
+    <div class="looks">sb_secret_… &nbsp;(or a long eyJhbGci… JWT whose role reads "service_role")</div>
+    <dl class="qa">
+      <dt>How you know it worked</dt>
+      <dd>Open your repo's <b>Actions</b> tab, run <b>Orbital daily scrape</b> by hand once. The first step checks both secrets and says in plain English if either is missing or is the wrong kind of key.</dd>
+    </dl>
+  </div>
+</div>
+
+<h2>Two optional extras</h2>
+
+<div class="card">
+  <div class="card-h">
+    <span class="num">4</span>
+    <div class="t">
+      <h3>The trigger-scrape Edge Function</h3>
+      <p class="sub">Makes the dashboard's "Refresh roles" button able to start a real scrape</p>
+    </div>
+    <span class="req opt">Optional</span>
+  </div>
+  <div class="card-b">
+    <dl class="qa">
+      <dt>What it is for</dt>
+      <dd>The 6am run happens on its own. But if you want <b>Refresh roles</b> to kick off a fresh scrape on demand, something has to ask GitHub to start one — and that request needs a GitHub token. This small function holds that token inside Supabase, so it never has to sit in your browser.</dd>
+      <dt>What you run, once</dt>
+    </dl>
+    <div class="looks">npm i -g supabase<br>supabase login<br>supabase link --project-ref &lt;your-ref&gt;<br>supabase secrets set GITHUB_TOKEN=… GITHUB_REPO=you/orbital ORBITAL_PIN=1725<br>supabase functions deploy trigger-scrape</div>
+    <dl class="qa">
+      <dt>The GitHub token it needs</dt>
+      <dd>A <b>fine-grained</b> token scoped to this one repository, with a single permission: <b>Actions → Read and write</b>. Nothing else. Make it at <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener">github.com/settings/personal-access-tokens</a>.</dd>
+      <dt>If you skip this</dt>
+      <dd>Refresh roles still re-reads the database and picks up anything new. It just cannot start a scrape itself, unless you use option 5.</dd>
+    </dl>
+    <div class="test">
+      <input id="fnIn" placeholder="https://xxxx.supabase.co  (same URL as step 1)" autocomplete="off" spellcheck="false">
+      <button data-test="fn">Check if it is deployed</button>
+      <div class="res" id="fnRes"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-h">
+    <span class="num">5</span>
+    <div class="t">
+      <h3>A GitHub token in the browser</h3>
+      <p class="sub">The fallback if you would rather not deploy the function</p>
+    </div>
+    <span class="req opt">Optional</span>
+  </div>
+  <div class="card-b">
+    <dl class="qa">
+      <dt>What it is</dt>
+      <dd>The same fine-grained token as above, pasted into <b>Settings → Live scraping</b> on the dashboard instead of into Supabase. It is stored in that browser only and never leaves it except to call GitHub.</dd>
+      <dt>The honest tradeoff</dt>
+      <dd>Anyone who can use your computer can read it out of browser storage. Scope it to the one repo with only Actions write, and it can do nothing except start your scrape. On a shared machine, prefer option 4.</dd>
+      <dt>Where it goes</dt>
+    </dl>
+    <div class="path"><span>dashboard</span><i>→</i><span>Settings</span><i>→</i><span>Live scraping</span><i>→</i><span>Fine-grained token</span></div>
+  </div>
+</div>
+
+<h2>Once it is all connected</h2>
+<p class="plain">The scrape runs at <b>6:00 AM Central</b> every day on GitHub, whether or not anything is open. It writes its progress as it goes, so the dashboard can show you which job boards have reported back while a run is in flight. If a run fails, open the <b>Actions</b> tab and read the first red step — every check in that workflow is written to tell you what is wrong in words, not a stack trace.</p>
+
+<h2 id="cheatsheet">Printable cheat sheet</h2>
+<p class="plain">One page with all five values, where each comes from, and where each belongs. Print it, fill in the blanks by hand, keep it with your other account records — do not write the service_role key on it if the page will be left out.</p>
+<table class="sheet">
+  <tr><th>#</th><th>Value</th><th>Comes from</th><th>Belongs in</th></tr>
+  <tr><td>1</td><td><b>Project URL</b></td><td>Supabase → Settings → Data API</td><td>The site (public) + GitHub secret <code>SUPABASE_URL</code></td></tr>
+  <tr><td>2</td><td><b>anon public key</b></td><td>Supabase → Settings → API Keys</td><td>The site (public, read-only)</td></tr>
+  <tr><td>3</td><td><b>service_role key</b></td><td>Supabase → Settings → API Keys</td><td>GitHub secret <code>SUPABASE_SERVICE_ROLE_KEY</code> only</td></tr>
+  <tr><td>4</td><td><b>GitHub token</b></td><td>github.com/settings/personal-access-tokens</td><td>Supabase function secret <code>GITHUB_TOKEN</code></td></tr>
+  <tr><td>5</td><td><b>GitHub repo name</b></td><td>Your repository address</td><td>Function secret <code>GITHUB_REPO</code>, as <code>owner/name</code></td></tr>
+</table>
+<button class="printbtn" onclick="window.print()">Print the cheat sheet</button>
+
+<footer>
+  Orbital CRM · If a check above fails, the message says which of the five values is wrong. Nothing on this page is stored — the fields are for testing only.
+</footer>
+</div>
+
+<!-- ============ print-only one-pager ============ -->
+<div class="cheat">
+  <h1>Orbital CRM — install cheat sheet</h1>
+  <p class="sub">Five values. Two are required to see jobs. Fill in the blanks by hand.</p>
+
+  <h2>What goes where</h2>
+  <table>
+    <tr><th>#</th><th>Value</th><th>Where you get it</th><th>Where it goes</th><th>Yours</th></tr>
+    <tr><td>1</td><td>Supabase Project URL</td><td>Supabase → Settings → Data API</td><td>The site + GitHub secret SUPABASE_URL</td><td style="width:22%">&nbsp;</td></tr>
+    <tr><td>2</td><td>anon public key</td><td>Supabase → Settings → API Keys</td><td>The site (read-only, public)</td><td>&nbsp;</td></tr>
+    <tr><td>3</td><td>service_role key</td><td>Supabase → Settings → API Keys</td><td>GitHub secret only — never the site</td><td>do not write here</td></tr>
+    <tr><td>4</td><td>GitHub token (fine-grained, Actions: read+write)</td><td>github.com/settings/personal-access-tokens</td><td>Supabase function secret GITHUB_TOKEN</td><td>&nbsp;</td></tr>
+    <tr><td>5</td><td>GitHub repo, as owner/name</td><td>Your repository address</td><td>Function secret GITHUB_REPO</td><td>&nbsp;</td></tr>
+  </table>
+
+  <h2>Order of operations</h2>
+  <table>
+    <tr><th>1</th><td>In Supabase, open SQL Editor and run the schema from the install console. Expect "Success. No rows returned".</td></tr>
+    <tr><th>2</th><td>Put the Project URL and anon key into the install console. The dashboard now reads live data.</td></tr>
+    <tr><th>3</th><td>In the GitHub repo: Settings → Secrets and variables → Actions. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.</td></tr>
+    <tr><th>4</th><td>Actions tab → Orbital daily scrape → Run workflow. Read the first step's output; it names any bad secret in plain English.</td></tr>
+    <tr><th>5</th><td>Optional: deploy the trigger-scrape function so Refresh roles can start a scrape on demand.</td></tr>
+  </table>
+
+  <h2>Good to know</h2>
+  <table>
+    <tr><th>Schedule</th><td>6:00 AM America/Chicago daily. Two UTC slots are scheduled and a gate step lets only the correct one through, so daylight saving does not shift it.</td></tr>
+    <tr><th>Refresh roles</th><td>Asks GitHub for a fresh run, then watches the scrape_runs and scrape_progress tables and loads the new roles when it finishes.</td></tr>
+    <tr><th>If a run fails</th><td>Actions tab → the failed run → first red step. The secret checks report the actual problem.</td></tr>
+    <tr><th>"permission denied for table jobs"</th><td>A missing GRANT, not row-level security. Run the isolated GRANT block from the install console.</td></tr>
+    <tr><th>Key safety</th><td>anon key public by design. service_role key never in a browser — rotate it in Supabase if it leaks.</td></tr>
+  </table>
+  <p class="note">Printed from install-guide.html · Orbital CRM</p>
+</div>
+
+<script>
+// Live checks. Each one makes a real request and reports the actual answer, because
+// "looks about right" is how a bad key survives until the first 6am run fails.
+const $=s=>document.querySelector(s);
+function say(el,cls,msg){ const r=$(el); r.className='res '+cls; r.innerHTML=msg; }
+
+function cleanUrl(v){ return (v||'').trim().replace(/\/+$/,'').replace(/\/rest\/v1$/,''); }
+
+async function testUrl(){
+  const v=cleanUrl($('#urlIn').value);
+  if(!v){ return say('#urlRes','bad','Paste the URL first.'); }
+  if(!/^https:\/\/[a-z0-9-]+\.supabase\.(co|in)$/.test(v)){
+    return say('#urlRes','bad','That is not the shape of a Supabase project URL. It should be <b>https://something.supabase.co</b> with nothing after it'+(v!==$('#urlIn').value.trim()?' (I already trimmed a trailing slash or /rest/v1 for you).':'.'));
+  }
+  say('#urlRes','busy','Checking the address responds…');
+  try{
+    // No key: a live project answers 401 (needs a key), a dead address fails outright.
+    const r=await fetch(v+'/rest/v1/',{method:'GET'});
+    if(r.status===401||r.status===400||r.ok) say('#urlRes','ok','This project is live and answering. Well-formed URL.');
+    else say('#urlRes','bad','The address answered with HTTP '+r.status+', which is not what a Supabase project returns. Double-check the project reference.');
+  }catch(e){
+    say('#urlRes','bad','Could not reach that address at all. Check the spelling of the project reference.');
+  }
+}
+
+async function testKey(){
+  const url=cleanUrl($('#urlIn').value), key=($('#keyIn').value||'').trim();
+  if(!url) return say('#keyRes','bad','Fill in the Project URL above first — a key can only be checked against its own project.');
+  if(!key) return say('#keyRes','bad','Paste the anon key first.');
+  if(/^sb_secret_/.test(key)) return say('#keyRes','bad','<b>That is the secret (write) key.</b> It must never go in a browser. Copy the <b>sb_publishable_</b> / anon key instead, and rotate this one in Supabase.');
+  if(/^eyJ/.test(key)){
+    try{
+      const payload=JSON.parse(atob(key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      if(payload.role==='service_role') return say('#keyRes','bad','<b>That is the service_role key.</b> Never put it in a browser — copy the anon key instead, and rotate this one in Supabase.');
+    }catch(e){}
+  }
+  say('#keyRes','busy','Reading the jobs table with this key…');
+  try{
+    const c=window.supabase.createClient(url,key);
+    const {count,error}=await c.from('jobs').select('*',{count:'exact',head:true});
+    if(error){
+      const m=(error.message||'').toLowerCase();
+      if(m.includes('does not exist')||m.includes('not find the table'))
+        return say('#keyRes','bad','The key works, but there is <b>no jobs table yet</b>. Run the schema SQL from the install console first.');
+      if(m.includes('jwt')||m.includes('api key')||m.includes('invalid'))
+        return say('#keyRes','bad','This key was rejected by that project. Make sure it is the anon key from <b>this same</b> project.');
+      if(m.includes('permission denied'))
+        return say('#keyRes','bad','The key is valid but has no read grant. Run the isolated GRANT block from the install console.');
+      return say('#keyRes','bad','Rejected: '+error.message);
+    }
+    say('#keyRes','ok','Works. This key can read the jobs table — <b>'+(count||0).toLocaleString()+' role'+(count===1?'':'s')+'</b> in there right now.'+(count?'':' Empty is normal before the first scrape.'));
+  }catch(e){
+    say('#keyRes','bad','Could not complete the read: '+(e.message||e));
+  }
+}
+
+async function testFn(){
+  const url=cleanUrl($('#fnIn').value)||cleanUrl($('#urlIn').value);
+  const key=($('#keyIn').value||'').trim();
+  if(!url) return say('#fnRes','bad','Paste your Project URL (step 1) first.');
+  say('#fnRes','busy','Looking for the function…');
+  try{
+    const r=await fetch(url+'/functions/v1/trigger-scrape',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'}, key?{'Authorization':'Bearer '+key,'apikey':key}:{}),
+      body:JSON.stringify({probe:true})
+    });
+    if(r.status===404) return say('#fnRes','busy','Not deployed yet. That is fine — Refresh roles will re-read the database instead of starting a scrape. Deploy it with the commands above if you want on-demand scraping.');
+    let d={}; try{ d=await r.json(); }catch(e){}
+    if(r.status===403) return say('#fnRes','ok','Deployed and reachable. It refused this probe because the owner PIN did not match, which is exactly what it should do — the dashboard sends the real PIN.');
+    if(r.ok) return say('#fnRes','ok','Deployed and working. It just asked GitHub to start a scrape'+(d.run_url?' — <a href="'+d.run_url+'" target="_blank" rel="noopener">watch the run</a>':'')+'.');
+    if(d.error) return say('#fnRes','bad','Deployed, but it reported: '+d.error);
+    say('#fnRes','bad','Deployed, but it answered HTTP '+r.status+'.');
+  }catch(e){
+    say('#fnRes','bad','Could not reach the function: '+(e.message||e));
+  }
+}
+
+document.querySelectorAll('[data-test]').forEach(b=>b.onclick=()=>{
+  const k=b.dataset.test;
+  if(k==='url') testUrl(); else if(k==='key') testKey(); else testFn();
+});
+
+// Pre-fill from whatever the site already has saved, so the checks test the real values.
+try{
+  const cfg=window.ORBITAL_CONFIG||{};
+  const u=localStorage.getItem('orbital.sbUrl')||localStorage.getItem('orbital.url')||cfg.url||'';
+  const k=localStorage.getItem('orbital.sbKey')||localStorage.getItem('orbital.key')||cfg.anonKey||'';
+  if(u){ $('#urlIn').value=u; $('#fnIn').value=u; }
+  if(k) $('#keyIn').value=k;
+}catch(e){}
+</script>
+</body>
+</html>

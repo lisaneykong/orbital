@@ -1,64 +1,1221 @@
 {
-  "_comment": "Canonical company/ATS source of truth (Improvement #1). scraper.py loads this directly. index.html/setup.html carry their own copy today — syncing them to fetch this file is the next increment (needs an async-load refactor since FP_COMPANIES is used synchronously across many functions).",
+  "_comment": "Canonical company/ATS source of truth. scraper.py reads this directly; index.html's FP_COMPANIES array is GENERATED from it (see _generated_note).",
+  "_generated_note": "FP_COMPANIES in index.html was generated from this file. If you edit a browser-reachable bucket here (greenhouse/lever/ashby/workday/amazon), regenerate that array so the in-browser refresh stays in sync with the daily Action.",
+  "_hub_warning": "Roles only survive if their location maps to SEATTLE, GREATER_LA, NEW_ZEALAND or US_OTHER. Companies marked \"intl\": true below are configured and will be fetched, but their non-US postings are dropped at the hub gate. Adding an INTERNATIONAL hub is what turns them on.",
   "greenhouse": {
-    "spacex": "SpaceX",
-    "rocketlab": "Rocket Lab",
-    "relativity": "Relativity Space",
-    "stokespacetechnologies": "Stoke Space",
-    "vast": "Vast Space",
-    "apex": "Apex Space",
-    "vardaspace": "Varda Space Industries",
-    "astranis": "Astranis",
-    "slingshotaerospace": "Slingshot Aerospace",
-    "graviticsinc": "Gravitics",
-    "ursamajor": "Ursa Major",
-    "leolabsinc": "LeoLabs",
-    "trueanomalyinc": "True Anomaly",
-    "outpostspace": "Outpost",
-    "terranorbitalcorporation": "Terran Orbital",
-    "blacksky": "BlackSky",
-    "planetlabs": "Planet Labs",
-    "andurilindustries": "Anduril",
-    "inversionspace": "Inversion Space",
-    "k2spacecorporation": "K2 Space",
-    "muonspace": "Muon Space",
-    "stratolaunch": "Stratolaunch",
-    "capellaspace": "Capella Space",
-    "spaceium": "Spaceium",
-    "albedo": "Albedo",
-    "spinlaunch": "SpinLaunch",
-    "offworld": "OffWorld",
-    "starcloud": "Starcloud",
-    "mithril": "Mithril Technologies",
-    "hubblenetwork": "Hubble Network"
+    "spacex": {
+      "company": "SpaceX",
+      "verified": "probed live 2026-09-05",
+      "open": 2333
+    },
+    "rocketlab": {
+      "company": "Rocket Lab",
+      "verified": "probed live 2026-09-05",
+      "open": 456
+    },
+    "planetlabs": {
+      "company": "Planet Labs",
+      "verified": "probed live 2026-09-05",
+      "open": 118
+    },
+    "astranis": {
+      "company": "Astranis",
+      "verified": "probed live 2026-09-05",
+      "open": 84
+    },
+    "slingshotaerospace": {
+      "company": "Slingshot Aerospace",
+      "verified": "probed live 2026-09-05",
+      "open": 3
+    },
+    "andurilindustries": {
+      "company": "Anduril",
+      "verified": "probed live 2026-09-05",
+      "open": 2213
+    },
+    "stratolaunch": {
+      "company": "Stratolaunch",
+      "verified": "probed live 2026-09-05",
+      "open": 58
+    },
+    "albedo": {
+      "company": "Albedo",
+      "verified": "probed live 2026-09-05",
+      "open": 10
+    },
+    "starcloud": {
+      "company": "Starcloud",
+      "verified": "probed live 2026-09-05",
+      "open": 12
+    },
+    "spaceium": {
+      "company": "Spaceium",
+      "verified": "probed live 2026-09-05",
+      "open": 10
+    },
+    "mithril": {
+      "company": "Mithril Technologies",
+      "verified": "probed live 2026-09-05",
+      "open": 3
+    },
+    "scoutspace": {
+      "company": "Scout Space",
+      "verified": "probed live 2026-09-05",
+      "open": 13
+    },
+    "momentus": {
+      "company": "Momentus",
+      "verified": "probed live 2026-09-05",
+      "open": 7
+    },
+    "ursamajor": {
+      "company": "Ursa Major",
+      "verified": "probed live 2026-09-05",
+      "open": 101
+    },
+    "relativity": {
+      "company": "Relativity Space",
+      "verified": "probed live 2026-09-05",
+      "open": 344,
+      "healed_from": "greenhouse:relativityspace"
+    },
+    "leolabsinc": {
+      "company": "LeoLabs",
+      "verified": "probed live 2026-09-05",
+      "open": 30,
+      "healed_from": "greenhouse:leolabs"
+    },
+    "spire": {
+      "company": "Spire Global",
+      "verified": "probed live 2026-09-05",
+      "open": 36,
+      "healed_from": "greenhouse:spireglobal"
+    },
+    "astspacemobile": {
+      "company": "AST SpaceMobile",
+      "verified": "probed live 2026-09-05",
+      "open": 230,
+      "healed_from": "lever:ast-science"
+    },
+    "trueanomalyinc": {
+      "company": "True Anomaly",
+      "verified": "probed live 2026-09-05",
+      "open": 178,
+      "healed_from": "lever:trueanomaly"
+    },
+    "stokespacetechnologies": {
+      "company": "Stoke Space",
+      "verified": "probed live 2026-09-05",
+      "open": 69,
+      "healed_from": "lever:stokespace"
+    },
+    "vardaspace": {
+      "company": "Varda Space Industries",
+      "verified": "probed live 2026-09-05",
+      "open": 87,
+      "healed_from": "ashby:varda"
+    },
+    "apex": {
+      "company": "Apex Space",
+      "verified": "probed live 2026-09-05",
+      "open": 1,
+      "healed_from": "ashby:apexspace"
+    },
+    "muonspace": {
+      "company": "Muon Space",
+      "verified": "probed live 2026-09-05",
+      "open": 107,
+      "healed_from": "ashby:muonspace"
+    },
+    "graviticsinc": {
+      "company": "Gravitics",
+      "verified": "probed live 2026-09-05",
+      "open": 18,
+      "healed_from": "ashby:gravitics"
+    },
+    "inversionspace": {
+      "company": "Inversion Space",
+      "verified": "probed live 2026-09-05",
+      "open": 76,
+      "healed_from": "ashby:inversion"
+    },
+    "hubblenetwork": {
+      "company": "Hubble Network",
+      "verified": "probed live 2026-09-05",
+      "open": 10,
+      "healed_from": "ashby:hubblenetwork"
+    },
+    "privateer": {
+      "company": "Privateer Space",
+      "verified": "probed live 2026-09-05",
+      "open": 2,
+      "healed_from": "ashby:privateer"
+    },
+    "portalspacesystems": {
+      "company": "Portal Space Systems",
+      "verified": "probed live 2026-09-05",
+      "open": 15,
+      "healed_from": "ashby:portalspace"
+    },
+    "array": {
+      "company": "Array Labs",
+      "verified": "verified live 2026-09-05 (route finder)",
+      "open": 15,
+      "healed_from": "greenhouse:arraylabs"
+    },
+    "ionq": {
+      "company": "IonQ (Capella Space)",
+      "verified": "verified live 2026-09-06 (route finder, 22-API pass)",
+      "open": 102,
+      "note": "Capella Space was acquired by IonQ; the former Capella satellite team now hires on IonQ's Greenhouse board. Counts and locations are IonQ-wide."
+    },
+    "voyagertechnologiesinc": {
+      "company": "Voyager Technologies (incl. Voyager Lunar Systems / Astrobotic)",
+      "verified": "verified live 2026-09-06 (route finder + entity-lineage pass)",
+      "open": 156,
+      "note": "Astrobotic Technology now trades as Voyager Lunar Systems inside this tenant — 34 of the 156 postings are Pittsburgh and 26 name Astrobotic or Voyager Lunar Systems in their body, but no department is tagged \"lunar\", so a department filter will not find them. Astrobotic deliberately has NO separate entry: it would duplicate this whole board."
+    }
   },
   "workday": [
-    {"company": "Blue Origin", "tenant": "blueorigin", "server": "wd5", "board": "BlueOrigin"},
-    {"company": "Sierra Space", "tenant": "sierraspace", "server": "wd1", "board": "Sierra_Space_External_Career_Site"},
-    {"company": "Maxar", "tenant": "maxar", "server": "wd1", "board": "lanterisspace"}
+    {
+      "company": "Virgin Galactic",
+      "tenant": "virgingalactic",
+      "server": "wd5",
+      "board": "VirginGalactic"
+    },
+    {
+      "company": "Blue Origin",
+      "tenant": "blueorigin",
+      "server": "wd5",
+      "board": "BlueOrigin"
+    },
+    {
+      "company": "Sierra Space",
+      "tenant": "sierraspace",
+      "server": "wd5",
+      "board": "SierraSpace"
+    },
+    {
+      "company": "Axiom Space",
+      "tenant": "axiomspace",
+      "server": "wd5",
+      "board": "AxiomSpace"
+    },
+    {
+      "company": "Intuitive Machines",
+      "tenant": "intuitivemachines",
+      "server": "wd5",
+      "board": "Careers"
+    },
+    {
+      "company": "BlackSky",
+      "tenant": "blacksky",
+      "server": "wd5",
+      "board": "BlackSky"
+    },
+    {
+      "company": "York Space Systems",
+      "tenant": "yorkspacesystems",
+      "server": "wd5",
+      "board": "York"
+    },
+    {
+      "company": "Lockheed Martin Space",
+      "tenant": "lockheedmartin",
+      "server": "wd5",
+      "board": "LockheedMartin"
+    },
+    {
+      "company": "Northrop Grumman Space",
+      "tenant": "northropgrumman",
+      "server": "wd1",
+      "board": "NG"
+    },
+    {
+      "company": "The Boeing Company",
+      "tenant": "boeing",
+      "server": "wd1",
+      "board": "Boeing"
+    },
+    {
+      "company": "L3Harris Technologies",
+      "tenant": "l3harris",
+      "server": "wd5",
+      "board": "L3Harris"
+    },
+    {
+      "company": "RTX Corporation",
+      "tenant": "rtx",
+      "server": "wd1",
+      "board": "RTX"
+    },
+    {
+      "company": "Airbus Defence and Space",
+      "tenant": "airbus",
+      "server": "wd3",
+      "board": "Airbus",
+      "intl": true
+    },
+    {
+      "company": "United Launch Alliance",
+      "tenant": "ulalaunch",
+      "server": "wd5",
+      "board": "ULA"
+    },
+    {
+      "company": "Maxar Technologies",
+      "tenant": "maxar",
+      "server": "wd1",
+      "board": "Maxar"
+    },
+    {
+      "company": "Terran Orbital",
+      "tenant": "terranorbital",
+      "server": "wd5",
+      "board": "TerranOrbital"
+    },
+    {
+      "company": "Blue Canyon Technologies",
+      "tenant": "rtx",
+      "server": "wd1",
+      "board": "BCT"
+    },
+    {
+      "company": "Mynaric",
+      "tenant": "mynaric",
+      "server": "wd3",
+      "board": "Mynaric",
+      "intl": true
+    },
+    {
+      "company": "Leidos",
+      "tenant": "leidos",
+      "server": "wd5",
+      "board": "External",
+      "unverified": true
+    },
+    {
+      "company": "Booz Allen Hamilton",
+      "tenant": "bah",
+      "server": "wd1",
+      "board": "BAH_Jobs",
+      "unverified": true
+    },
+    {
+      "company": "SAIC",
+      "tenant": "saic",
+      "server": "wd1",
+      "board": "External",
+      "unverified": true
+    },
+    {
+      "company": "CACI",
+      "tenant": "caci",
+      "server": "wd1",
+      "board": "External",
+      "unverified": true
+    },
+    {
+      "company": "Parsons",
+      "tenant": "parsons",
+      "server": "wd5",
+      "board": "Search",
+      "unverified": true
+    },
+    {
+      "company": "Peraton",
+      "tenant": "peraton",
+      "server": "wd1",
+      "board": "Peraton_Careers",
+      "unverified": true
+    },
+    {
+      "company": "KBR",
+      "tenant": "kbr",
+      "server": "wd5",
+      "board": "KBR_Careers",
+      "unverified": true
+    },
+    {
+      "company": "Amentum",
+      "tenant": "amentum",
+      "server": "wd1",
+      "board": "Amentum",
+      "unverified": true
+    },
+    {
+      "company": "Jacobs",
+      "tenant": "jacobs",
+      "server": "wd1",
+      "board": "Jacobs_Careers",
+      "unverified": true
+    },
+    {
+      "company": "MITRE",
+      "tenant": "mitre",
+      "server": "wd5",
+      "board": "MITRE_Careers",
+      "unverified": true
+    },
+    {
+      "company": "The Aerospace Corporation",
+      "tenant": "aerospace",
+      "server": "wd1",
+      "board": "External",
+      "unverified": true
+    },
+    {
+      "company": "Viasat",
+      "tenant": "viasat",
+      "server": "wd1",
+      "board": "Viasat_Careers",
+      "unverified": true
+    },
+    {
+      "company": "Iridium",
+      "tenant": "iridium",
+      "server": "wd1",
+      "board": "Iridium",
+      "unverified": true
+    },
+    {
+      "company": "EchoStar",
+      "tenant": "echostar",
+      "server": "wd1",
+      "board": "EchoStar_Careers",
+      "unverified": true
+    },
+    {
+      "company": "Intelsat",
+      "tenant": "intelsat",
+      "server": "wd1",
+      "board": "Intelsat_Careers",
+      "unverified": true
+    },
+    {
+      "company": "SES Space & Defense",
+      "tenant": "ses",
+      "server": "wd3",
+      "board": "SES_Careers",
+      "unverified": true
+    },
+    {
+      "company": "Kratos Defense",
+      "tenant": "kratosdefense",
+      "server": "wd1",
+      "board": "Kratos_Careers",
+      "unverified": true
+    },
+    {
+      "company": "BWXT",
+      "tenant": "bwxt",
+      "server": "wd1",
+      "board": "BWXT_Careers",
+      "unverified": true
+    },
+    {
+      "company": "Redwire",
+      "tenant": "redwirespace",
+      "server": "wd1",
+      "board": "Redwire",
+      "unverified": true
+    },
+    {
+      "company": "Moog Space & Defense",
+      "tenant": "moog",
+      "server": "wd5",
+      "board": "Moog_Careers",
+      "unverified": true
+    },
+    {
+      "company": "Honeywell Aerospace",
+      "tenant": "honeywell",
+      "server": "wd1",
+      "board": "Honeywell_Careers",
+      "unverified": true
+    }
   ],
   "lever": [
-    {"company": "E-Space", "token": "espace"},
-    {"company": "Loft Orbital", "token": "loftorbital"},
-    {"company": "Hermeus", "token": "hermeus"},
-    {"company": "Kepler Communications", "token": "kepler"}
+    {
+      "company": "Loft Orbital",
+      "token": "loftorbital",
+      "verified": "probed live 2026-09-05",
+      "open": 57
+    },
+    {
+      "company": "E-Space",
+      "token": "espace",
+      "verified": "probed live 2026-09-05",
+      "open": 142
+    },
+    {
+      "company": "Hermeus",
+      "token": "hermeus",
+      "verified": "probed live 2026-09-05",
+      "open": 85
+    },
+    {
+      "company": "Kepler Communications",
+      "token": "kepler",
+      "intl": true,
+      "verified": "probed live 2026-09-05",
+      "open": 27
+    },
+    {
+      "company": "Nominal",
+      "token": "nominal",
+      "verified": "probed live 2026-09-05",
+      "open": 0
+    },
+    {
+      "company": "Shield AI",
+      "token": "shieldai",
+      "verified": "probed live 2026-09-05",
+      "open": 439,
+      "healed_from": "greenhouse:shieldai"
+    },
+    {
+      "company": "Palantir",
+      "token": "palantir",
+      "verified": "probed live 2026-09-05",
+      "open": 310,
+      "healed_from": "greenhouse:palantir"
+    },
+    {
+      "company": "Velo3D",
+      "token": "velo3d",
+      "verified": "probed live 2026-09-05",
+      "open": 38,
+      "healed_from": "greenhouse:velo3d"
+    },
+    {
+      "company": "Epsilon3",
+      "token": "epsilon3",
+      "verified": "probed live 2026-09-05",
+      "open": 6,
+      "healed_from": "greenhouse:epsilon3"
+    },
+    {
+      "company": "Orbital Sidekick",
+      "token": "orbitalsidekick",
+      "verified": "probed live 2026-09-05",
+      "open": 2,
+      "healed_from": "greenhouse:orbitalsidekick"
+    },
+    {
+      "company": "Venus Aerospace",
+      "token": "venusaero",
+      "verified": "probed live 2026-09-05",
+      "open": 25,
+      "healed_from": "greenhouse:venusaero"
+    },
+    {
+      "company": "CesiumAstro",
+      "token": "CesiumAstro",
+      "verified": "verified live 2026-09-05 (route finder)",
+      "open": 266,
+      "healed_from": "greenhouse:cesiumastro",
+      "note": "Lever tokens are case-sensitive — the lowercase \"cesiumastro\" 404s, \"CesiumAstro\" returns 266 roles."
+    },
+    {
+      "company": "Long Wall (formerly ABL Space Systems)",
+      "token": "longwall",
+      "verified": "verified live 2026-09-06 (route finder, 22-API pass)",
+      "open": 21,
+      "note": "ABL Space Systems renamed to Long Wall; the board moved to lever:longwall. El Segundo + Long Beach, CA. The rename was why every abl* token form failed."
+    }
   ],
   "ashby": [
-    {"company": "Starfish Space", "token": "starfish-space-inc"},
-    {"company": "Hadrian", "token": "hadrian-automation"},
-    {"company": "Impulse Space", "token": "impulse"},
-    {"company": "Constellation Space", "token": "constellationspace"},
-    {"company": "Turion Space", "token": "turion-space"}
+    {
+      "company": "Vast Space",
+      "token": "vast",
+      "verified": "probed live 2026-09-05",
+      "open": 0
+    },
+    {
+      "company": "Outpost Technologies",
+      "token": "outpost",
+      "verified": "probed live 2026-09-05",
+      "open": 9
+    },
+    {
+      "company": "Turion Space",
+      "token": "turion-space",
+      "verified": "probed live 2026-09-05",
+      "open": 8
+    },
+    {
+      "company": "Reflect Orbital",
+      "token": "reflect-orbital",
+      "verified": "probed live 2026-09-05",
+      "open": 24
+    },
+    {
+      "company": "Hadrian",
+      "token": "hadrian-automation",
+      "verified": "probed live 2026-09-05",
+      "open": 148
+    },
+    {
+      "company": "Impulse Space",
+      "token": "impulse",
+      "verified": "probed live 2026-09-05",
+      "open": 3,
+      "healed_from": "ashby:impulsespace"
+    },
+    {
+      "company": "Skylo Technologies",
+      "token": "skylo",
+      "verified": "probed live 2026-09-05",
+      "open": 61,
+      "healed_from": "greenhouse:skylo"
+    },
+    {
+      "company": "Sift",
+      "token": "sift",
+      "verified": "probed live 2026-09-05",
+      "open": 7,
+      "healed_from": "greenhouse:siftstack"
+    },
+    {
+      "company": "Astra",
+      "token": "astra",
+      "verified": "probed live 2026-09-05",
+      "open": 9,
+      "healed_from": "greenhouse:astra"
+    },
+    {
+      "company": "ICEYE",
+      "token": "iceye",
+      "verified": "probed live 2026-09-05",
+      "open": 189,
+      "healed_from": "lever:iceye"
+    },
+    {
+      "company": "Starfish Space",
+      "token": "starfish-space-inc",
+      "verified": "confirmed 2026-09-05 — jobs.ashbyhq.com/starfish-space-inc",
+      "healed_from": "greenhouse:starfishspace",
+      "note": "Previous probes stripped hyphens and could never reach this token."
+    },
+    {
+      "company": "First Resonance",
+      "token": "first-resonance",
+      "verified": "verified live 2026-09-05 (route finder)",
+      "open": 15,
+      "healed_from": "greenhouse:firstresonance"
+    },
+    {
+      "company": "Radiant Industries",
+      "token": "radiant-industries",
+      "verified": "verified live 2026-09-05 (route finder)",
+      "open": 91,
+      "healed_from": "greenhouse:radiantindustries"
+    },
+    {
+      "company": "Base Power",
+      "token": "base-power",
+      "verified": "verified live 2026-09-05 (route finder)",
+      "open": 174,
+      "healed_from": "greenhouse:basepower"
+    },
+    {
+      "company": "Xona Space Systems",
+      "token": "xona-space",
+      "verified": "verified live 2026-09-06 (route finder, 22-API pass)",
+      "open": 59,
+      "note": "Ashby — https://api.ashbyhq.com/posting-api/job-board/xona-space . Burlingame, CA. Confirmed by GNSS/DSP role titles."
+    },
+    {
+      "company": "Starpath Robotics",
+      "token": "starpath.space",
+      "verified": "verified live 2026-09-06 (route finder + entity-lineage pass)",
+      "open": 20,
+      "note": "Ashby identifier is the full web domain, dots included. The token generator strips dots, so no starpath* form could ever reach it — the same class of bug as the stripped hyphens. All 20 roles are Hawthorne, CA."
+    }
   ],
-  "eightfold": [
-    {"company": "Virgin Galactic", "host": "vgcareers.virgingalactic.com", "domain": "virgingalactic.com"}
+  "bamboohr": [
+    {
+      "company": "Phantom Space",
+      "token": "phantomspace",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "World View Enterprises",
+      "token": "worldview",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Agile Space Industries",
+      "token": "agilespace",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Benchmark Space Systems",
+      "token": "benchmark",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Busek Co.",
+      "token": "busek",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Lynk Global",
+      "token": "lynk",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Sidus Space",
+      "token": "sidusspace",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Advanced Space",
+      "token": "advancedspace",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "TransAstra",
+      "token": "transastra",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Lunar Outpost",
+      "token": "lunaroutpost",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "OffWorld",
+      "token": "offworld",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "AI SpaceFactory",
+      "token": "aispacefactory",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Quantum Space",
+      "token": "quantumspace",
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Space Forge",
+      "token": "spaceforge",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "D-Orbit",
+      "token": "dorbit",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "PLD Space",
+      "token": "pldspace",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Agnikul Cosmos",
+      "token": "agnikul",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Skyroot Aerospace",
+      "token": "skyroot",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Interstellar Technologies",
+      "token": "interstellar",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Enpulsion",
+      "token": "enpulsion",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Pale Blue",
+      "token": "paleblue",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Dawn Aerospace",
+      "token": "dawnaespace",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Sateliot",
+      "token": "sateliot",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "EnduroSat",
+      "token": "endurosat",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "NanoAvionics",
+      "token": "nanoavionics",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "AAC Clyde Space",
+      "token": "aacclydespace",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "GomSpace",
+      "token": "gomspace",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Dhruva Space",
+      "token": "dhruvaspace",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Bellatrix Aerospace",
+      "token": "bellatrix",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "OrbitGuardians",
+      "token": "orbitguardians",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    },
+    {
+      "company": "Neuraspace",
+      "token": "neuraspace",
+      "intl": true,
+      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+    }
   ],
+  "personio": [
+    {
+      "company": "Morpheus Space",
+      "token": "morpheusspace"
+    },
+    {
+      "company": "ClearSpace",
+      "token": "clearspace",
+      "intl": true
+    },
+    {
+      "company": "Isar Aerospace",
+      "token": "isaraerospace",
+      "intl": true
+    },
+    {
+      "company": "The Exploration Company",
+      "token": "exploration",
+      "intl": true
+    },
+    {
+      "company": "Atmos Space Cargo",
+      "token": "atmos",
+      "intl": true
+    }
+  ],
+  "welcomekit": [
+    {
+      "company": "Exotrail",
+      "token": "exotrail",
+      "intl": true
+    },
+    {
+      "company": "ThrustMe",
+      "token": "thrustme",
+      "intl": true
+    },
+    {
+      "company": "Unseenlabs",
+      "token": "unseenlabs",
+      "intl": true
+    },
+    {
+      "company": "Kinéis",
+      "token": "kineis",
+      "intl": true
+    },
+    {
+      "company": "Interstellar Lab",
+      "token": "interstellarlab"
+    },
+    {
+      "company": "Look Up Space",
+      "token": "lookup",
+      "intl": true
+    }
+  ],
+  "icims": [],
   "workable": [
-    {"company": "Umbra", "token": "umbra"},
-    {"company": "Xplore", "token": "xplore-inc"},
-    {"company": "Capella Space", "token": "capellaspace"}
+    {
+      "company": "Xplore",
+      "token": "xplore-inc",
+      "verified": "probed live 2026-09-05",
+      "open": 4
+    }
   ],
+  "eightfold": [],
   "amazon": [
-    {"company": "Project Kuiper (Amazon)", "query": "kuiper"}
-  ]
+    {
+      "company": "Project Kuiper (Amazon)",
+      "query": "kuiper"
+    },
+    {
+      "company": "AWS Aerospace & Satellite",
+      "query": "aerospace satellite"
+    }
+  ],
+  "custom": [
+    {
+      "company": "BAE Systems Space & Mission Systems",
+      "url": "https://jobs.baesystems.com/global/en/search-results",
+      "region": "US"
+    },
+    {
+      "company": "General Dynamics Mission Systems",
+      "url": "https://gdmissionsystems.com/careers/search-jobs",
+      "region": "US"
+    },
+    {
+      "company": "Evolution Space",
+      "url": "https://www.evolutionspace.com/careers",
+      "region": "US"
+    },
+    {
+      "company": "Ultra Safe Nuclear Technologies",
+      "url": "https://usnc.com/careers/",
+      "region": "US"
+    },
+    {
+      "company": "Tethers Unlimited",
+      "url": "https://www.tethers.com/careers/",
+      "region": "New Zealand"
+    },
+    {
+      "company": "Kea Aerospace",
+      "url": "https://www.keaaerospace.com/careers",
+      "region": "New Zealand"
+    },
+    {
+      "company": "Astrix Astronautics",
+      "url": "https://www.astrix.co.nz/careers",
+      "region": "New Zealand"
+    },
+    {
+      "company": "Xerra",
+      "url": "https://www.xerra.nz/careers/",
+      "region": "New Zealand"
+    },
+    {
+      "company": "SpaceBase",
+      "url": "https://www.spacebase.co/careers",
+      "region": "New Zealand"
+    },
+    {
+      "company": "Tāwhaki Joint Venture",
+      "url": "https://www.tawhaki.co.nz/careers",
+      "region": "New Zealand"
+    },
+    {
+      "company": "Firefly Aerospace",
+      "url": "https://firefly.hrmdirect.com/employment/job-openings.php?search=true",
+      "region": "US",
+      "ats": "clearcompany",
+      "note": "ClearCompany portal, confirmed 2026-09-05. Not Greenhouse — the old fireflyaerospace token never existed."
+    },
+    {
+      "company": "Sierra Nevada Corporation",
+      "url": "https://www.sncorp.com/careers/",
+      "region": "US",
+      "ats": "inhouse",
+      "note": "In-house talent portal, confirmed 2026-09-05. Large systems-engineering and program-management employer."
+    },
+    {
+      "company": "K2 Space",
+      "url": "https://www.k2space.com/careers",
+      "region": "GREATER_LA",
+      "ats": "unknown",
+      "note": "Torrance, CA. Careers page confirmed 2026-09-05; ATS token unconfirmed — run heal-probe.html to resolve."
+    }
+  ],
+  "careerLinks": [
+    {
+      "company": "NASA (civil service)",
+      "url": "https://www.nasa.gov/careers/",
+      "note": "USAJOBS — federal application flow, no ATS API"
+    },
+    {
+      "company": "NASA JPL / Caltech",
+      "url": "https://www.jpl.nasa.gov/careers/",
+      "note": "Caltech in-house ATS"
+    },
+    {
+      "company": "Johns Hopkins APL",
+      "url": "https://www.jhuapl.edu/careers",
+      "note": "In-house ATS"
+    },
+    {
+      "company": "Draper",
+      "url": "https://www.draper.com/careers",
+      "note": "In-house ATS"
+    },
+    {
+      "company": "Southwest Research Institute",
+      "url": "https://www.swri.org/careers",
+      "note": "In-house ATS"
+    },
+    {
+      "company": "US Space Force (civilian)",
+      "url": "https://www.spaceforce.com/careers",
+      "note": "USAJOBS / federal"
+    },
+    {
+      "company": "Space Development Agency",
+      "url": "https://www.sda.mil/careers/",
+      "note": "USAJOBS / federal"
+    },
+    {
+      "company": "General Atomics Electromagnetic Systems",
+      "url": "https://www.ga-careers.com/",
+      "note": "In-house ATS"
+    },
+    {
+      "company": "Millennium Space Systems (Boeing)",
+      "url": "https://www.millennium-space.com/careers",
+      "note": "Posts under Boeing Workday"
+    },
+    {
+      "company": "Aerojet Rocketdyne (L3Harris)",
+      "url": "https://www.l3harris.com/careers",
+      "note": "Now posted under L3Harris"
+    },
+    {
+      "company": "Swarm Technologies",
+      "url": "https://www.spacex.com/careers",
+      "note": "Acquired by SpaceX — the PDF's 'spacex' slug would duplicate SpaceX's whole board, so it is link-only here"
+    },
+    {
+      "company": "Vandenberg / Space Launch Delta 30",
+      "url": "https://www.vandenberg.spaceforce.mil/",
+      "note": "Federal + contractor postings"
+    }
+  ],
+  "_provenance": "Entries carry \"verified\":\"probed live 2026-09-05\" only when that exact token returned live jobs from its public API during a browser probe on 2026-09-05. 25 tokens were healed (see healed_from). 38 companies had no browser-reachable board on any of greenhouse/lever/ashby/workable after ~10 slug variants each and were moved to needs_route. BambooHR cannot be probed from a browser (CORS) — those rows are unverified by design and only the GitHub Action can confirm them. 2026-09-05 route pass: Starfish Space resolved to ashby:starfish-space-inc; Firefly Aerospace, Sierra Nevada Corporation and K2 Space moved to custom with confirmed careers URLs. The probe pages now read this file directly and no longer flatten hyphens in token variants. Route-finder pass resolved 5 more: First Resonance, Radiant Industries and Base Power on Ashby, Array Labs on Greenhouse (token \"array\"), Aetherflux on Recruitee (new bucket) — 301 additional live postings. Four of the five required hyphenated tokens, which the old probes could not generate. Astroscale resolved to smartrecruiters:AstroscaleUS — SmartRecruiters identifiers are PascalCase, a form the probes previously never generated. CesiumAstro resolved to lever:CesiumAstro (266 roles). Net: 12 of the original 38 unrouted companies now resolved — 9 on live public APIs, 3 as confirmed careers portals with no API. 27 remain genuinely unrouted. 2026-09-06 second route pass widened the probe from six to twenty-two public ATS APIs and added post-acquisition trading names: Capella Space resolved to greenhouse:ionq (acquired by IonQ), Zeno Power and HEO Robotics to Breezy HR, Orbit Fab to Rippling ATS — two more buckets (breezy, rippling) and 141 additional live postings. All four were confirmed by reading back real job titles and locations, not by token match alone. 23 remain unrouted. Third pass: ABL Space Systems resolved only after adding its post-rename identity Long Wall (lever:longwall) — no abl* form could ever have matched; Xona Space Systems to ashby:xona-space; Venturi Astrolab to Pinpoint (new bucket). Castelion's board was identified as Manatal (careers-page.com is Manatal's hosted product) with a CORS-open API at api.manatal.com/open/v3/career-page/<slug>/jobs/ returning 191 postings. Entity-lineage pass resolved three more: Voyager Space to greenhouse:voyagertechnologiesinc (legal-entity slug, 156 roles, and the home of the former Astrobotic as Voyager Lunar Systems), Starpath Robotics to ashby:starpath.space (dot-TLD identifier — the generator strips dots, a third token-shape bug alongside hyphens and case), Aalyria to rippling:aalyria-careers (-careers suffix). X-Bow Systems is Paylocity (identified, no public JSON) and Chandra Industries is flagged manual_sourcing_only as a probable entity misidentification. 15 remain unrouted.",
+  "_greenhouse_shape": "Value shapes: \"token\": \"Display Name\", or \"token\": {\"company\",\"verified\",\"open\",\"healed_from\"} for a probe-confirmed board, or {\"company\",\"unverified\":true} for an unprobed guess. NOTE: Lever and SmartRecruiters tokens are CASE-SENSITIVE (CesiumAstro, AstroscaleUS). Never lowercase a token before probing it.",
+  "needs_route": [
+    {
+      "company": "Space Perspective",
+      "tried": "greenhouse:spaceperspective",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "Umbra Space",
+      "tried": "greenhouse:umbra",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "SpinLaunch",
+      "tried": "greenhouse:spinlaunch",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "Antaris",
+      "tried": "greenhouse:antaris",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "Wyvern",
+      "tried": "greenhouse:wyvern",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "Rogue Space Systems",
+      "tried": "greenhouse:rogue",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "Karman Space & Defense",
+      "tried": "greenhouse:karman",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "X-Bow Systems",
+      "tried": "greenhouse:xbowsystems",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Platform identified but Paylocity exposes no public JSON and needs enterprise form parameters — server-side route only. Do NOT re-guess API tokens.",
+      "platform": "Paylocity (recruiting.paylocity.com, legal entity \"XBOW Launch Systems Inc\")"
+    },
+    {
+      "company": "Atomos Space",
+      "tried": "greenhouse:atomosspace",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "Satellogic",
+      "tried": "lever:satellogic",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "Pixxel",
+      "tried": "lever:pixxel",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "Phase Four",
+      "tried": "lever:phasefour",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "Astro Digital",
+      "tried": "lever:astrodigital",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "Chandra Industries",
+      "tried": "lever:chandra",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Likely a misidentified entity: the trading name resolves to South Asian industrial suppliers (Chandra Industries Pvt Ltd, est. 1952), not a space company. Confirm this belongs on the target list at all before spending more probe budget.",
+      "status": "manual_sourcing_only"
+    },
+    {
+      "company": "Vaya Space",
+      "tried": "workable:vaya-space",
+      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
+      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    }
+  ],
+  "recruitee": [
+    {
+      "company": "Aetherflux",
+      "token": "aetherflux",
+      "verified": "verified live 2026-09-05 (route finder)",
+      "open": 6,
+      "note": "Recruitee — https://aetherflux.recruitee.com/api/offers/ . Browser-reachable; add a scrape_recruitee() branch to scraper.py for the daily Action."
+    }
+  ],
+  "smartrecruiters": [
+    {
+      "company": "Astroscale",
+      "token": "AstroscaleUS",
+      "verified": "confirmed 2026-09-05 — careers.smartrecruiters.com/AstroscaleUS",
+      "healed_from": "lever:astroscale",
+      "note": "Denver CO + Washington DC. On-orbit servicing / debris removal — directly relevant to the ADR capstone. SmartRecruiters tokens are PascalCase and case-sensitive: https://api.smartrecruiters.com/v1/companies/AstroscaleUS/postings"
+    }
+  ],
+  "breezy": [
+    {
+      "company": "Zeno Power",
+      "token": "zeno-power",
+      "verified": "verified live 2026-09-06 (route finder, 22-API pass)",
+      "open": 19,
+      "note": "Breezy HR — https://zeno-power.breezy.hr/json . Seattle-heavy board. Add a scrape_breezy() branch to scraper.py for the daily Action."
+    },
+    {
+      "company": "HEO",
+      "token": "heo",
+      "verified": "verified live 2026-09-06 (route finder, 22-API pass)",
+      "open": 9,
+      "note": "Breezy HR — https://heo.breezy.hr/json . HEO Robotics, Sydney NSW + Arlington VA. Confirmed by job locations, not token guess."
+    }
+  ],
+  "rippling": [
+    {
+      "company": "Orbit Fab",
+      "token": "orbitfab",
+      "verified": "verified live 2026-09-06 (route finder, 22-API pass)",
+      "open": 11,
+      "note": "Rippling ATS — https://api.rippling.com/platform/api/ats/v1/board/orbitfab/jobs . Each posting carries its own ats.rippling.com apply URL. Lafayette, CO."
+    },
+    {
+      "company": "Aalyria",
+      "token": "aalyria-careers",
+      "verified": "verified live 2026-09-06 (route finder + entity-lineage pass)",
+      "open": 46,
+      "note": "Rippling ATS — the tenant carries a \"-careers\" suffix the generator never appended. Per-posting URLs come back on each row."
+    }
+  ],
+  "pinpoint": [
+    {
+      "company": "Venturi Astrolab",
+      "token": "astrolab",
+      "verified": "verified live 2026-09-06 (route finder, 22-API pass)",
+      "open": 32,
+      "note": "Pinpoint — https://astrolab.pinpointhq.com/postings.json , shape {data:[...]}. Hawthorne, CA lunar rover roles. Add a scrape_pinpoint() branch to scraper.py."
+    }
+  ],
+  "manatal": [
+    {
+      "company": "Castelion",
+      "token": "castelion-corporation",
+      "verified": "verified live 2026-09-06 (route finder, 23-API pass)",
+      "open": 191,
+      "note": "Manatal — https://api.manatal.com/open/v3/career-page/castelion-corporation/jobs/ . Paginated 10 per page; the response's \"count\" is the real total, so follow \"next\" or trust count. Jobs use position_name, not title. Torrance CA + Rio Rancho NM + Midland TX. careers-page.com is Manatal's hosted careers product."
+    }
+  ],
+  "_routing_platforms": {
+    "browser_reachable": [
+      "greenhouse",
+      "lever",
+      "ashby",
+      "workable",
+      "smartrecruiters",
+      "recruitee",
+      "breezy",
+      "rippling",
+      "pinpoint",
+      "manatal",
+      "amazon"
+    ],
+    "action_only": [
+      "workday",
+      "bamboohr",
+      "personio",
+      "welcomekit",
+      "icims",
+      "eightfold",
+      "custom"
+    ],
+    "note": "browser_reachable buckets are fetched live by index.html (FP_COMPANIES + fpFetchBoard). action_only buckets are CORS-blocked from a browser and are fetched exclusively by the daily GitHub Action via scraper.py. Adding a bucket to companies.json does nothing until it has BOTH an fpFetchBoard branch and an fpNormalize branch in index.html.",
+    "api_notes": {
+      "manatal": "api.manatal.com/open/v3/career-page/<slug>/jobs/ — paginated 10/page, follow \"next\"; title field is position_name; per-posting URL is careers-page.com/<slug>/job/<hash>",
+      "breezy": "<slug>.breezy.hr/json — array; title field is name; each row carries its own /p/<friendly_id> URL",
+      "rippling": "api.rippling.com/platform/api/ats/v1/board/<slug>/jobs — array; each row carries an ats.rippling.com apply URL",
+      "pinpoint": "<slug>.pinpointhq.com/postings.json — {data:[...]}; location is an object with name/city/province",
+      "smartrecruiters": "api.smartrecruiters.com/v1/companies/<Identifier>/postings — {content:[...]}; identifiers are PascalCase and case-sensitive; list endpoint carries no description",
+      "recruitee": "<slug>.recruitee.com/api/offers/ — {offers:[...]}; per-posting URL is careers_url"
+    }
+  }
 }

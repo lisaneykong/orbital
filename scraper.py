@@ -2,8 +2,9 @@
 """
 Orbital CRM — multi-ATS data pipeline
 =====================================
-Pulls REAL, active aerospace/space roles from 75 target companies across five
-applicant-tracking systems (Greenhouse, Workday CXS, Lever, Ashby, Amazon) plus
+Pulls REAL, active aerospace/space roles from ~200 target companies across nine
+applicant-tracking systems (Greenhouse, Workday CXS, Lever, Ashby, Amazon,
+Workable, Eightfold, BambooHR, Personio, WelcomeKit/WTTJ, iCIMS) plus
 custom HTML career sites, scores them against the target resume profile, maps
 them to a regional hub (Seattle / Greater LA / New Zealand), reconstructs a
 DIRECT-to-application URL (tracking params stripped), and upserts clean rows
@@ -13,7 +14,8 @@ Design rules (from the architecture master doc):
   * Never scrape a front-end career page when an ATS API exists.
   * `id`  = f"{company_slug}-{ats_id}"  (lowercase, alphanumeric + hyphens);
             custom HTML sites use  f"{name}-{md5(url)[:8]}".
-  * `location_hub` is EXACTLY one of SEATTLE | GREATER_LA | NEW_ZEALAND.
+  * `location_hub` is EXACTLY one of SEATTLE | GREATER_LA | NEW_ZEALAND | US_OTHER |
+    INTERNATIONAL.
   * `company` uses the exact display name (UI matches logos/colors on it).
   * `url` is the direct apply link with ?gh_jid / ?gh_src / utm_* stripped.
   * `source` is greenhouse | workday | lever | ashby | amazon | custom.
@@ -38,7 +40,7 @@ import random
 import hashlib
 import threading
 import urllib.parse
-from datetime import datetime
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
@@ -138,6 +140,18 @@ ASHBY = _COMPANIES.get("ashby", [])
 EIGHTFOLD = _COMPANIES.get("eightfold", [])
 AMAZON = _COMPANIES.get("amazon", [])
 WORKABLE = _COMPANIES.get("workable", [])
+BAMBOOHR = _COMPANIES.get("bamboohr", [])
+PERSONIO = _COMPANIES.get("personio", [])
+WELCOMEKIT = _COMPANIES.get("welcomekit", [])
+ICIMS = _COMPANIES.get("icims", [])
+# Buckets added by the 2026-09-06 route passes. Each one needs BOTH an entry here and a
+# loop in build_tasks(), or the board sits in companies.json and is never fetched.
+SMARTRECRUITERS = _COMPANIES.get("smartrecruiters", [])
+RECRUITEE = _COMPANIES.get("recruitee", [])
+BREEZY = _COMPANIES.get("breezy", [])
+RIPPLING = _COMPANIES.get("rippling", [])
+PINPOINT = _COMPANIES.get("pinpoint", [])
+MANATAL = _COMPANIES.get("manatal", [])
 
 # Eightfold-powered portals (custom JSON API, server-side only — CORS-blocked in browser).
 # API: https://{host}/api/apply/v2/jobs?domain={domain}&start=0&num=100
@@ -145,30 +159,67 @@ WORKABLE = _COMPANIES.get("workable", [])
 # Custom HTML sites. Provide a `url` (and optional CSS `selector` for posting
 # links) to enable scraping; entries without a url are skipped + logged so the
 # pipeline never crashes. Fill these in as you confirm each site's structure.
-CUSTOM_HTML = [
-    {"company": "Tethers Unlimited", "url": "https://www.tethers.com/careers/", "region": "New Zealand"},
-    {"company": "Kea Aerospace", "url": "https://www.keaaerospace.com/careers", "region": "New Zealand"},
-    {"company": "Astrix Astronautics", "url": "https://www.astrix.co.nz/careers", "region": "New Zealand"},
-    {"company": "Argo Navis Aerospace", "url": "", "region": "New Zealand"},
-    {"company": "Xerra", "url": "https://www.xerra.nz/careers/", "region": "New Zealand"},
-    {"company": "SpaceBase", "url": "https://www.spacebase.co/careers", "region": "New Zealand"},
-    {"company": "Tāwhaki Joint Venture", "url": "https://www.tawhaki.co.nz/careers", "region": "New Zealand"},
-    {"company": "Earthpen", "url": "", "region": "New Zealand"},
-    {"company": "Morf3D", "url": "", "region": "New Zealand"},
-]
+# companies.json owns this list. The hardcoded fallback that used to live here shadowed
+# it whenever the custom bucket was empty, so edits to the file appeared to do nothing.
+CUSTOM_HTML = _COMPANIES.get("custom", [])
 
 
 # --------------------------------------------------------------------
 # Resume profile + scoring + gates
 # --------------------------------------------------------------------
 RESUME_KEYWORDS = [
-    "program management", "systems engineering", "mission integration",
-    "business operations", "s&op", "sales & operations planning",
-    "process automation", "lifecycle management", "cross-functional",
-    "stakeholder management", "salesforce", "crm", "root cause analysis",
-    "regulatory compliance", "solutions engineering", "agile", "p&l",
-    "scaling", "mission assurance", "payload", "launch operations",
-    "supply chain", "procurement", "program operations",
+    # Mirrors OWNER.skills in index.html, which is generated from the two current resume
+    # versions (master + General Dynamics tailored). Keep the two in sync: this list is
+    # what calculate_resume_alignment() scores against at ingest time.
+    "systems engineering",
+    "requirements development",
+    "requirements management",
+    "verification and validation",
+    "trade study",
+    "trade studies",
+    "program management",
+    "technical program",
+    "technical project management",
+    "project management",
+    "mission integration",
+    "mission operations",
+    "mission assurance",
+    "space operations",
+    "spacecraft operations",
+    "payload integration",
+    "schedule management",
+    "integrated master schedule",
+    "critical path",
+    "risk management",
+    "risk mitigation",
+    "lifecycle management",
+    "configuration management",
+    "interface control",
+    "concept of operations",
+    "conops",
+    "design review",
+    "integration and test",
+    "work breakdown",
+    "budget",
+    "resource planning",
+    "capacity planning",
+    "stakeholder management",
+    "cross-functional",
+    "process automation",
+    "root cause analysis",
+    "supplier negotiation",
+    "regulatory compliance",
+    "operational excellence",
+    "agile",
+    "ms project",
+    "jira",
+    "python",
+    "tableau",
+    "power bi",
+    "salesforce",
+    "proposal",
+    "p&l",
+    "startup",
 ]
 
 TITLE_EXCLUDE = re.compile(
@@ -188,40 +239,164 @@ TITLE_INCLUDE = re.compile(
 )
 
 HUB_KEYWORDS = {
-    "SEATTLE": ["seattle", "redmond", "kent", "renton", "bellevue", "tukwila",
-                "auburn", "everett", "bothell", "washington", " wa"],
-    "GREATER_LA": ["los angeles", "hawthorne", "el segundo", "long beach",
-                   "torrance", "irvine", "pasadena", "van nuys", "culver city",
-                   "santa monica", "redondo beach", "manhattan beach", "inglewood",
-                   "burbank", "glendale", "anaheim", "orange county", "santa clarita",
-                   "palmdale"],
+    # SEATTLE and GREATER_LA moved to the regexes below. "washington" used to live in the
+    # SEATTLE list, which filed every "Washington, D.C." posting as a Seattle role — the
+    # dict is ordered, so DC never reached the US_OTHER branch. D.C. is now excluded first.
     "NEW_ZEALAND": ["new zealand", "mahia", "māhia", "auckland", "christchurch",
                     "wellington", " nz", "warkworth", "waikato"],
 }
-# Cities that are genuinely Northern California (Bay Area/Sacramento) — a bare " ca"/
-# "california" match used to lump these into GREATER_LA, which was wrong.
-NORCAL_KEYWORDS = ["san francisco", "bay area", "oakland", "san jose", "palo alto",
-                   "mountain view", "sunnyvale", "berkeley", "redwood city",
-                   "menlo park", "santa clara", "silicon valley", "sacramento"]
+
+# ---- Hub geography. Kept deliberately in step with fpHubOf() in index.html; when the two
+# ---- disagree, the browser pass and the nightly Action file the same job in two hubs.
+DC_RE = re.compile(r"washington,?\s*d\.?c\.?|district of columbia")
+WA_STATE_RE = re.compile(r"\bwa\b|washington state|,\s*washington\b")
+PNW_CITY_RE = re.compile(
+    r"seattle|seatle|redmond|kent|renton|bellevue|tukwila|auburn|everett|kirkland|bothell|"
+    r"lynnwood|mukilteo|woodinville|issaquah|sammamish|federal way|sea-?tac|tacoma|olympia|"
+    r"puyallup|marysville|snohomish|dupont|lacey|edmonds|shoreline|burien|kenmore|"
+    r"mill creek|bremerton")
+LA_METRO_RE = re.compile(
+    r"los angeles|hawthorne|el segundo|long beach|torrance|irvine|pasadena|van nuys|"
+    r"culver city|santa monica|redondo beach|manhattan beach|inglewood|burbank|glendale|"
+    r"anaheim|orange county|santa clarita|palmdale|huntington beach|mojave|lancaster|"
+    r"downey|carson|gardena|compton|chatsworth|northridge|woodland hills|sylmar|valencia|"
+    r"canoga park|santa ana|costa mesa|tustin|fullerton|brea|cerritos|signal hill|"
+    r"seal beach|garden grove|simi valley|thousand oaks|camarillo|oxnard|ventura|goleta|"
+    r"san pedro|sun valley|el monte|whittier|norwalk|la mirada|city of industry|"
+    r"santa fe springs|monrovia|azusa|covina|pomona|rancho cucamonga|san bernardino|"
+    r"riverside|westminster,? ca|ontario,? ca|corona,? ca")
+NORCAL_RE = re.compile(
+    r"san francisco|bay area|oakland|san jose|palo alto|mountain view|sunnyvale|berkeley|"
+    r"redwood city|menlo park|santa clara|silicon valley|sacramento|burlingame|san mateo|"
+    r"san carlos|foster city|south san francisco|fremont|hayward|emeryville|alameda|"
+    r"milpitas|cupertino|los altos|campbell|san leandro|livermore|pleasanton|san ramon|"
+    r"walnut creek|novato|san rafael|petaluma|santa rosa|vacaville|morgan hill|gilroy|"
+    r"watsonville|santa cruz|monterey|salinas|napa|vallejo|stockton|modesto|dublin,? ca|"
+    r"concord,? ca|richmond,? ca|davis,? ca|fairfield,? ca")
+# "Burlingame, California" matched no city list and no state name in US_OTHER_RE, so it
+# returned None and the row was thrown away. Spelled-out California now counts.
+CA_STATE_RE = re.compile(r"\bca\b|,\s*california\b|\bcalifornia,")
+# Bare metro names with no state or country attached, which were being discarded.
+US_METRO_RE = re.compile(
+    r"\baustin\b|\bboulder\b|\bdenver\b|wichita|huntsville|albuquerque|pittsburgh|"
+    r"\bhouston\b|\bdallas\b|\bphoenix\b|\btucson\b|salt lake|colorado springs|"
+    r"cape canaveral|titusville|\bmidland\b|\bchicago\b|\bboston\b|\batlanta\b|"
+    r"\bportland\b|san diego|folsom|d\.?c\.? office")
+INTL_EXTRA_RE = re.compile(r"kyiv|kiev|lviv|loughborough|new dehli|\beurope\b|middle east|\blatam\b")
+
+# Fourth hub: the rest of the United States. Without this, roles from the primes and
+# integrators (Colorado, Texas, Alabama, Virginia, Florida) scraped fine and were then
+# discarded for having no hub.
+# Fifth hub: commercial space outside the US and NZ. Matched BEFORE US_OTHER because
+# two-letter country codes collide with state abbreviations (DE, IN, CA, IL, CO, MA);
+# ambiguous city names with US namesakes (Melbourne FL, Vienna VA, Paris TX) are matched
+# AFTER US_OTHER so the US reading wins.
+INTL_RE = re.compile(
+    r"canada|united kingdom|\bu\.?k\.?\b|england|scotland|wales|northern ireland|ireland|"
+    r"france|germany|deutschland|italy|italia|spain|españa|portugal|netherlands|holland|"
+    r"belgium|luxembourg|switzerland|austria|denmark|sweden|norway|finland|iceland|poland|"
+    r"czech|slovakia|hungary|romania|bulgaria|greece|croatia|slovenia|turkey|türkiye|estonia|"
+    r"latvia|lithuania|ukraine|israel|united arab emirates|\buae\b|saudi|qatar|oman|bahrain|"
+    r"kuwait|jordan|egypt|morocco|south africa|kenya|ghana|nigeria|india|japan|south korea|"
+    r"singapore|malaysia|indonesia|thailand|vietnam|philippines|taiwan|hong kong|australia|"
+    r"brazil|brasil|argentina|chile|mexico|méxico|colombia|peru|uruguay|international|emea|"
+    r"\bapac\b|toulouse|kourou|bordeaux|nantes|grenoble|montpellier|sophia antipolis|"
+    r"bengaluru|bangalore|hyderabad|chennai|mumbai|ahmedabad|new delhi|tokyo|osaka|fukuoka|"
+    r"tsukuba|hokkaido|seoul|daejeon|shenzhen|taipei|tel aviv|herzliya|haifa|beersheba|"
+    r"harwell|guildford|farnborough|stevenage|didcot|oxfordshire|münchen|munich|bremen|"
+    r"augsburg|stuttgart|darmstadt|köln|oberpfaffenhofen|noordwijk|delft|eindhoven|leuven|"
+    r"liège|lausanne|zürich|zurich|gothenburg|göteborg|kiruna|trondheim|tromsø|espoo|tampere|"
+    r"tartu|tallinn|vilnius|kaunas|wrocław|warszawa|brno|thessaloniki|ankara|istanbul|dubai|"
+    r"abu dhabi|riyadh|jeddah|torino|milano|bologna|napoli|catania|barcelona|sevilla|elche|"
+    r"lisboa|coimbra|brisbane|adelaide|canberra|mount stromlo|koonibba|whyalla|montréal|"
+    r"longueuil|st-hubert|mississauga|brampton|winnipeg|são paulo|santiago|buenos aires|"
+    r"querétaro|stellenbosch|johannesburg|pretoria|nairobi",
+    re.I,
+)
+INTL_AMBIGUOUS_RE = re.compile(
+    r"melbourne|sydney|perth|vienna|berlin|paris|milan|rome|athens|naples|bristol|oxford|"
+    r"cambridge|glasgow|edinburgh|birmingham|london|toronto|ottawa|vancouver|calgary|madrid|"
+    r"lisbon|prague|warsaw|sofia|bucharest|copenhagen|stockholm|oslo|helsinki|amsterdam|"
+    r"brussels|luxembourg city|cape town|mexico city|delhi",
+    re.I,
+)
+
+US_OTHER_RE = re.compile(
+    r"united states|\bu\.?s\.?a?\b|remote,? us|remote \(us|"
+    r"alabama|alaska|arizona|arkansas|colorado|connecticut|delaware|florida|georgia|"
+    r"hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|"
+    r"massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|"
+    r"new hampshire|new jersey|new mexico|new york|north carolina|north dakota|ohio|"
+    r"oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|"
+    r"texas|utah|vermont|virginia|west virginia|wisconsin|wyoming|district of columbia|"
+    r"washington,? d\.?c\.?|"
+    r"\b(?:al|ak|az|ar|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|"
+    r"ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wv|wi|wy|dc)\b",
+    re.I,
+)
 
 
 def determine_location_hub(loc_str):
+    """Mirror of fpHubOf() in index.html. Order matters: D.C. is settled before any
+    Washington test, and NorCal is claimed before the bare-California fallback."""
     if not loc_str:
         return None
     low = " " + loc_str.lower()
+    is_dc = bool(DC_RE.search(low))
+    if not is_dc and (WA_STATE_RE.search(low) or PNW_CITY_RE.search(low)):
+        return "SEATTLE"
     for hub, kws in HUB_KEYWORDS.items():
         if any(k in low for k in kws):
             return hub
-    # Generic California fallback — only if NOT clearly a Bay Area / NorCal city.
-    if (" ca" in low or "california" in low) and not any(k in low for k in NORCAL_KEYWORDS):
+    if LA_METRO_RE.search(low):
         return "GREATER_LA"
+    if NORCAL_RE.search(low):
+        return "US_OTHER"
+    if CA_STATE_RE.search(low):
+        return "GREATER_LA"
+    if INTL_RE.search(low):
+        return "INTERNATIONAL"
+    if US_OTHER_RE.search(low):
+        return "US_OTHER"
+    if INTL_AMBIGUOUS_RE.search(low):
+        return "INTERNATIONAL"
+    if US_METRO_RE.search(low):
+        return "US_OTHER"
+    if INTL_EXTRA_RE.search(low):
+        return "INTERNATIONAL"
+    # Deliberately unmapped: "Remote", "Talent Community", "Flexible - Any SpaceX Site".
+    # They carry no place, and inventing a hub would stamp a fabricated location on a
+    # real posting. coverage-seattle-la.html lists whatever lands here.
     return None
 
 
+# Tiered weighting mirrors OWNER.coreSkills in index.html: the credentials and functions
+# Lisaney is actually targeting count for more than the supporting tooling. A flat +5 per
+# term made the 70% firewall need 8 hits, so genuinely-matching roles stalled in the 40s.
+RESUME_CORE = [
+    "systems engineering", "requirements development", "requirements management",
+    "verification and validation", "trade study", "trade studies",
+    "technical program", "technical project management", "program management",
+    "mission integration", "mission operations", "mission assurance",
+    "space operations", "spacecraft operations", "payload integration",
+    "schedule management", "integrated master schedule", "critical path",
+    "concept of operations", "conops", "interface control",
+]
+
+
 def calculate_resume_alignment(title, description):
+    """Tiered keyword alignment. A hit in the TITLE is worth double a hit in the body:
+    a title states what the job is, a body line is only context."""
+    title_l = (title or "").lower()
+    body_l = f"{title or ''} {description or ''}".lower()
     score = 30
-    text = f"{title} {description or ''}".lower()
-    score += sum(5 for kw in RESUME_KEYWORDS if kw in text)
+    for kw in RESUME_KEYWORDS:
+        if kw not in body_l:
+            continue
+        weight = 7 if kw in RESUME_CORE else 3
+        if kw in title_l:
+            weight *= 2
+        score += weight
     return min(score, 100)
 
 
@@ -241,7 +416,8 @@ def space_qualifies(title, score, is_intern, hub=None):
 
 
 def estimate_salary(title, hub):
-    base = {"SEATTLE": 140000, "GREATER_LA": 150000, "NEW_ZEALAND": 115000}.get(hub, 140000)
+    base = {"SEATTLE": 140000, "GREATER_LA": 150000, "NEW_ZEALAND": 115000,
+            "US_OTHER": 135000, "INTERNATIONAL": 105000}.get(hub, 140000)
     tl = (title or "").lower()
     if re.search(r"director|head|principal|lead|senior|sr\.?|manager", tl):
         sf = 1.18
@@ -420,8 +596,11 @@ else:
 
 
 def log_failure(company, url, error):
-    new = not os.path.exists(FAIL_LOG)
     with _FAIL_LOG_LOCK:   # multiple worker threads may fail at once — serialize the CSV write
+        # The existence check has to happen INSIDE the lock. Computed outside it, every
+        # thread that failed at once saw no file and wrote its own header row, which is
+        # why the shipped log had "timestamp,company,url,error" repeated through it.
+        new = not os.path.exists(FAIL_LOG)
         try:
             with open(FAIL_LOG, "a", newline="", encoding="utf-8") as fh:
                 w = csv.writer(fh)
@@ -653,7 +832,7 @@ def build_row(company, ats_id, title, location, url, source, description="", pos
         "saved": False,
         "archived": False,
         "url": strip_tracking(url),
-        "description": clean_text(description)[:4000],
+        "description": clean_text(description)[:12000],
         "requirements": "",
         "timestamp": posted_iso,
         "itar_flag": sig["itar_flag"],
@@ -711,6 +890,28 @@ def scrape_lever(token, company):
     return rows
 
 
+def _workday_description(base, tenant, board, ext):
+    """Workday's job LIST endpoint carries NO description — only the per-job detail endpoint
+    does. Until this existed the pipeline stored the job TITLE as the description, which
+    starved every downstream consumer: resume alignment, vertical classification, ITAR and
+    clearance parsing, intern pay extraction and deadline parsing all read that field.
+    Called only for postings whose location already resolved to a target hub, so this costs
+    one request per KEPT row rather than one per posting."""
+    if not ext:
+        return ""
+    try:
+        r = request("GET", f"{base}/wday/cxs/{tenant}/{board}{ext}",
+                    headers={"Accept": "application/json"})
+        if r.status_code != 200:
+            return ""
+        info = (r.json() or {}).get("jobPostingInfo") or {}
+        return (info.get("jobDescription")
+                or info.get("jobDescriptionSummary")
+                or info.get("jobRequisitionDescription") or "")
+    except Exception:
+        return ""
+
+
 def scrape_workday(cfg):
     company, tenant = cfg["company"], cfg["tenant"]
     server, board = cfg["server"], cfg["board"]
@@ -750,14 +951,20 @@ def scrape_workday(cfg):
             break
         for p in postings:
             ext = p.get("externalPath", "") or ""
+            loc = p.get("locationsText", "")
+            # Cheap local gate BEFORE paying for a detail request: most postings sit
+            # outside the target hubs and build_row would drop them anyway.
+            if not determine_location_hub(loc):
+                continue
             m = re.search(r"_(R[-\d]+)\b", ext) or re.search(r"_(\w+\d+)$", ext)
             jid = m.group(1) if m else hashlib.md5(ext.encode()).hexdigest()[:8]
             url = f"{base}/en-US/{board}{ext}"
-            loc = p.get("locationsText", "")
+            desc = _workday_description(base, tenant, board, ext)
             row = build_row(company, jid, p.get("title"), loc, url, "workday",
-                            p.get("title", ""), posted=p.get("postedOn") or p.get("startDate"))
+                            desc, posted=p.get("postedOn") or p.get("startDate"))
             if row:
                 rows.append(row)
+            time.sleep(0.25 + random.random() * 0.25)
         offset += 20
         if offset >= (total or 0) or offset >= 400:
             break
@@ -769,13 +976,40 @@ ASHBY_QUERY = (
     "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {"
     " jobBoard: jobBoardWithTeams(organizationHostedJobsPageName:"
     " $organizationHostedJobsPageName) { jobPostings { id title locationName"
-    " employmentType } } }"
+    " employmentType descriptionPlain } } }"
 )
 
 
 def scrape_ashby(cfg):
     company, token = cfg["company"], cfg["token"]
     rows = []
+    # Ashby's DOCUMENTED public posting API returns descriptionPlain. The internal GraphQL
+    # board query below does not reliably, and this extractor previously passed the job
+    # TITLE in as the description. Verified live 2026-09-05 against impulse / iceye /
+    # skylo / sift / astra / outpost / turion-space / reflect-orbital / hadrian-automation.
+    try:
+        r = request("GET",
+                    f"https://api.ashbyhq.com/posting-api/job-board/{token}?includeCompensation=true",
+                    headers={"Accept": "application/json"})
+        if r.status_code == 200:
+            postings = (r.json() or {}).get("jobs")
+            if postings is not None:
+                for p in postings:
+                    jid = p.get("id")
+                    loc = (p.get("location")
+                           or ((p.get("address") or {}).get("postalAddress") or {}).get("addressLocality")
+                           or "")
+                    apply_url = (p.get("jobUrl") or p.get("applyUrl")
+                                 or f"https://jobs.ashbyhq.com/{token}/{jid}")
+                    row = build_row(company, jid, p.get("title"), loc, apply_url, "ashby",
+                                    p.get("descriptionPlain") or p.get("descriptionHtml") or "",
+                                    posted=p.get("publishedAt") or p.get("updatedAt"))
+                    if row:
+                        rows.append(row)
+                return rows
+    except Exception:
+        pass   # fall through to the GraphQL board query
+
     url = "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams"
     body = {
         "operationName": "ApiJobBoardWithTeams",
@@ -792,7 +1026,8 @@ def scrape_ashby(cfg):
         apply_url = f"https://jobs.ashbyhq.com/{token}/{jid}"
         loc = p.get("locationName", "")
         row = build_row(company, jid, p.get("title"), loc, apply_url, "ashby",
-                        p.get("title", ""), posted=p.get("publishedAt") or p.get("createdAt"))
+                        p.get("descriptionPlain") or "",
+                        posted=p.get("publishedAt") or p.get("createdAt"))
         if row:
             rows.append(row)
     return rows
@@ -816,7 +1051,8 @@ def scrape_amazon(cfg):
             loc = j.get("normalized_location") or j.get("location", "")
             apply_url = "https://www.amazon.jobs" + (j.get("job_path") or "")
             row = build_row(company, jid, j.get("title"), loc, apply_url, "amazon",
-                            j.get("description_short", ""), posted=j.get("posted_date"))
+                            j.get("description") or j.get("description_short", ""),
+                            posted=j.get("posted_date"))
             if row:
                 rows.append(row)
         offset += 100
@@ -916,12 +1152,268 @@ def scrape_eightfold(cfg):
     return rows
 
 
+def scrape_bamboohr(cfg):
+    """BambooHR public careers JSON. /careers/list returns every open requisition for the
+    account with no auth. Covers the largest single block of small/mid space companies."""
+    company, token = cfg["company"], cfg["token"]
+    rows = []
+    api = f"https://{token}.bamboohr.com/careers/list"
+    r = request("GET", api)
+    if r.status_code != 200:
+        raise RetryableHTTP(f"bamboohr {token} -> {r.status_code}")
+    for j in (r.json().get("result") or []):
+        loc = j.get("location") or {}
+        if isinstance(loc, dict):
+            loc_str = ", ".join([p for p in (loc.get("city"), loc.get("state"),
+                                             loc.get("country")) if p])
+        else:
+            loc_str = str(loc or "")
+        if not loc_str and (j.get("isRemote") or j.get("atsLocationRemote")):
+            loc_str = "Remote"
+        jid = j.get("id") or j.get("jobOpeningId")
+        row = build_row(company, jid, j.get("jobOpeningName"), loc_str,
+                        f"https://{token}.bamboohr.com/careers/{jid}", "custom",
+                        j.get("departmentLabel") or "")
+        if row:
+            rows.append(row)
+    return rows
+
+
+def scrape_personio(cfg):
+    """Personio XML job feed — the reliable public endpoint (the HTML board is JS-rendered)."""
+    import xml.etree.ElementTree as ET
+    company, token = cfg["company"], cfg["token"]
+    rows = []
+    api = f"https://{token}.jobs.personio.de/xml"
+    r = request("GET", api)
+    if r.status_code != 200:
+        raise RetryableHTTP(f"personio {token} -> {r.status_code}")
+    try:
+        root = ET.fromstring(r.content)
+    except ET.ParseError as exc:
+        raise RetryableHTTP(f"personio {token} bad xml: {exc}")
+    for pos in root.iter("position"):
+        def g(tag):
+            el = pos.find(tag)
+            return (el.text or "").strip() if el is not None and el.text else ""
+        jid = g("id")
+        loc = ", ".join([p for p in (g("office"), g("subcompany")) if p])
+        desc = " ".join((el.text or "") for el in pos.iter("value"))
+        row = build_row(company, jid, g("name"), loc,
+                        f"https://{token}.jobs.personio.de/job/{jid}", "custom",
+                        desc, posted=g("createdAt") or None)
+        if row:
+            rows.append(row)
+    return rows
+
+
+def scrape_welcomekit(cfg):
+    """Welcome to the Jungle / WelcomeKit. Two endpoint shapes in the wild; try both and
+    let the failure log record it rather than guessing silently."""
+    company, token = cfg["company"], cfg["token"]
+    rows = []
+    endpoints = [
+        f"https://api.welcometothejungle.com/api/v1/organizations/{token}/jobs",
+        f"https://www.welcomekit.co/api/v1/embed/organizations/{token}/jobs",
+    ]
+    data = None
+    for api in endpoints:
+        r = request("GET", api)
+        if r.status_code == 200:
+            try:
+                data = r.json()
+                break
+            except Exception:
+                continue
+    if data is None:
+        raise RetryableHTTP(f"welcomekit {token} -> no usable endpoint")
+    jobs = data.get("jobs") or data.get("results") or (data if isinstance(data, list) else [])
+    for j in jobs:
+        offices = j.get("offices") or []
+        loc = (j.get("office", {}) or {}).get("city") or \
+              (offices[0].get("city") if offices and isinstance(offices[0], dict) else "") or \
+              j.get("city") or ""
+        country = (j.get("office", {}) or {}).get("country") or j.get("country") or ""
+        loc_str = ", ".join([p for p in (loc, country) if p])
+        jid = j.get("id") or j.get("reference") or j.get("slug")
+        url = j.get("websites_urls", [{}])[0].get("url") if j.get("websites_urls") else None
+        url = url or j.get("url") or f"https://www.welcometothejungle.com/en/companies/{token}/jobs/{j.get('slug','')}"
+        row = build_row(company, jid, j.get("name") or j.get("title"), loc_str, url,
+                        "custom", j.get("description") or "",
+                        posted=j.get("published_at") or j.get("created_at"))
+        if row:
+            rows.append(row)
+    return rows
+
+
+def scrape_icims(cfg):
+    """iCIMS has no public JSON API — parse the search page's job links. Best-effort:
+    titles and URLs are reliable, location often needs the detail page, so rows without a
+    parseable location fall through the hub gate and are dropped rather than guessed at."""
+    company, token = cfg["company"], cfg["token"]
+    rows = []
+    api = f"https://careers-{token}.icims.com/jobs/search?ss=1&in_iframe=1"
+    r = request("GET", api)
+    if r.status_code != 200:
+        raise RetryableHTTP(f"icims {token} -> {r.status_code}")
+    html = r.text
+    for m in re.finditer(r'href="(/jobs/(\d+)/[^"]+)"[^>]*>\s*(?:<[^>]+>\s*)*([^<]{4,140})', html):
+        href, jid, title = m.group(1), m.group(2), clean_text(m.group(3))
+        seg = re.search(r'title="([^"]*(?:, [A-Z]{2}|United States)[^"]*)"', html[m.end():m.end() + 400])
+        row = build_row(company, jid, title, seg.group(1) if seg else "",
+                        f"https://careers-{token}.icims.com{href}", "custom")
+        if row:
+            rows.append(row)
+    return rows
+
+
+def scrape_smartrecruiters(cfg):
+    """SmartRecruiters public postings API. Identifiers are PascalCase and
+    case-sensitive (AstroscaleUS) — never lowercase the token."""
+    company, token = cfg["company"], cfg["token"]
+    rows = []
+    r = request("GET", f"https://api.smartrecruiters.com/v1/companies/{token}/postings?limit=100")
+    if r.status_code != 200:
+        raise RetryableHTTP(f"smartrecruiters {token} -> {r.status_code}")
+    for j in r.json().get("content", []):
+        loc = j.get("location") or {}
+        loc_str = ", ".join([p for p in [loc.get("city"), loc.get("region"), loc.get("country")] if p])
+        jid = j.get("id")
+        # The list endpoint carries no description, so the detail endpoint is the only
+        # place the posting body exists — without it every row scores off its title alone.
+        desc = ""
+        d = request("GET", f"https://api.smartrecruiters.com/v1/companies/{token}/postings/{jid}")
+        if d.status_code == 200:
+            sections = ((d.json().get("jobAd") or {}).get("sections") or {})
+            desc = " ".join(clean_text((sections.get(k) or {}).get("text", ""))
+                            for k in ("companyDescription", "jobDescription", "qualifications"))
+        row = build_row(company, jid, j.get("name"), loc_str,
+                        f"https://jobs.smartrecruiters.com/{token}/{jid}",
+                        "smartrecruiters", desc, posted=j.get("releasedDate"))
+        if row:
+            rows.append(row)
+    return rows
+
+
+def scrape_recruitee(cfg):
+    """Recruitee public offers feed."""
+    company, token = cfg["company"], cfg["token"]
+    rows = []
+    r = request("GET", f"https://{token}.recruitee.com/api/offers/")
+    if r.status_code != 200:
+        raise RetryableHTTP(f"recruitee {token} -> {r.status_code}")
+    for j in r.json().get("offers", []):
+        loc_str = ", ".join([p for p in [j.get("city"), j.get("state_code") or j.get("country_code")] if p]) \
+                  or j.get("location") or ""
+        url = j.get("careers_url") or f"https://{token}.recruitee.com/o/{j.get('slug')}"
+        row = build_row(company, j.get("id"), j.get("title") or j.get("position"), loc_str, url,
+                        "recruitee", clean_text(j.get("description", "")), posted=j.get("created_at"))
+        if row:
+            rows.append(row)
+    return rows
+
+
+def scrape_breezy(cfg):
+    """Breezy HR public board. Each posting carries its own /p/<friendly_id> apply URL."""
+    company, token = cfg["company"], cfg["token"]
+    rows = []
+    r = request("GET", f"https://{token}.breezy.hr/json")
+    if r.status_code != 200:
+        raise RetryableHTTP(f"breezy {token} -> {r.status_code}")
+    data = r.json()
+    for j in (data if isinstance(data, list) else []):
+        loc = j.get("location") or {}
+        loc_str = loc.get("name") or ", ".join([p for p in [
+            loc.get("city"),
+            (loc.get("state") or {}).get("name") if isinstance(loc.get("state"), dict) else loc.get("state"),
+            (loc.get("country") or {}).get("name") if isinstance(loc.get("country"), dict) else loc.get("country"),
+        ] if p])
+        url = j.get("url") or f"https://{token}.breezy.hr/p/{j.get('friendly_id') or j.get('id')}"
+        row = build_row(company, j.get("id"), j.get("name"), loc_str, url, "breezy",
+                        clean_text(j.get("description", "")), posted=j.get("published_date"))
+        if row:
+            rows.append(row)
+    return rows
+
+
+def scrape_rippling(cfg):
+    """Rippling ATS public board. Some tenants carry a "-careers" suffix (aalyria-careers)."""
+    company, token = cfg["company"], cfg["token"]
+    rows = []
+    r = request("GET", f"https://api.rippling.com/platform/api/ats/v1/board/{token}/jobs")
+    if r.status_code != 200:
+        raise RetryableHTTP(f"rippling {token} -> {r.status_code}")
+    data = r.json()
+    for j in (data if isinstance(data, list) else []):
+        jid = j.get("uuid") or j.get("id")
+        row = build_row(company, jid, j.get("name"),
+                        (j.get("workLocation") or {}).get("label", ""),
+                        j.get("url") or f"https://ats.rippling.com/{token}/jobs/{jid}",
+                        "rippling", clean_text(j.get("description", "")))
+        if row:
+            rows.append(row)
+    return rows
+
+
+def scrape_pinpoint(cfg):
+    """Pinpoint public postings feed — {"data": [...]}, location is a nested object."""
+    company, token = cfg["company"], cfg["token"]
+    rows = []
+    r = request("GET", f"https://{token}.pinpointhq.com/postings.json")
+    if r.status_code != 200:
+        raise RetryableHTTP(f"pinpoint {token} -> {r.status_code}")
+    for j in r.json().get("data", []):
+        loc = j.get("location") or {}
+        loc_str = loc.get("name") or ", ".join([p for p in [loc.get("city"), loc.get("province")] if p])
+        desc = " ".join(clean_text(j.get(k, "")) for k in
+                        ("description", "key_responsibilities", "skills_knowledge_expertise"))
+        url = j.get("url") or f"https://{token}.pinpointhq.com/en/postings/{j.get('id')}"
+        row = build_row(company, j.get("id"), j.get("title"), loc_str, url, "pinpoint", desc)
+        if row:
+            rows.append(row)
+    return rows
+
+
+def scrape_manatal(cfg):
+    """Manatal career-page API (careers-page.com is Manatal's hosted product).
+    Paginated ten per page — follow "next" or a 191-role board truncates to its first
+    page. The title field is position_name, not title."""
+    company, token = cfg["company"], cfg["token"]
+    rows = []
+    url = f"https://api.manatal.com/open/v3/career-page/{token}/jobs/"
+    guard = 0
+    while url and guard < 40:
+        guard += 1
+        r = request("GET", url)
+        if r.status_code != 200:
+            if rows:
+                break
+            raise RetryableHTTP(f"manatal {token} -> {r.status_code}")
+        payload = r.json()
+        for j in payload.get("results", []):
+            loc_str = j.get("location_display") or ", ".join(
+                [p for p in [j.get("city"), j.get("state"), j.get("country")] if p])
+            if not loc_str and j.get("is_remote"):
+                loc_str = "Remote"
+            row = build_row(company, j.get("hash") or j.get("id"), j.get("position_name"),
+                            loc_str,
+                            f"https://www.careers-page.com/{token}/job/{j.get('hash')}",
+                            "manatal", clean_text(j.get("description", "")))
+            if row:
+                rows.append(row)
+        url = payload.get("next")
+    return rows
+
+
 # --------------------------------------------------------------------
 # Main scrub cycle
 # --------------------------------------------------------------------
 def build_tasks():
     tasks = []
-    for token, name in GREENHOUSE.items():
+    for token, val in GREENHOUSE.items():
+        # value is either a display-name string (verified board) or
+        # {"company": ..., "unverified": true} for a best-guess token.
+        name = val.get("company") if isinstance(val, dict) else val
         tasks.append((name, "greenhouse", lambda t=token, n=name: scrape_greenhouse(t, n)))
     for cfg in LEVER:
         tasks.append((cfg["company"], "lever", lambda c=cfg: scrape_lever(c["token"], c["company"])))
@@ -935,8 +1427,28 @@ def build_tasks():
         tasks.append((cfg["company"], "eightfold", lambda c=cfg: scrape_eightfold(c)))
     for cfg in AMAZON:
         tasks.append((cfg["company"], "amazon", lambda c=cfg: scrape_amazon(c)))
+    for cfg in BAMBOOHR:
+        tasks.append((cfg["company"], "bamboohr", lambda c=cfg: scrape_bamboohr(c)))
+    for cfg in PERSONIO:
+        tasks.append((cfg["company"], "personio", lambda c=cfg: scrape_personio(c)))
+    for cfg in WELCOMEKIT:
+        tasks.append((cfg["company"], "welcomekit", lambda c=cfg: scrape_welcomekit(c)))
+    for cfg in ICIMS:
+        tasks.append((cfg["company"], "icims", lambda c=cfg: scrape_icims(c)))
     for cfg in CUSTOM_HTML:
         tasks.append((cfg["company"], "custom", lambda c=cfg: scrape_custom(c)))
+    for cfg in SMARTRECRUITERS:
+        tasks.append((cfg["company"], "smartrecruiters", lambda c=cfg: scrape_smartrecruiters(c)))
+    for cfg in RECRUITEE:
+        tasks.append((cfg["company"], "recruitee", lambda c=cfg: scrape_recruitee(c)))
+    for cfg in BREEZY:
+        tasks.append((cfg["company"], "breezy", lambda c=cfg: scrape_breezy(c)))
+    for cfg in RIPPLING:
+        tasks.append((cfg["company"], "rippling", lambda c=cfg: scrape_rippling(c)))
+    for cfg in PINPOINT:
+        tasks.append((cfg["company"], "pinpoint", lambda c=cfg: scrape_pinpoint(c)))
+    for cfg in MANATAL:
+        tasks.append((cfg["company"], "manatal", lambda c=cfg: scrape_manatal(c)))
     random.shuffle(tasks)   # spread load across domains naturally
     return tasks
 
@@ -945,6 +1457,7 @@ def execute_scrub():
     print(f"\n>>> Orbital multi-ATS scrub  ({datetime.now():%Y-%m-%d %H:%M})")
     tasks = build_tasks()
     payload, total, ok_boards = [], 0, 0
+    progress_start(tasks)
     # Improvement: run boards concurrently (I/O-bound HTTP calls) instead of one at a time.
     # Bounded pool keeps us polite to any single host while cutting total wall-clock time
     # roughly in proportion to MAX_WORKERS across ~90+ boards.
@@ -962,10 +1475,12 @@ def execute_scrub():
                     print(f"   ++ {company} [{source}]: {len(rows)} role(s)")
                 else:
                     print(f"   -- {company} [{source}]: 0 matching")
+                progress_board(source, len(rows or []))
             except Exception as exc:
                 print(f"   !! {company} [{source}]: {exc}")
                 log_failure(company, source, exc)
                 _RUN_FAILURES.append((company, source, str(exc)[:120]))
+                progress_board(source, 0, failed=True)
 
     # de-duplicate by id (same role can surface twice, e.g. BO greenhouse+workday)
     dedup = {row["id"]: row for row in payload}
@@ -1018,12 +1533,92 @@ def execute_scrub():
         print(f">>> WARNING: zero rows from {sorted(missing_srcs)} — those ATS families are "
               f"failing silently. Run the workflow with mode=diagnose to probe each family.")
     if ok_boards == 0:
+        progress_finish("failed", 0, "every board failed")
         print(">>> FATAL: every board failed — exiting 1 so the run shows red.")
         raise SystemExit(1)
+    progress_finish("done", len(payload),
+                    f"{ok_boards} board(s), {len(_RUN_FAILURES)} failure(s)")
 
 
 _RUN_FAILURES = []   # (company, source, error) tuples for the end-of-run summary
 _SKIP_COLS = set()   # columns the live table is missing; learned once, applied to all rows
+
+# --------------------------------------------------------------------
+# Live progress telemetry
+# --------------------------------------------------------------------
+# The dashboard's "Refresh roles" button dispatches this workflow and then needs to
+# show what is happening. GitHub's API only exposes whole-step status, so the per-ATS
+# detail is written here: one scrape_runs header row, plus one scrape_progress row per
+# ATS family, updated as boards finish. Every write is wrapped in try/except and can
+# never fail the scrape — telemetry is not worth losing a run over. If the two tables
+# don't exist yet (older schema), the first write fails once and progress goes quiet.
+RUN_ID = os.environ.get("GITHUB_RUN_ID") or f"local-{int(time.time())}"
+RUN_TRIGGER = os.environ.get("ORBITAL_TRIGGER") or (
+    "schedule" if os.environ.get("GITHUB_EVENT_NAME") == "schedule" else "manual")
+_PROGRESS_OK = True          # flipped off after the first failure so we stop retrying
+_PROGRESS_LOCK = threading.Lock()
+_PROGRESS = {}               # source -> {"boards_total":n,"boards_done":n,"rows":n}
+_LAST_FLUSH = 0.0
+
+
+def _progress_write(table, rows):
+    global _PROGRESS_OK
+    if not _PROGRESS_OK or not rows:
+        return
+    try:
+        supabase.table(table).upsert(rows).execute()
+    except Exception as exc:
+        _PROGRESS_OK = False
+        print(f"   .. progress telemetry off ({table}: {str(exc)[:80]}) — "
+              f"run the scrape_runs/scrape_progress SQL from SUPABASE-SCHEMA.sql to enable it")
+
+
+def progress_start(tasks):
+    with _PROGRESS_LOCK:
+        for _company, source, _fn in tasks:
+            slot = _PROGRESS.setdefault(source, {"boards_total": 0, "boards_done": 0, "rows": 0})
+            slot["boards_total"] += 1
+    _progress_write("scrape_runs", [{
+        "run_id": RUN_ID, "status": "running", "trigger": RUN_TRIGGER,
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "boards_total": len(tasks), "boards_done": 0, "rows_upserted": 0,
+    }])
+    progress_flush(force=True)
+
+
+def progress_board(source, row_count, failed=False):
+    global _LAST_FLUSH
+    with _PROGRESS_LOCK:
+        slot = _PROGRESS.setdefault(source, {"boards_total": 0, "boards_done": 0, "rows": 0})
+        slot["boards_done"] += 1
+        slot["rows"] += 0 if failed else row_count
+    # Throttled: ~90 boards finishing would otherwise mean 90 round-trips mid-scrape.
+    if time.time() - _LAST_FLUSH > 2.0:
+        progress_flush()
+
+
+def progress_flush(force=False):
+    global _LAST_FLUSH
+    _LAST_FLUSH = time.time()
+    with _PROGRESS_LOCK:
+        snapshot = {k: dict(v) for k, v in _PROGRESS.items()}
+    now = datetime.now(timezone.utc).isoformat()
+    _progress_write("scrape_progress", [{
+        "run_id": RUN_ID, "source": src,
+        "boards_total": v["boards_total"], "boards_done": v["boards_done"],
+        "rows": v["rows"], "updated_at": now,
+        "status": "done" if v["boards_done"] >= v["boards_total"] else "running",
+    } for src, v in snapshot.items()])
+    done = sum(v["boards_done"] for v in snapshot.values())
+    _progress_write("scrape_runs", [{"run_id": RUN_ID, "boards_done": done}])
+
+
+def progress_finish(status, rows_upserted, note=""):
+    progress_flush(force=True)
+    _progress_write("scrape_runs", [{
+        "run_id": RUN_ID, "status": status, "rows_upserted": rows_upserted,
+        "finished_at": datetime.now(timezone.utc).isoformat(), "note": note[:400],
+    }])
 
 
 def _upsert_with_autoheal(chunk):
@@ -1062,6 +1657,14 @@ def diagnose():
           "variables": {"organizationHostedJobsPageName": "apex.space"}, "query": ASHBY_QUERY}),
         ("workday",    "POST", "https://blueorigin.wd5.myworkdayjobs.com/wday/cxs/blueorigin/BlueOrigin/jobs",
          {"limit": 1, "offset": 0, "appliedFacets": {}}),
+        # The six families added by the 2026-09-06 route passes. A family with no probe
+        # here can break silently for weeks, because nothing but the row count would say so.
+        ("smartrecruiters", "GET", "https://api.smartrecruiters.com/v1/companies/AstroscaleUS/postings?limit=1", None),
+        ("recruitee",  "GET",  "https://aetherflux.recruitee.com/api/offers/", None),
+        ("breezy",     "GET",  "https://zeno-power.breezy.hr/json", None),
+        ("rippling",   "GET",  "https://api.rippling.com/platform/api/ats/v1/board/orbitfab/jobs", None),
+        ("pinpoint",   "GET",  "https://astrolab.pinpointhq.com/postings.json", None),
+        ("manatal",    "GET",  "https://api.manatal.com/open/v3/career-page/castelion-corporation/jobs/", None),
     ]
     failures = 0
     for fam, method, url, body in checks:
@@ -1104,4 +1707,8 @@ if __name__ == "__main__":
         import traceback
         print("\n>>> CRASH — unhandled exception (this is the root cause):")
         traceback.print_exc()
+        try:
+            progress_finish("failed", 0, "crashed")   # so the dashboard stops saying "running"
+        except Exception:
+            pass
         raise SystemExit(1)

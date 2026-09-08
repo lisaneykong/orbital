@@ -120,6 +120,65 @@ not fabricated) · ⏳ Deferred/On hold
 | **Settings** | Control room for the whole account. | Supabase connection, "Save &amp; update everything," résumé upload (synced with Profile), region default, match floor, Fetch-real-jobs dial, density/theme tweaks. |
 
 ---
+---
+
+## PART 3 — Later Sessions (reconstructed from the shipped code, Sept 2026)
+
+*Part 1 above was written mid-build and stops before the work below. This
+section was rebuilt by reading `index.html` directly rather than from chat
+memory, so every line names the function or view that implements it. If an ask
+from those sessions isn't here, it's because nothing in the code implements it —
+worth re-raising.*
+
+### New top-level views
+- ✅ **Today** (`queue`) — the "what do I do right now" console. Ranked apply-now shortlist by `priorityScore`, honest backfill when the match floor leaves fewer than three (says so rather than showing an empty panel), overdue follow-ups, and shortcuts to full ranking / degree-relevance ranking / internship intelligence.
+- ✅ **Essays** (`essays`) — application-essay workbench. See below.
+
+### Essays / application writing
+- ✅ Seeded essay questions per role, drafted in her voice from résumé + capstone + ERAU coursework, ~250 words each.
+- ✅ Seeded questions are always labelled as *likely, not confirmed* — real portals can't be read (CLAUDE.md honesty rule, enforced in `essayBlock`).
+- ✅ Paste the real questions from an application → "Use these questions" replaces the seeded set.
+- ✅ Per-answer "Draft this answer" + Save, with edited-state tracking.
+- ✅ Two honesty flags surfaced per answer where relevant: *verify against your own memory*, and *fill the bracketed slot with a real reason*.
+- ✅ **Pain-Letter Generator** — problem-first opener with {COMPANY}/{ROLE}/{NAME} tokens, copy-to-clipboard.
+- ✅ **Portfolio Quick-Links** panel.
+- ✅ Essay text boxes widened to fill the panel (were falling back to the browser's default ~20-column width).
+
+### Per-role dossier additions
+- ✅ **Paste the JD → "Analyze requirements"** — parses the Requirements/Qualifications block from a posting and scores against it.
+- ✅ **AI re-score** panel per role (opt-in).
+- ✅ **My Notes** per role, owner-only, with a saved-on timestamp.
+- ✅ **"Not a match" reasons** captured (`recordNotMatch`) and fed back into ranking.
+- ✅ Internship prep block extended to early-career full-time roles, not just internships.
+
+### Definitions tightened (now pinned in CLAUDE.md)
+- ✅ **Hot = both conditions** — posted ≤7 days AND clears the match floor (default 70%). Recency alone is "new", not hot. `isHot(j)`.
+- ✅ **Early-career on-ramps** — title OR posting body says early career / new grad / recent graduate / entry level, with `seniorityOf()` still excluding senior titles. Body-only matches allow the mid-level default title. `isEarlyCareer(j)`.
+- ✅ **Location tabs pre-populate** — every region lists all its roles ranked by match on load, no button click. Global pools every region at 100/page; Seattle, LA, NZ, US Other and International list everything. `showAllRoles` + the `PS` split.
+- ✅ Pagination chrome now only renders on Global — a 27-role region no longer shows a "See all 27 ranked" fold.
+
+### Ranking / scoring
+- ✅ Seniority adjustment curve — lead/director/VP penalised as out of cold-application reach, intern/entry neutral.
+- ✅ Match floor exemptions: internships and the early-career view bypass the 70% floor in every data mode.
+- ✅ Learned-preference nudge from real save/dismiss history.
+- ✅ Salary range estimation from title seniority when the posting publishes no numbers, labelled as an estimate.
+
+### Access / interaction
+- ✅ Owner vs guest roles — notes and other write surfaces are owner-only.
+- ✅ `j` / `k` keyboard navigation through the role list, suppressed while typing in a field.
+- ✅ Click a company in the hiring chart → filters the job list to that company.
+- ✅ Planet-rank display toggle in Settings.
+- ✅ Accountability bar — counts follow-ups due and roles gone silent 21+ days, with snooze.
+- ✅ Mobile hardening: 16px inputs to stop iOS zoom-on-focus, safe-area insets on both nav bars, full-screen modals.
+
+### Diagnostic / proof pages (shipped alongside the app)
+- ✅ `score-proof.html`, `coverage-seattle-la.html`, `token-probe.html`, `heal-probe.html`, `tools.html` — verification surfaces for scoring, regional coverage, ATS tokens and the auto-healing upsert.
+
+### Still open
+- 🟡 Everything still marked 🟡 in Part 1 stands (ATS token re-verification, keyword-not-semantic matching, MSO title visual re-check).
+- ⏳ setup.html screen-by-screen wizard — still on hold, still not built.
+
+---
 
 ## Bottom Line
 

@@ -262,6 +262,16 @@ input.good{border-color:var(--good)}
 
   <!-- ====== STEP 1+2: ALL VARIABLES AT ONCE ====== -->
   <div class="body hidden" id="setupBody">
+    <a href="install-guide.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;
+      margin-bottom:16px;padding:14px 16px;border:1px solid rgba(55,214,230,.35);border-radius:12px;
+      background:rgba(55,214,230,.07)">
+      <span style="font-size:1.3rem;line-height:1">🧭</span>
+      <span style="flex:1;min-width:0">
+        <b style="display:block;color:var(--text);font-size:.94rem">Not sure what these keys are? Start here.</b>
+        <span style="display:block;color:var(--muted);font-size:.82rem;line-height:1.5">Every value explained in plain words — what it is, exactly where to click for it, what it should look like, and a button that checks it really works. Includes a printable one-page cheat sheet.</span>
+      </span>
+      <span style="color:var(--accent);font-size:1.1rem">→</span>
+    </a>
     <div class="intro">
       <div class="t">First-time install · required to launch</div>
       <div class="row"><b class="n">1.</b><div>Paste all three keys below (copy them from <b style="color:var(--text)">supabase.com → your project → Settings → API</b>).</div></div>
@@ -340,7 +350,6 @@ create table if not exists public.user_state (
 );
 grant select, insert, update on public.user_state to anon, authenticated, service_role;
 alter table public.user_state disable row level security;
-alter table public.jobs enable row level security;
 drop policy if exists "anon read jobs" on public.jobs;
 create policy "anon read jobs" on public.jobs
   for select to anon using (true);
@@ -349,15 +358,49 @@ create policy "anon read jobs" on public.jobs
 grant usage on schema public to anon, authenticated, service_role;
 grant select on public.jobs to anon, authenticated;
 grant all privileges on public.jobs to service_role;
-grant insert, update, delete on public.jobs to service_role;
--- Single-user tool: disable row-level security so the service_role key can always write.
+-- Single-user tool: RLS off so the service_role key can always write. (The policies
+-- above are kept as belt-and-suspenders in case a future change re-enables RLS.)
 alter table public.jobs disable row level security;
--- Belt & suspenders: an explicit write policy (in case the key resolves as authenticated).
+-- Belt &amp; suspenders: an explicit write policy (in case the key resolves as authenticated).
 drop policy if exists "service role writes" on public.jobs;
 create policy "service role writes" on public.jobs
   for all to service_role using (true) with check (true);
 create index if not exists jobs_hub_time_idx
   on public.jobs (location_hub, timestamp desc);
+
+-- ============ LIVE SCRAPE PROGRESS (powers the Refresh roles button) ============
+-- The browser cannot watch scraper.py run: GitHub's API only reports whole workflow
+-- STEPS, so "greenhouse came back, workday is still going" has to come from the
+-- scraper itself. It writes one header row per run plus one row per ATS family as
+-- each finishes, and the dashboard polls these two tables while a run is in flight.
+-- Read-only to anon (it is progress telemetry, not user data); only the service key
+-- the Action holds can write.
+create table if not exists public.scrape_runs (
+  run_id        text primary key,
+  started_at    timestamptz default now(),
+  finished_at   timestamptz,
+  status        text default 'running',   -- running | done | failed
+  boards_total  int  default 0,
+  boards_done   int  default 0,
+  rows_upserted int  default 0,
+  trigger       text,                    -- schedule | manual | dispatch
+  note          text
+);
+create table if not exists public.scrape_progress (
+  run_id      text not null,
+  source      text not null,             -- greenhouse | lever | workday | ...
+  boards_done int  default 0,
+  boards_total int default 0,
+  rows        int  default 0,
+  status      text default 'running',     -- running | done | failed
+  updated_at  timestamptz default now(),
+  primary key (run_id, source)
+);
+create index if not exists scrape_runs_started_idx on public.scrape_runs (started_at desc);
+grant select on public.scrape_runs, public.scrape_progress to anon, authenticated;
+grant all privileges on public.scrape_runs, public.scrape_progress to service_role;
+alter table public.scrape_runs     disable row level security;
+alter table public.scrape_progress disable row level security;
 -- Supabase's REST layer (PostgREST) caches role permissions and does NOT always pick up
 -- GRANT/RLS changes immediately — this NOTIFY forces an instant cache reload so the fix
 -- above takes effect right away instead of waiting for PostgREST's automatic refresh.
@@ -371,6 +414,8 @@ NOTIFY pgrst, 'reload schema';</pre>
 <pre id="sqlFixBlock">grant usage on schema public to service_role, anon, authenticated;
 grant all privileges on public.jobs to service_role;
 grant select on public.jobs to anon, authenticated;
+grant select on public.scrape_runs, public.scrape_progress to anon, authenticated;
+grant all privileges on public.scrape_runs, public.scrape_progress to service_role;
 alter table public.jobs disable row level security;
 NOTIFY pgrst, 'reload schema';</pre>
         </div>

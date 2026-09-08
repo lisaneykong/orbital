@@ -1,0 +1,17 @@
+# Runtime artifacts — regenerated on every scrape. Committing them is worse than
+# useless: a stale resolved_tokens.json pins companies to dead ATS tokens, because
+# resolve_gh() trusts the cache and skips probing.
+resolved_tokens.json
+failed_scrapes_log.csv
+
+# Real credentials. Only orbital-config.js (public URL + anon read key) is safe to commit.
+config.json
+.env
+
+# Dev capture folder — not part of the app.
+screenshots/
+
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
