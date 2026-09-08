@@ -27,6 +27,9 @@ on:
       - 'manifest.json'
       - 'orbital-logo.png'
       - 'orbital-config.js'
+      - 'companies.json'
+      - 'coverage-seattle-la.html'
+      - '.htaccess'
       - 'assets/**'
   workflow_dispatch: {}
 
@@ -41,7 +44,14 @@ jobs:
           mkdir -p _publish
           cp index.html setup.html START-HERE.html manifest.json _publish/ 2>/dev/null || true
           cp orbital-logo.png orbital-config.js _publish/ 2>/dev/null || true
+          # companies.json is read by the diagnostic pages; .htaccess carries the static-host
+          # rules (index default, no .py served, cache headers) and was never being uploaded,
+          # so none of it was in effect on the live site.
+          cp companies.json .htaccess _publish/ 2>/dev/null || true
+          # Owner-facing live audit. Delete this line to keep it off the public site.
+          cp coverage-seattle-la.html _publish/ 2>/dev/null || true
           [ -d assets ] && cp -r assets _publish/ || true
+          echo "Staged for upload:" && ls -a _publish
 
       - name: Upload website to IONOS via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
