@@ -12,6 +12,10 @@ name: Orbital daily scrape
 #      the dashboard's "Refresh roles" button or by hand
 #      (Actions tab -> "Orbital daily scrape" -> Run workflow).
 #
+# SELF-HEALING: if the 6am run writes nothing — rate limit, quota, network blip — the
+# catch-up slots at ~10am, 2pm and 6pm Chicago retry on their own. Nobody has to notice
+# or press anything. Once a run completes, the remaining slots see it and no-op.
+#
 # If a run fails, open it and read the FIRST red step — the preflight below names a
 # missing or malformed secret in plain English instead of letting the scraper die on
 # a stack trace 40 lines deep.
@@ -23,6 +27,14 @@ on:
     # exactly ONE of them through — whichever one is actually 6am in Chicago today.
     - cron: "0 11 * * *"
     - cron: "0 12 * * *"
+    # Catch-up slots (~10am, 2pm, 6pm Chicago). On a normal day these cost a few
+    # seconds and stop: the gate sees the morning run already finished and exits.
+    # They exist so a scrape killed by a rate limit, a quota or a network blip
+    # resumes BY ITSELF later the same day, instead of leaving the board frozen
+    # until tomorrow at 6am and waiting on somebody to press a button.
+    - cron: "0 15 * * *"
+    - cron: "0 19 * * *"
+    - cron: "0 23 * * *"
   workflow_dispatch:        # manual "Run workflow" button + the dashboard's Refresh roles
     inputs:
       mode:
@@ -38,29 +50,88 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Daylight-saving gate. Two UTC crons cover 6am Chicago year-round, so one of them is
-  # always an hour off — this job compares the real local hour and stops the wrong one.
+  # Gate. Decides whether this particular trigger should really scrape, and answers two
+  # separate questions:
+  #
+  #   1. DST. Two UTC crons cover 6am Chicago year-round, so one of them is always an
+  #      hour off. Compare the real local hour and stop the wrong one.
+  #   2. Catch-up. The afternoon/evening crons should only do work if today has no
+  #      successful scrape yet — that is what makes a failed morning run resume on its
+  #      own. It asks Supabase directly rather than trusting GitHub's run history,
+  #      because a run can go green while writing nothing.
+  #
   # Manual runs (workflow_dispatch) always pass straight through.
   gate:
     runs-on: ubuntu-latest
     outputs:
       run: ${{ steps.check.outputs.run }}
+      kind: ${{ steps.check.outputs.kind }}
     steps:
       - id: check
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           if [ "${{ github.event_name }}" != "schedule" ]; then
             echo "Manual run — proceeding."
-            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "run=true"      >> "$GITHUB_OUTPUT"
+            echo "kind=dispatch" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+
           hour=$(TZ=America/Chicago date +%H)
           echo "Local time in America/Chicago: $(TZ=America/Chicago date '+%Y-%m-%d %H:%M %Z')"
-          if [ "$hour" = "06" ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Not 6am in Chicago (hour=$hour) — this is the other DST slot. Skipping."
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          fi
+
+          case "${{ github.event.schedule }}" in
+            "0 11 * * *"|"0 12 * * *")
+              # The DST pair. Exactly one of these is 6am in Chicago today.
+              echo "kind=schedule" >> "$GITHUB_OUTPUT"
+              if [ "$hour" = "06" ]; then
+                echo "run=true" >> "$GITHUB_OUTPUT"
+              else
+                echo "Not 6am in Chicago (hour=$hour) — this is the other DST slot. Skipping."
+                echo "run=false" >> "$GITHUB_OUTPUT"
+              fi
+              ;;
+            *)
+              # A catch-up slot. Run only if nothing succeeded yet today (Chicago day).
+              echo "kind=catchup" >> "$GITHUB_OUTPUT"
+              day=$(TZ=America/Chicago date +%F)
+              since=$(TZ=America/Chicago date -d "$day 00:00" -u +%Y-%m-%dT%H:%M:%SZ)
+              echo "Looking for a completed scrape since $since (start of $day in Chicago)."
+
+              if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+                echo "::warning::Supabase secrets are not set, so the catch-up cannot tell whether today already ran. Skipping — fix the secrets and the 6am run will report the real error."
+                echo "run=false" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+
+              code=$(curl -sS -o /tmp/runs.json -w '%{http_code}' \
+                -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+                -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+                "$SUPABASE_URL/rest/v1/scrape_runs?select=run_id,finished_at&status=eq.done&finished_at=gte.$since&limit=1" \
+                || echo 000)
+
+              if [ "$code" = "404" ] || grep -q 'PGRST20[0-9]' /tmp/runs.json; then
+                # PERMANENT, not transient: the table isn't there. Failing open here would
+                # scrape at every catch-up slot every single day — four runs instead of one.
+                echo "::warning::scrape_runs does not exist in Supabase, so the catch-up cannot tell whether today already ran. Run the scrape_runs section of SUPABASE-SCHEMA.sql, then this self-healing retry starts working. Skipping."
+                echo "run=false" >> "$GITHUB_OUTPUT"
+              elif [ "$code" != "200" ]; then
+                # Transient (5xx, network, timeout). Fail OPEN: a duplicate scrape is
+                # harmless (every write is an upsert, and the concurrency group serialises
+                # runs); a frozen board is not.
+                echo "::warning::Could not read scrape_runs (HTTP $code) — running the catch-up anyway rather than risk a day with no data."
+                echo "run=true" >> "$GITHUB_OUTPUT"
+              elif grep -q '"run_id"' /tmp/runs.json; then
+                echo "Today's scrape already completed — nothing to catch up."
+                echo "run=false" >> "$GITHUB_OUTPUT"
+              else
+                echo "No completed scrape yet today — resuming now."
+                echo "run=true" >> "$GITHUB_OUTPUT"
+              fi
+              ;;
+          esac
 
   scrape:
     needs: gate
@@ -131,9 +202,10 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
-          # Stamped onto the scrape_runs row so the dashboard can tell a run it asked
-          # for apart from the 6am scheduled one.
-          ORBITAL_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
+          # Stamped onto the scrape_runs row so the dashboard can tell a run it asked for
+          # (dispatch) apart from the 6am one (schedule) and an automatic same-day retry
+          # of a failed morning run (catchup).
+          ORBITAL_TRIGGER: ${{ needs.gate.outputs.kind }}
         run: python scraper.py ${{ inputs.mode == 'diagnose' && '--diagnose' || '' }}
 
       - name: Upload failure log (if any)

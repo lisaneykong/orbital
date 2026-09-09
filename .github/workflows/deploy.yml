@@ -16,22 +16,24 @@ name: Publish website to IONOS
 #
 # After that: any push to the repo re-publishes the site automatically. You can also
 # run it by hand from the Actions tab → "Publish website to IONOS" → Run workflow.
+#
+# TWO BUGS FIXED (both caused "GitHub isn't publishing to IONOS"):
+#  1. local_path was './_publish/*'. A shell glob does NOT match dotfiles, so .htaccess
+#     was silently never uploaded — which is why the no-cache rules in it were never in
+#     effect on the live site and every deploy looked stale. Now uploads the directory.
+#  2. The `paths:` filter only republished on a handful of files. Editing anything else
+#     (install-guide.html, tools.html, this workflow) looked like a failed publish
+#     because no run was ever triggered. The filter is gone: every push publishes.
 
 on:
   push:
     branches: [ main, master ]
-    paths:
-      - 'index.html'
-      - 'setup.html'
-      - 'START-HERE.html'
-      - 'manifest.json'
-      - 'orbital-logo.png'
-      - 'orbital-config.js'
-      - 'companies.json'
-      - 'coverage-seattle-la.html'
-      - '.htaccess'
-      - 'assets/**'
   workflow_dispatch: {}
+
+# Never let two publishes race each other onto the same web root.
+concurrency:
+  group: ionos-publish
+  cancel-in-progress: true
 
 jobs:
   publish:
@@ -42,15 +44,23 @@ jobs:
       - name: Stage only the public website files (keep scraper/.github off the live site)
         run: |
           mkdir -p _publish
-          cp index.html setup.html START-HERE.html manifest.json _publish/ 2>/dev/null || true
-          cp orbital-logo.png orbital-config.js _publish/ 2>/dev/null || true
-          # companies.json is read by the diagnostic pages; .htaccess carries the static-host
-          # rules (index default, no .py served, cache headers) and was never being uploaded,
-          # so none of it was in effect on the live site.
-          cp companies.json .htaccess _publish/ 2>/dev/null || true
-          # Owner-facing live audit. Delete this line to keep it off the public site.
-          cp coverage-seattle-la.html _publish/ 2>/dev/null || true
+          for f in index.html setup.html install-guide.html START-HERE.html tools.html \
+                   manifest.json orbital-logo.png orbital-config.js companies.json \
+                   coverage-seattle-la.html score-proof.html .htaccess; do
+            [ -f "$f" ] && cp "$f" _publish/ && echo "  + $f"
+          done
           [ -d assets ] && cp -r assets _publish/ || true
+          # Publish stamp so you can confirm from a browser which upload is live:
+          # open jobs.lisaney.com/build.txt
+          date -u +"%Y-%m-%dT%H:%M:%SZ  ${GITHUB_SHA}" > _publish/build.txt
+          # version.json is what every page polls (no-store) to notice it is running a
+          # stale cached copy and reload itself. It MUST match the orbital-build meta in
+          # index.html, so it is read out of the file rather than hand-maintained.
+          BUILD=$(sed -n 's/.*name="orbital-build" content="\([^"]*\)".*/\1/p' index.html | head -1)
+          if [ -z "$BUILD" ]; then echo "::error::no orbital-build meta in index.html"; exit 1; fi
+          printf '{"build":"%s","commit":"%s","published":"%s"}\n' \
+            "$BUILD" "$GITHUB_SHA" "$(date -u +%FT%TZ)" > _publish/version.json
+          echo "Build stamp: $BUILD"
           echo "Staged for upload:" && ls -a _publish
 
       - name: Upload website to IONOS via SFTP
@@ -60,10 +70,16 @@ jobs:
           username: ${{ secrets.IONOS_FTP_USERNAME }}
           password: ${{ secrets.IONOS_FTP_PASSWORD }}
           port: 22
-          local_path: './_publish/*'
+          # Trailing slash, no glob — a '*' glob skips dotfiles and left .htaccess behind.
+          local_path: './_publish/'
           # IONOS's web root for this account — most standard hosting plans use this path.
           # If your site doesn't appear after a successful run, check IONOS -> Hosting ->
           # your site for the exact web-root folder name and update this.
           remote_path: '/'
           sftp_only: true
           delete_remote_files: false
+
+      - name: Confirm what went up
+        run: |
+          echo "Published $(date -u +%FT%TZ) from ${GITHUB_SHA}"
+          echo "Verify: https://jobs.lisaney.com/build.txt should show the same commit."
