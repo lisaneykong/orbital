@@ -6,6 +6,10 @@
 # returned the plain-text string "Orbital CRM static server running." It also exposed
 # scraper.py as a web-executable endpoint. ORBITAL is pure static HTML — no Python runs
 # on the host; scraper.py runs only inside GitHub Actions.
+#
+# NOTE: until the deploy workflow was fixed, this file was never actually uploaded
+# (local_path used a '*' glob, which skips dotfiles), so none of the rules below were
+# in effect on the live site. That is why fresh uploads kept showing the old page.
 
 DirectoryIndex index.html
 
@@ -27,11 +31,32 @@ DirectoryIndex index.html
   AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
 </IfModule>
 
+# ---------------------------------------------------------------------------
+# CACHING. The HTML is the whole app, so it must never be cached: an Expires
+# header alone is not enough (browsers still reuse a heuristic copy), so send
+# an explicit no-store Cache-Control too. Images and the logo stay cached long,
+# since their names change when they change.
+# ---------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|json|webmanifest|txt)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+    Header unset ETag
+    Header unset Last-Modified
+  </FilesMatch>
+  <FilesMatch "\.(png|jpg|jpeg|svg|ico|woff2?)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+</IfModule>
+FileETag None
+
 <IfModule mod_expires.c>
   ExpiresActive On
-  # companies.json and index.html change with every build — never cache them hard.
+  # index.html, companies.json and build.txt change with every publish.
   ExpiresByType text/html "access plus 0 seconds"
   ExpiresByType application/json "access plus 0 seconds"
+  ExpiresByType text/plain "access plus 0 seconds"
   ExpiresByType text/css "access plus 7 days"
   ExpiresByType application/javascript "access plus 7 days"
   ExpiresByType image/jpeg "access plus 30 days"

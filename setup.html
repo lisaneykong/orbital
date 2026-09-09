@@ -6,6 +6,31 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
+<meta name="orbital-build" content="2026-09-08.1" />
+<script>
+(function(){
+  try{
+    if(location.protocol==='file:') return;
+    var mt=document.querySelector('meta[name="orbital-build"]');
+    var mine=mt&&mt.content; if(!mine) return;
+    var K='orbital.freshBuildTried';
+    fetch('version.json?__probe='+Date.now(),{cache:'no-store'})
+      .then(function(r){ return r.ok?r.json():null; })
+      .then(function(v){
+        if(!v||!v.build) return;
+        if(v.build===mine){ try{ sessionStorage.removeItem(K); }catch(e){} return; }
+        try{ if(sessionStorage.getItem(K)===v.build) return; sessionStorage.setItem(K,v.build); }catch(e){}
+        var u=new URL(location.href);
+        u.searchParams.set('__v', v.build);
+        location.replace(u.toString());
+      })
+      .catch(function(){});
+  }catch(e){}
+})();
+</script>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>Orbital CRM · Install</title>
 <script>
   // Force a fresh copy of this page once per visit — bypasses any stale cached version

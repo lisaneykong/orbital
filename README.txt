@@ -10,7 +10,41 @@ install, no command line, no local server. If you can copy & paste,
 you can do it.
 
 ------------------------------------------------------------
-NEW IN THIS VERSION
+NEW IN THIS VERSION   (build 2026-09-09.2)
+------------------------------------------------------------
+· THE WHOLE BOARD NOW LOADS. Supabase caps every reply at 1000
+  rows and does it silently — a request for 2000 came back as
+  exactly 1000 rows with no error at all. With 1722 roles
+  scraped, 722 of them were invisible, and every count, chart
+  and scatterplot was drawn on a market that was missing its
+  tail. The app now pages through the table until it runs out.
+  The "which configured companies produced no roles" panel was
+  wrong for the same reason — it called a company missing when
+  its rows simply sat past number 1000. Also fixed.
+· THE SCRAPER RETRIES ITSELF. Alongside the 6:00 AM Central run
+  there are now catch-up slots at roughly 10am, 2pm and 6pm.
+  Each one asks the database whether today already finished; if
+  it has, it stops within seconds. So a morning run killed by a
+  rate limit, a quota or a network blip picks itself back up the
+  same day instead of leaving the board frozen until tomorrow.
+  This NEEDS the scrape_runs table — see INSTALL ORDER step 3.
+  Without it the retry stays switched off and says so in the
+  Actions log.
+· LISTING TEMPERATURE. 🔥 Hot (1-5 days), Warm (6-10), Lukewarm
+  (11-30), Cold (31-60) — on cards, dossier headers, the table
+  and the snapshots. Hot means fresh AND at least a 10% match;
+  recency on its own is only "new".
+· MATCH FLOOR IS NOW 40%. Any higher value stored from an older
+  build is pulled down once, automatically, on first load.
+· 60-DAY LIVE WINDOW for full-time roles. Internships stay at
+  270 days, because those programs post 6-9 months ahead of the
+  start date.
+· ESSAYS ON EVERY ROLE, not just internships — ten drafted
+  answers per posting. Seeded questions are always labelled as a
+  forecast, because real application portals cannot be read.
+
+------------------------------------------------------------
+ALSO IN THIS PACKAGE
 ------------------------------------------------------------
 · TAILORED RÉSUMÉ — open any job, click "📄 Tailored Résumé".
   It reads the posting, tailors your summary / skills order /
@@ -58,11 +92,36 @@ ORBITAL-AUDIT.md ...... the full running feature list — every ask,
 .gitignore ............ keeps runtime junk and real keys out of the repo
 
 ------------------------------------------------------------
-THE 3 STEPS (full details inside START-HERE.html)
+INSTALL ORDER (full details inside START-HERE.html)
 ------------------------------------------------------------
-1. SUPABASE  — make the free database (paste 1 block of code, press Run)
-2. GITHUB    — turn on the daily job-feeder robot (add 2 secret keys)
-3. IONOS     — upload the files so it's live at jobs.lisaney.com
+1. SUPABASE — make the free database. Open SQL Editor → New query,
+   paste ALL of SUPABASE-SCHEMA.sql, press Run. Expect
+   "Success. No rows returned."
+
+2. GITHUB — turn on the daily job-feeder. Repo → Settings →
+   Secrets and variables → Actions. Add exactly two:
+     SUPABASE_URL               = https://<your-ref>.supabase.co
+     SUPABASE_SERVICE_ROLE_KEY  = the service_role / sb_secret_ key
+   Then: Actions tab → "Orbital daily scrape" → Run workflow.
+
+3. CHECK THE scrape_runs TABLE EXISTS. Step 1 creates it, but an
+   older database that was set up before it existed will not have
+   it, and the self-healing retry silently stays off. In Supabase:
+   Table Editor → look for "scrape_runs" in the list. If it isn't
+   there, run the scrape_runs section at the bottom of
+   SUPABASE-SCHEMA.sql on its own.
+
+4. IONOS — upload the files so the site is live at
+   jobs.lisaney.com. Upload the CONTENTS of this folder, not the
+   folder itself, and keep the hidden .github folder.
+
+5. CLAUDE API KEY (only for the AI features). In the live site:
+   Settings → 🔑 Claude API Key → paste → Save → Test. Wait for
+   the green "✓ Working". The key is held in that one browser and
+   goes nowhere else — never into these files, never to Supabase.
+   Give it a monthly spend cap in the Anthropic console, since a
+   key sitting in a browser is readable by anyone using that
+   device.
 
 Owner login PIN: 1725   (everyone else gets a read-only view)
 

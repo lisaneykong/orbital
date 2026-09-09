@@ -3,6 +3,31 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<meta name="orbital-build" content="2026-09-09.2" />
+<script>
+(function(){
+  try{
+    if(location.protocol==='file:') return;
+    var mt=document.querySelector('meta[name="orbital-build"]');
+    var mine=mt&&mt.content; if(!mine) return;
+    var K='orbital.freshBuildTried';
+    fetch('version.json?__probe='+Date.now(),{cache:'no-store'})
+      .then(function(r){ return r.ok?r.json():null; })
+      .then(function(v){
+        if(!v||!v.build) return;
+        if(v.build===mine){ try{ sessionStorage.removeItem(K); }catch(e){} return; }
+        try{ if(sessionStorage.getItem(K)===v.build) return; sessionStorage.setItem(K,v.build); }catch(e){}
+        var u=new URL(location.href);
+        u.searchParams.set('__v', v.build);
+        location.replace(u.toString());
+      })
+      .catch(function(){});
+  }catch(e){}
+})();
+</script>
 <title>Orbital CRM · Command Console</title>
 <link rel="manifest" href="manifest.json" />
 <!-- Home-screen / desktop-shortcut identity: the planet mark from orbital-logo.png -->
@@ -475,7 +500,13 @@ a{color:inherit;text-decoration:none}
 .jlogo{width:42px;height:42px;border-radius:var(--rs);flex:none;display:grid;place-items:center;font-family:'Space Grotesk';font-weight:700;font-size:var(--fs-base);color:#fff}
 .jmain{flex:1;min-width:0}
 .jtitle{font-weight:600;font-size:var(--fs-xl);display:flex;align-items:center;gap:8px}
-.jtitle .hot{font-size:var(--fs-nano);font-weight:700;letter-spacing:.05em;color:#fff;background:var(--a4);padding:2px 6px;border-radius:var(--rx);box-shadow:0 0 10px var(--a4-soft)}
+.jtitle .hot{font-size:var(--fs-md);line-height:1;filter:drop-shadow(0 0 7px rgba(255,77,109,.75))}
+.hot{cursor:help}
+.tempchip{font-size:var(--fs-nano);font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;border:1px solid;cursor:help;white-space:nowrap}
+.tempchip.t-warm{color:var(--gold);border-color:rgba(245,197,96,.45);background:rgba(245,197,96,.1)}
+.tempchip.t-lukewarm{color:var(--a3);border-color:rgba(55,214,230,.4);background:rgba(55,214,230,.08)}
+.tempchip.t-cold{color:var(--dim);border-color:rgba(143,160,184,.35);background:rgba(143,160,184,.07)}
+
 .jtitle .postedage{font-size:var(--fs-micro);font-weight:600;color:var(--dim);margin-left:auto;padding-left:8px}
 .jco{font-size:var(--fs-md);color:var(--muted);margin-top:2px}
 .jco b{color:var(--a3);font-weight:600}
@@ -617,6 +648,8 @@ textarea.tinput{display:block;width:100%;box-sizing:border-box;resize:vertical;l
 .drawer .dh{position:sticky;top:0;background:rgba(12,19,32,.96);backdrop-filter:blur(8px);padding:20px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;z-index:2}
 .drawer .dh h2{font-size:var(--fs-d2);display:flex;align-items:center;gap:9px}
 .drawer .db{padding:20px 22px 60px;display:flex;flex-direction:column;gap:22px}
+.drawer .db>.dsec:last-child{padding-bottom:6px}
+.drawer .db>.dsec:nth-last-child(2){margin-bottom:8px}
 .dsec h4{font-size:var(--fs-2xs);letter-spacing:.13em;text-transform:uppercase;color:var(--a3);margin-bottom:12px}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:var(--fs-sm);color:var(--muted);margin-bottom:6px}
@@ -1678,16 +1711,27 @@ const defaultSettings = {
   dataSource:'auto',      // auto | live | sample
   planetRanks:true, hotBadges:true, weather:true, relocation:true,
   density:'comfortable',  // comfortable | compact
-  matchFloor:70,
+  matchFloor:40,        // board threshold: roles below this drop out of the pipeline
   readableMode:false,     // accessibility: bigger/higher-contrast text, no moving backgrounds
 };
 let settings = Object.assign({}, defaultSettings, JSON.parse(localStorage.getItem(LS.settings)||'{}'));
+(function(){
+  try{
+    if(localStorage.getItem('orbital.floor40')) return;
+    localStorage.setItem('orbital.floor40','1');
+    if(settings.matchFloor > 40){
+      settings.matchFloor = 40;
+      localStorage.setItem(LS.settings, JSON.stringify(settings));
+    }
+  }catch(e){}
+})();
 const defaultTweaks = { atmosphere:'region', density:'standard', energy:'charged' };
 let tweaks = Object.assign({}, defaultTweaks, JSON.parse(localStorage.getItem('orbital.tweaks')||'{}'));
 let SB_URL = localStorage.getItem(LS.url) || (window.ORBITAL_CONFIG&&window.ORBITAL_CONFIG.url) || '';
 let SB_KEY = localStorage.getItem(LS.key) || (window.ORBITAL_CONFIG&&window.ORBITAL_CONFIG.anonKey) || '';
 let region = localStorage.getItem(LS.region) || 'global';
 let track = 'fulltime';     // fulltime | intern
+const ORBITAL_BUILD = '2026-09-09.2';   // shown in Settings so you can tell what the server is actually serving
 let query = '';
 let companyFilter = '';     // click a bar → filter to this company
 let favOnly = false;        // Favorites filter
@@ -1696,7 +1740,7 @@ let salFilter = 0;          // minimum salary floor (0 = any) — real salaryVal
 let sortMode = 'priority';  // priority | erau | match | salary | newest — Jobs view sort
 let internVertical = '';    // '' | gnc | ground | mission — internship domain vertical (guide §4)
 let internScope = 'intern';  // 'intern' | 'early' — widen the page to real new-grad/entry roles
-let showArchived = false;   // include roles ≥90 days (archived)
+let showArchived = false;   // include roles past the live window (archived)
 let dataFallback = false;   // live table empty → showing sample roles
 let jobsShown = 30;         // 30 roles per page; "See more jobs" reveals the next 30
 let currentPage = 1;        // numbered pagination for jobListPanel (30/page)
@@ -2125,7 +2169,7 @@ function statsForRegion(){
   const savedHere = jobs.filter(j=>savedJobs.has(j.id)).length;
   return [
     {ic:'jobs',  v:String(jobs.length),    l:'Matched Roles', c:'#5b8cff', note:'≥70% fit · space-only'},
-    {ic:'fire',  v:String(hot),            l:'Hot Roles',     c:'#ff5a4d', note:'≤7 days old'},
+    {ic:'fire',  v:String(hot),            l:'Hot Roles',     c:'#ff5a4d', note:`≤${HOT_DAYS} days old`},
     {ic:'cand',  v:String(interns.length), l:'Internships',   c:'#37d6e6', note:'open · no 70% floor'},
     {ic:'grad',  v:String(pool.filter(isEarlyCareer).length), l:'Early-Career', c:'#c17bff', note:'new-grad friendly'},
     {ic:'sal',   v:medLabel,               l:'Median Base',   c:'#37e0a0', note:cos+' companies hiring'},
@@ -2710,9 +2754,25 @@ async function aiComplete(prompt){
   const data=await r.json();
   return (data.content||[]).map(c=>c.text||'').join('\n');
 }
+// An Anthropic auth failure (bad/rotated/revoked key) is recoverable — the UI should
+// offer a replacement field rather than printing the raw 401.
+function aiAuthFailed(e){
+  const m=String((e&&e.message)||e||'');
+  return /\b401\b/.test(m) || /authentication_error/i.test(m) || /api key/i.test(m);
+}
 // True when drafting can run without prompting for a key first.
 function aiKeyPresent(){
   return !!(window.claude && window.claude.complete) || !!(localStorage.getItem('orbital.anthropicKey')||'').trim();
+}
+function aiKeyRejectedHTML(boxId){
+  const k=(localStorage.getItem('orbital.anthropicKey')||'').trim();
+  return `<p class="subtle" style="margin:0 0 8px;color:var(--bad)">Anthropic rejected the saved key${k?' (ends \u2025'+esc(k.slice(-4))+')':''}. It has expired, been revoked, or was pasted incompletely.</p>
+    <p class="subtle" style="margin:0 0 8px">Paste a current key to replace it &mdash; it stays in this browser's storage only:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input class="tinput" id="aikey-${boxId}" type="password" placeholder="sk-ant-..." autocomplete="off" style="flex:1;min-width:200px"/>
+      <button class="dbtn primary" data-savekey="${boxId}">Save &amp; retry</button>
+      <button class="dbtn" data-opensettings="1">Open Settings</button>
+    </div>`;
 }
 function aiKeyPromptHTML(boxId){
   return `<p class="subtle" style="margin:0 0 8px">AI drafting needs a connection. Paste an Anthropic API key &mdash;
@@ -3215,8 +3275,12 @@ async function generateTailoredResume(jobId){
     if(String(e.message)==='NO_AI_KEY'){
       box.innerHTML = `<h4>Tailored Résumé</h4>${aiKeyPromptHTML('resume-'+jobId)}`;
       wireAiKeySave('resume-'+jobId, ()=>generateTailoredResume(jobId));
+    } else if(aiAuthFailed(e)){
+      box.innerHTML = `<h4>Tailored Résumé</h4>${aiKeyRejectedHTML('resume-'+jobId)}`;
+      wireAiKeySave('resume-'+jobId, ()=>generateTailoredResume(jobId));
     } else {
-      box.innerHTML = `<h4>Tailored Résumé</h4><p class="subtle" style="color:var(--bad)">Couldn't generate (${esc(e.message||'unknown error')}).</p>`;
+      box.innerHTML = `<h4>Tailored Résumé</h4><p class="subtle" style="color:var(--bad)">Couldn't generate (${esc(e.message||'unknown error')}).</p>
+        <div style="margin-top:9px"><button class="dbtn" data-opensettings="1">Open Settings</button></div>`;
     }
   }
 }
@@ -3286,7 +3350,7 @@ function salaryLabel(j){
   return money(j.salMin)+' – '+money(j.salMax)+(j.estimated?' (est.)':'');
 }
 function salaryValue(j){ return j.salMax || (j.internRate? j.internRate*40*(j.internWeeks||1):0); }
-// 45-day posting window — deterministic spread so charts show real X-axis range; ≤7d = HOT
+// Live window is ROLE_WINDOW_DAYS (60d; internships 270d); ≤HOT_DAYS (5d) + match floor = HOT
 const DAY_OVERRIDE={j1:3,j2:9,j3:18,j4:6,j5:27,j6:12,j7:1,j8:4,j9:22,j10:31,j11:2,j12:8,j13:5,j14:14,j15:25,j16:1,j17:11,j18:38};
 // Early-career / new-grad detector — shared everywhere so the whole platform treats this
 // as a first-class category, not just one widget: track filter, badges, and match scoring.
@@ -3304,10 +3368,53 @@ function isEarlyCareer(j){
   return seniorityOf(j.title)<=(byBody?2:1);   // body-only matches allow the mid-level default title
 }
 function daysOnMarket(j){ return DAY_OVERRIDE[j.id] ?? (j.days!=null ? j.days : 0); }
-// HOT = both conditions, never just one: posted within the last 7 days AND a good match
-// for the résumé (clears the match floor). Recency alone is "new", not hot.
-function isHot(j){ return daysOnMarket(j)<=7 && (j.match||0) >= settings.matchFloor; }
-function isArchived(j){ const max=(j.type==='Internship')?270:45; return daysOnMarket(j) >= max; }   // interns kept 270d (~9 months: postings open far ahead of program start), others 45d
+// HOT = both conditions: posted within the last HOT_DAYS days AND at least HOT_MATCH_FLOOR% match.
+// Recency alone is "new", not hot.
+const HOT_DAYS = 5;
+// Hotness runs on its own low floor, independent of the pipeline match floor: a brand-new
+// posting is worth seeing even when it scores well under the threshold that governs the
+// board. Recency still is not enough on its own.
+const HOT_MATCH_FLOOR = 10;
+function isHot(j){ return daysOnMarket(j)<=HOT_DAYS && (j.match||0) >= HOT_MATCH_FLOOR; }
+// The flame markup, used everywhere a hot role is labelled.
+function hotFlame(size){
+  return `<span class="hot" title="Hot — posted in the last ${HOT_DAYS} days and matches at least ${HOT_MATCH_FLOOR}%"${size?` style="font-size:${size};vertical-align:middle"`:''}>🔥</span>`;
+}
+
+// The live window: a role stays on the board for its first ROLE_WINDOW_DAYS days on market.
+// Internships keep a much longer tail on purpose — programs post 6-9 months before the
+// start date, so a 60-day cutoff would empty the internship board.
+const ROLE_WINDOW_DAYS = 60;
+const INTERN_WINDOW_DAYS = 270;
+function isArchived(j){ const max=(j.type==='Internship')?INTERN_WINDOW_DAYS:ROLE_WINDOW_DAYS; return daysOnMarket(j) >= max; }
+// ---- Listing temperature: how long a role has been sitting on the board ----
+// Hot additionally requires HOT_MATCH_FLOOR (10%) — NOT settings.matchFloor. A fresh
+// posting under 10% is labelled Warm rather than promoted on recency alone.
+const TEMP_BANDS = [
+  {k:'hot',      max:HOT_DAYS,          label:'Hot',      color:'var(--hot)'},
+  {k:'warm',     max:10,                label:'Warm',     color:'var(--gold)'},
+  {k:'lukewarm', max:30,                label:'Lukewarm', color:'var(--a3)'},
+  {k:'cold',     max:ROLE_WINDOW_DAYS,  label:'Cold',     color:'var(--dim)'},
+];
+function roleTemp(j){
+  const d=daysOnMarket(j);
+  let b=TEMP_BANDS[TEMP_BANDS.length-1];
+  for(const x of TEMP_BANDS){ if(d<=x.max){ b=x; break; } }
+  if(b.k==='hot' && (j.match||0) < HOT_MATCH_FLOOR) b=TEMP_BANDS[1];
+  return b;
+}
+function tempTip(j){
+  const t=roleTemp(j), d=daysOnMarket(j);
+  if(t.k==='hot') return `Hot — posted ${d} day${d===1?'':'s'} ago and matches ${j.match||0}% (hot needs ${HOT_MATCH_FLOOR}%+)`;
+  if(t.k==='warm') return `Warm — ${d} days on market${(j.match||0)<HOT_MATCH_FLOOR?`, and matches only ${j.match||0}%`:''}`;
+  if(t.k==='lukewarm') return `Lukewarm — ${d} days on market; the first wave of applicants is already in`;
+  return `Cold — ${d} days on market; likely filled or stalled, but still inside the ${ROLE_WINDOW_DAYS}-day window`;
+}
+function tempBadge(j, size){
+  const t=roleTemp(j);
+  if(t.k==='hot') return `<span class="hot" title="${esc(tempTip(j))}"${size?` style="font-size:${size};vertical-align:middle"`:''}>🔥</span>`;
+  return `<span class="tempchip t-${t.k}" title="${esc(tempTip(j))}">${t.label}</span>`;
+}
 function targetSalary(){ return +localStorage.getItem('orbital.targetGross') || 165000; }
 function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function planetRow(n){
@@ -3386,16 +3493,29 @@ function applySettingsTheme(){
   // nebula wash behind text, boosts contrast/weight/spacing everywhere.
   root.classList.toggle('readable-mode', !!settings.readableMode);
 }
+// PostgREST caps every response at its server-side max-rows (1000 on Supabase) and it
+// does so SILENTLY: .limit(2000) came back as exactly 1000 rows with no error, which hid
+// 722 of 1722 scraped roles and quietly skewed every count, chart and "which companies
+// are missing" diagnostic built on top of them. Anything that needs the whole table pages
+// through it instead of asking once and trusting the answer.
+async function sbAll(client, table, cols, perPage){
+  const PAGE=perPage||1000, MAX=40, rows=[];
+  for(let p=0;p<MAX;p++){
+    const q=client.from(table).select(cols||'*').order('id',{ascending:true}).range(p*PAGE, p*PAGE+PAGE-1);
+    const {data,error}=await Promise.race([q, new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),12000))]);
+    if(error) throw error;
+    rows.push(...(data||[]));
+    if(!data || data.length<PAGE) break;
+  }
+  return rows;
+}
 async function initData(){
   // decide mode
   const wantLive = settings.dataSource==='live' || (settings.dataSource==='auto' && SB_URL && SB_KEY);
   if(wantLive && SB_URL && SB_KEY){
     try{
       sb = window.supabase.createClient(SB_URL, SB_KEY);
-      const q = sb.from('jobs').select('*').limit(2000);
-      const {data,error} = await Promise.race([q, new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),6000))]);
-      if(error) throw error;
-      liveJobs = data||[];
+      liveJobs = await sbAll(sb, 'jobs', '*');
       dataMode = 'live';
       _sigCache.clear();   // stale internship-signal cache would misreport after a refresh
       return;
@@ -3413,7 +3533,7 @@ function jobsForRegion(){
   }
   const out = base.filter(j=>{
     if(!j.live && !spaceQualifies(j)) return false;   // sample rows: client gate; live rows: already server-gated
-    if(!showArchived && isArchived(j)) return false;   // hide roles ≥90 days old
+    if(!showArchived && isArchived(j)) return false;   // hide roles past the live window (60d; internships 270d)
     if(region!=='global' && j.region!==region) return false;
     if(track==='intern' && j.type!=='Internship') return false;
     if(track==='fulltime' && j.type==='Internship') return false;
@@ -3790,7 +3910,7 @@ function heroHUD(){
     <div class="hud-readouts">
       <div class="hud-row"><span class="hk">◇ SECTOR</span><span class="hv">${esc(R.short.toUpperCase())}</span></div>
       <div class="hud-row"><span class="hk">◇ COMPANIES</span><span class="hv">${co}</span></div>
-      <div class="hud-row"><span class="hk">◇ HOT (≤7d)</span><span class="hv hot">${hot}</span></div>
+      <div class="hud-row"><span class="hk">◇ HOT (≤${HOT_DAYS}d)</span><span class="hv hot">${hot}</span></div>
       <div class="hud-row"><span class="hk">◇ FEED</span><span class="hv ${dataMode==='live'?'ok':'amber'}">${dataMode==='live'?'LIVE':'SAMPLE'}</span></div>
       ${hudSpark(live)}
     </div>
@@ -4040,7 +4160,7 @@ function roleTags(j){
   if(/integrat|mission|program|s&op|operations|supply/.test(t)) tags.push({k:'Integration', c:'#37d6e6', tip:'Cross-functional / supply-chain leverage — your wheelhouse'});
   if(/defense|avionics|guidance|propuls|payload|gnc|structures/.test(t)) tags.push({k:'Regulated', c:'#f5c560', tip:'ITAR / FAA / FCC exposure — clearance or compliance edge'});
   if(['SpaceX','Rocket Lab','Relativity Space','Impulse Space','Stoke Space','Blue Origin'].includes(co)) tags.push({k:'SpaaS', c:'#37e0a0', tip:'Space-as-a-service / launch cadence company'});
-  if(isHot(j)) tags.push({k:'High velocity', c:'#ff6f86', tip:'Posted ≤7 days AND clears your match floor — move fast'});
+  if(isHot(j)) tags.push({k:'High velocity', c:'#ff6f86', tip:`Posted ≤${HOT_DAYS} days and matches ${HOT_MATCH_FLOOR}%+ — move fast`});
   if(/lead|senior|director|principal|manager/.test(t)) tags.push({k:'Full-lifecycle', c:'#5b8cff', tip:'Owns end-to-end — matches your 10-yr operator profile'});
   return tags;
 }
@@ -4145,7 +4265,7 @@ function jobListPanel(jobs, title, opts={}){
       <div class="empty">${dataMode==='live'
         ? `<div class="big">No Data</div><div>No roles in Supabase for this view yet. Open <b>Settings → Fetch real jobs</b> and watch the dial fill, or run the daily scrape on GitHub. Then hit Refresh.</div>`
         : (track==='intern'
-            ? `<div class="big">No internships currently posted</div><div>These space-ops boards post few internships, and any older than 90 days have rolled off. Switch to <b>Full-time</b>, or check back after the next daily scrape.</div>`
+            ? `<div class="big">No internships currently posted</div><div>These space-ops boards post few internships, and any older than ${INTERN_WINDOW_DAYS} days have rolled off. Switch to <b>Full-time</b>, or check back after the next daily scrape.</div>`
             : `<div class="big">No roles match these filters</div><div>Try another region, type, or search term.</div>`)}</div></div></div>`;
   }
   const paginate = opts.paginate;
@@ -4167,7 +4287,7 @@ function jobListPanel(jobs, title, opts={}){
     return `<div class="jrow ${hot?'hotjob':''}" data-job="${j.id}">
       <div class="jlogo" style="background:${j.logoBg};${j.logoFg?'color:'+j.logoFg:''}">${esc(j.logo)}</div>
       <div class="jmain">
-        <div class="jtitle">${esc(j.title)} ${hot?'<span class="hot">HOT</span>':''}<span class="postedage">${daysOnMarket(j)}d listed</span></div>
+        <div class="jtitle">${esc(j.title)} ${settings.hotBadges?tempBadge(j):''}<span class="postedage">${daysOnMarket(j)}d listed</span></div>
         <div class="jco"><b class="colink" data-company="${esc(j.company)}" title="Company profile — every role, pay band, hiring pattern and alumni lead">${esc(j.company)}</b> · ${esc(j.location)}</div>
         <div class="jmeta">${internChip}${internMeta}${relocChip}<span class="chip mchip" style="color:${matchColor(j.match)};border-color:${matchColor(j.match)}55">${matchIcon(j.match)} ${j.match}% match</span>${(j.matchFlags&&j.matchFlags.length)?`<span class="chip" style="color:var(--a4);border-color:var(--a4-soft);background:var(--a4-soft)" title="${esc(j.matchFlags.join(', '))}">⚠ ${j.matchFlags.length} flag${j.matchFlags.length>1?'s':''}</span>`:''}${sourceBadge(j)}${roleTagChips(j)}</div>
       </div>
@@ -4529,7 +4649,7 @@ const PUSH = [
   ["Your future self is watching.","Will they thank you for today, or sigh? Make them proud. Open the Jobs tab and grind."],
   ["Fortune favors the bold, not the bookmarked.","Three cold outreaches today. Use the templates in the dossier. No overthinking."],
   ["A 'no' is free data.","You can't get rejected from a job you never applied to — and that's worse. Send it."],
-  ["The space industry is hiring NOW.","Hot jobs go cold in days. Hit the ≤7-day listings before someone less qualified does."],
+  ["The space industry is hiring NOW.","Hot jobs go cold in days. Hit the 🔥 listings before someone less qualified does."],
   ["Match score means nothing if you sit on it.","98% match and zero applications = 0% chance. Do the math, then do the work."],
   ["Polish later. Apply now.","Your resume is good enough. Send it to your top 3 matches and refine on the next round."],
   ["This is YOUR command console.","Built to give you the edge. An edge you don't use is just decoration. Execute."],
@@ -4735,7 +4855,7 @@ function jobTable(jobs){
   return `<div style="overflow-x:auto"><table class="dtable"><thead><tr>
     <th>Role</th><th>Company</th><th>Location</th><th class="r">Salary</th><th class="r">Match</th><th class="r">Reloc</th><th class="r">Save</th>
     </tr></thead><tbody>${jobs.map(j=>`<tr data-job="${j.id}">
-    <td><div class="ti"><b>${esc(j.title)} ${settings.hotBadges&&j.days<=7?'<span style="font-size:var(--fs-nano);background:var(--hot);color:#fff;padding:2px 6px;border-radius:var(--rx);vertical-align:middle">HOT</span>':''}</b><span>${esc(j.type)} · ${daysOnMarket(j)}d listed</span></div></td>
+    <td><div class="ti"><b>${esc(j.title)} ${settings.hotBadges?tempBadge(j,'var(--fs-md)'):''}</b><span>${esc(j.type)} · ${daysOnMarket(j)}d listed</span></div></td>
     <td><div class="co"><div class="lg" style="background:${j.logoBg};${j.logoFg?'color:'+j.logoFg:''}">${esc(j.logo)}</div>${esc(j.company)}</div></td>
     <td style="color:var(--muted)">${esc(j.location)}</td>
     <td class="r salcell">${salaryLabel(j)}</td>
@@ -5802,7 +5922,7 @@ function strategyView(){
   const plays=[
     {ic:'🎯',t:'Lead with leverage, not apology',d:'You are not "career-changing from zero" — you bring 10 yrs of ops + an ERAU Master of Space Operations and Graduate Certificate in Systems Engineering. Frame every story as transferable mission value.'},
     {ic:'🔑',t:'Beat the bot first',d:'Open each dossier → ATS Keyword Delta. Add every missing keyword verbatim before you submit. 100% parse or don\'t send it.'},
-    {ic:'⚡',t:'Strike while HOT',d:'Roles ≤7 days old convert best. Apply within 48 hours and send a same-day LinkedIn note to someone on the team.'},
+    {ic:'⚡',t:'Strike while HOT',d:`Roles ≤${HOT_DAYS} days old convert best. Apply within 48 hours and send a same-day LinkedIn note to someone on the team.`},
     {ic:'🤝',t:'Referrals > applications',d:'A warm intro is worth 10 cold applies. Use the company alumni count + outreach templates to find the shortest path in.'},
     {ic:'💬',t:'Quantify everything',d:'Every bullet gets a number: 166%, 300%, "largest enterprise contract." Numbers survive the skim; adjectives don\'t.'},
     {ic:'🧭',t:'Qualify the fit, ruthlessly',d:'This move is life-changing — protect it. Check comp vs lifestyle floor, relocation, and 4-dog housing BEFORE investing in a long loop.'},
@@ -6059,13 +6179,38 @@ function drawCharts(){
   // scatter: DAYS ON MARKET (X) vs SALARY (Y, first-class) + lifestyle hashline
   const sc=document.getElementById('scatterChart');
   if(sc){
-    const src = (dataMode==='live') ? jobsForRegion() : (region==='global'? JOBS : jobs);
+    // The chart is a picture of the market, not of the current filters: pool BOTH tracks
+    // and ignore the match floor, so every role inside the live window is plotted.
+    const src = (()=>{
+      const savedTrack=track, savedFloor=settings.matchFloor, savedCo=companyFilter, savedQ=query;
+      const seen={}, out=[];
+      try{
+        settings.matchFloor=0; companyFilter=''; query='';
+        ['fulltime','intern'].forEach(t=>{
+          track=t;
+          try{ jobsForRegion().forEach(j=>{ if(!seen[j.id]){ seen[j.id]=1; out.push(j); } }); }catch(e){}
+        });
+      } finally {
+        track=savedTrack; settings.matchFloor=savedFloor; companyFilter=savedCo; query=savedQ;
+      }
+      return out.length ? out : ((region==='global'? JOBS : jobs)||[]);
+    })();
     const pts = src.map(j=>({
-      x: daysOnMarket(j), y: salaryValue(j), label:j.title, sal:salaryLabel(j), reg:j.region, co:j.company, jid:j.id
-    })).filter(p=>p.y>0);
+      x: daysOnMarket(j), y: salaryValue(j), label:j.title, sal:salaryLabel(j), reg:j.region, co:j.company, jid:j.id, hot:isHot(j)
+    })).filter(p=>p.y>0 && p.x<=ROLE_WINDOW_DAYS);
+    // Hot roles are plotted as a flame rather than a dot.
+    const flameIcon=(()=>{
+      try{
+        const c=document.createElement('canvas'); const S=26; c.width=c.height=S;
+        const cx=c.getContext('2d'); cx.font='20px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+        cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText('🔥',S/2,S/2+1);
+        return c;
+      }catch(e){ return null; }
+    })();
     const colorFor=reg=>({seattle:'#3ecf94',la:'#ff8a5c',nz:'#c17bff',global:'#5b8cff'}[reg]||R.a);
     const tgt=targetSalary();
-    const maxDays=45;
+    const observed=pts.length?Math.max(...pts.map(p=>p.x)):0;
+    const maxDays=Math.min(ROLE_WINDOW_DAYS, Math.max(20, Math.ceil((observed+2)/10)*10));
     const hashline={id:'hashline',afterDatasetsDraw(chart){
       const {ctx,chartArea:{left,right},scales:{y}}=chart;
       const yy=y.getPixelForValue(tgt); if(yy<chart.chartArea.top||yy>chart.chartArea.bottom)return;
@@ -6082,15 +6227,17 @@ function drawCharts(){
     charts.scatter=new Chart(sc,{type:'scatter',
       data:{datasets:[{data:pts,
         backgroundColor:pts.map(p=>colorFor(p.reg)+(rm?'ee':'cc')),borderColor:rm?'#0b1019':pts.map(p=>colorFor(p.reg)),
-        pointRadius:rm?11:7,pointHoverRadius:rm?15:11,borderWidth:rm?2.5:1.5}]},
+        pointStyle:pts.map(p=>(p.hot&&flameIcon)?flameIcon:'circle'),
+        pointRadius:pts.map(p=>p.hot?(rm?13:10):(rm?11:7)),
+        pointHoverRadius:pts.map(p=>p.hot?(rm?17:14):(rm?15:11)),borderWidth:rm?2.5:1.5}]},
       options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:10}},
         onClick:(e,els)=>{ if(els.length){ const p=charts.scatter.data.datasets[0].data[els[0].index]; if(p&&p.jid) openDossier(p.jid); } },
         onHover:(e,els)=>{ e.native.target.style.cursor=els.length?'pointer':'default'; },
         plugins:{legend:{display:false},tooltip:{titleFont:{size:rm?16:13},bodyFont:{size:rm?14:12},callbacks:{
           label:c=>`${c.raw.co} — ${c.raw.label}`,
-          afterLabel:c=>`${c.raw.sal}  ·  ${c.raw.x} day(s) on market · click to open`}}},
+          afterLabel:c=>`${c.raw.sal}  ·  ${c.raw.x} day(s) on market${c.raw.hot?' · 🔥 hot':''} · click to open`}}},
         scales:{
-          x:{title:{display:true,text:'Days on market (last 45 days)',color:tickc,font:{size:rm?15:12,weight:rm?'700':'400'}},grid:{color:rm?'rgba(120,160,235,.35)':gridc,lineWidth:rm?1.5:1},ticks:{color:tickc,precision:0,stepSize:5,font:{size:rm?13:11}},min:0,max:45},
+          x:{title:{display:true,text:`Days on market (last ${maxDays} days) · 🔥 = hot`,color:tickc,font:{size:rm?15:12,weight:rm?'700':'400'}},grid:{color:rm?'rgba(120,160,235,.35)':gridc,lineWidth:rm?1.5:1},ticks:{color:tickc,precision:0,stepSize:10,font:{size:rm?13:11}},min:0,max:maxDays},
           y:{title:{display:true,text:'Salary (USD)',color:tickc,font:{size:rm?15:12,weight:rm?'700':'400'}},grid:{color:rm?'rgba(120,160,235,.35)':gridc,lineWidth:rm?1.5:1},ticks:{color:tickc,font:{size:rm?13:11}},
              ticks:{color:tickc,callback:v=>'$'+(v/1000)+'K'},min:0,max:250000}
         }},
@@ -7326,6 +7473,9 @@ function essaysView(){
   const store=essayStore();
   const started=roles.filter(x=>store[x.id]&&Object.keys(store[x.id].answers||{}).length).length;
   const confirmed=roles.filter(x=>store[x.id]&&store[x.id].src==='pasted').length;
+  // Anything already started stays visible regardless of rank.
+  const touched=roles.filter(x=>store[x.id]);
+  const shortlist=[...new Set([...touched, ...roles])].slice(0,40);
   return `${guestStrip()}
     ${viewHead('Application Essays','Open-ended questions on job and internship applications · answers drafted in your voice from your résumé, capstone and ERAU coursework','Essay Bank')}
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin:2px 0 4px">
@@ -7344,7 +7494,8 @@ function essaysView(){
         <p class="subtle" style="margin:6px 0 0;line-height:1.5;font-size:var(--fs-2xs)">${esc(essayDraft(p.k,null).split('\n')[0].slice(0,180))}…</p>
       </div>`).join('')}
     </div></div>
-    ${roles.length?`<div class="fullwidth">${jobListPanel(roles,'All roles · open a dossier to draft its essays',{paginate:true,va:'Jobs'})}</div>`
+    ${roles.length?`<div class="fullwidth">${jobListPanel(shortlist,`Best ${shortlist.length} of ${roles.length} by match · open a dossier to draft its essays`,{paginate:true,va:'Jobs'})}</div>
+      <p class="subtle" style="margin:10px 2px 0;line-height:1.55">Only the strongest matches are listed here to keep this page quick. Every one of the ${roles.length} roles in scope carries the same question set inside its own dossier — open any role from <b>Jobs</b> or <b>Internships</b>.</p>`
       :`<div class="panel"><div class="pb"><div class="empty"><div class="big">No roles loaded</div><div>Nothing is in the current pool for ${esc((REGIONS[region]||{}).short||'this region')}. The seeded answers above are ready regardless — they do not depend on a posting.</div></div></div></div>`}`;
 }
 function dossierHTML(j){
@@ -7356,7 +7507,7 @@ function dossierHTML(j){
     <div class="dt-flag">📁 Strategic Intel Dossier · Active Focus Lock</div>
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
       <button class="colg" data-company="${esc(j.company)}" title="Open ${esc(j.company)}'s company profile" style="background:${companyLogoBg(j.company)};border:0;cursor:pointer">${esc(companyInitials(j.company))}</button>
-      <h2 style="margin:0">${esc(j.title)} ${isHot(j)?'<span class="hot" style="font-size:var(--fs-2xs);vertical-align:middle">HOT</span>':''}</h2>
+      <h2 style="margin:0">${esc(j.title)} ${tempBadge(j,'var(--fs-d3)')}</h2>
     </div>
     <div class="dco"><b class="colink" data-company="${esc(j.company)}" title="Open ${esc(j.company)}'s company profile">${esc(j.company)}</b> · ${esc(j.location)} · ${esc(R.short)} · <span class="subtle">${daysOnMarket(j)} days on market</span></div>
     <div class="dtagrow"><span class="dsal">${salaryLabel(j)}</span>${settings.planetRanks?planetRow(j.planets):''}<span class="chip">${esc(j.type)}</span><span class="chip reloc">🧳 ${esc(j.reloc)}</span><span class="chip" style="color:${matchColor(j.match)}">Match ${j.match}%</span></div>
@@ -7454,7 +7605,7 @@ function sharedRoleView(j){
     <div class="modal" style="width:100%;margin:0">
       <div class="dossier-top">
         <div class="dt-flag">🔗 Shared role · read-only snapshot</div>
-        <h2>${esc(j.title)} ${isHot(j)?'<span class="hot" style="font-size:var(--fs-2xs);vertical-align:middle">HOT</span>':''}</h2>
+        <h2>${esc(j.title)} ${tempBadge(j,'var(--fs-d3)')}</h2>
         <div class="dco"><b>${esc(j.company)}</b> · ${esc(j.location)} · ${esc(R.short)} · <span class="subtle">${daysOnMarket(j)} days on market</span></div>
         <div class="dtagrow"><span class="dsal">${salaryLabel(j)}</span><span class="chip">${esc(j.type)}</span><span class="chip reloc">🧳 ${esc(j.reloc)}</span><span class="chip" style="color:${matchColor(j.match)}">Match ${j.match}%</span></div>
       </div>
@@ -8108,7 +8259,7 @@ async function verifyLiveJobs(){
     const c=window.supabase.createClient(SB_URL,SB_KEY);
     const {count,error}=await c.from('jobs').select('*',{count:'exact',head:true}); if(error) throw error;
     const {data}=await c.from('jobs').select('company,title,location,url,location_hub,match').order('posting_age',{ascending:true}).limit(6);
-    const {data:all}=await c.from('jobs').select('location_hub');
+    const all=await sbAll(c,'jobs','location_hub');
     const hubs={}; (all||[]).forEach(r=>{hubs[r.location_hub]=(hubs[r.location_hub]||0)+1;});
     const rows=(data||[]).map(j=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)"><span style="min-width:0"><b style="color:var(--text)">${esc(j.title)}</b><br><span class="subtle">${esc(j.company)} · ${esc(j.location||'')} · ${j.match||0}%</span></span><a href="${esc(j.url)}" target="_blank" rel="noreferrer" style="color:var(--a3);white-space:nowrap;font-size:var(--fs-sm)">real link ↗</a></div>`).join('');
     out.innerHTML=`<div style="color:var(--good);font-weight:600;margin-bottom:5px">✔ ${count??0} live role(s) in Supabase</div>
@@ -8155,17 +8306,6 @@ function drawerHTML(){
         <div class="field"><label>Google email with owner access</label><input id="setOwner" placeholder="you@lisaney.com" value="${esc(OWNER_EMAIL)}"></div>
         <p class="subtle">Sign-ins from this address (or any <b>@lisaney.com</b>) get full owner control. Everyone else is read-only.</p>
       </div>
-      <div class="dsec"><h4>🔑 Claude API Key</h4>
-        <p class="subtle" style="margin:0 0 9px;line-height:1.55">Powers <b>Tailored Résumé</b>, bullet rewriting, essay drafting and AI Re-Score. Stored in this browser only — never synced to Supabase, never sent anywhere but api.anthropic.com. Paste a new key here any time you rotate it; saving replaces the old one.</p>
-        <div id="aiKeyState" style="font-size:var(--fs-sm);margin:0 0 9px;line-height:1.5"></div>
-        <div class="field"><label>Anthropic API key <span class="subtle">starts sk-ant-</span></label><input id="setAiKey" type="password" autocomplete="off" placeholder="sk-ant-api03-…"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="dbtn primary" id="saveAiKey" style="flex:1;min-width:110px">Save key</button>
-          <button class="dbtn" id="testAiKey">Test</button>
-          <button class="dbtn" id="clearAiKey">Remove</button>
-        </div>
-        <div class="savemsg" id="aiKeyMsg"></div>
-      </div>
       <div class="dsec"><h4>🛰 Résumé Refresh</h4>
         <p class="subtle" style="margin:0 0 9px">Drop a fresh PDF anytime your skills or network level up — each upload becomes a new revision and instantly powers matching + every role's <b>Convert Résumé</b>.</p>
         <label class="upload" id="resumeDrop"><input type="file" id="resumeFile" accept="application/pdf" hidden>
@@ -8185,6 +8325,17 @@ function drawerHTML(){
       :`<div class="dsec"><h4>Database Connection</h4>
         <div class="guestbar" style="border-radius:var(--r)">🔒 <b>Owner-only.</b> Database keys &amp; data entry are locked in guest mode. <span class="gswitch" id="guestSwitch2">Sign in as owner</span></div>
       </div>`}
+      <div class="dsec"><h4>🔑 Claude API Key</h4>
+        <p class="subtle" style="margin:0 0 9px;line-height:1.55">Powers <b>Tailored Résumé</b>, bullet rewriting, essay drafting and AI Re-Score. Stored in this browser only — never synced to Supabase, never sent anywhere but api.anthropic.com. Paste a new key here any time you rotate it; saving replaces the old one.</p>
+        <div id="aiKeyState" style="font-size:var(--fs-sm);margin:0 0 9px;line-height:1.5"></div>
+        <div class="field"><label>Anthropic API key <span class="subtle">starts sk-ant-</span></label><input id="setAiKey" type="password" autocomplete="off" placeholder="sk-ant-api03-…"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="dbtn primary" id="saveAiKey" style="flex:1;min-width:110px">Save key</button>
+          <button class="dbtn" id="testAiKey">Test</button>
+          <button class="dbtn" id="clearAiKey">Remove</button>
+        </div>
+        <div class="savemsg" id="aiKeyMsg"></div>
+      </div>
       <div class="dsec"><h4>Data Source</h4>
         <div class="seg3" id="dsSeg">
           <button data-ds="auto" class="${settings.dataSource==='auto'?'on':''}">Auto</button>
@@ -8217,7 +8368,7 @@ function drawerHTML(){
       <div class="dsec"><h4>Display</h4>
         <div class="swrow"><div class="si"><b>📖 Readable Mode</b><span>Bigger text, higher contrast, no moving backgrounds — for astigmatism/low-vision</span></div><div class="${sw(settings.readableMode)}" data-toggle="readableMode"></div></div>
         <div class="swrow"><div class="si"><b>Planet rankings</b><span>Opportunity quality 0–5 🪐</span></div><div class="${sw(settings.planetRanks)}" data-toggle="planetRanks"></div></div>
-        <div class="swrow"><div class="si"><b>Hot job badges</b><span>Flag roles ≤ 7 days old</span></div><div class="${sw(settings.hotBadges)}" data-toggle="hotBadges"></div></div>
+        <div class="swrow"><div class="si"><b>Listing temperature</b><span>🔥 Hot (≤${HOT_DAYS}d + ${HOT_MATCH_FLOOR}%+ match) · Warm (≤10d) · Lukewarm (≤30d) · Cold (≤${ROLE_WINDOW_DAYS}d)</span></div><div class="${sw(settings.hotBadges)}" data-toggle="hotBadges"></div></div>
         <div class="swrow"><div class="si"><b>Weather widgets</b><span>Regional climate header</span></div><div class="${sw(settings.weather)}" data-toggle="weather"></div></div>
         <div class="swrow"><div class="si"><b>Relocation dossiers</b><span>Cost, tax, housing sidebar</span></div><div class="${sw(settings.relocation)}" data-toggle="relocation"></div></div>
       </div>
@@ -8230,7 +8381,7 @@ function drawerHTML(){
       </div>
       ${removedRolesPanel()}
       ${canEdit()?`<div class="dsec"><h4>Live scraping</h4>
-        <p class="subtle" style="margin:0 0 10px;line-height:1.55">The scrape runs on GitHub at <b>6:00 AM Central</b> every day whether or not this page is open (next run ${nextScrapeLabel()}). <b>Refresh roles</b> starts one on demand.</p>
+        <p class="subtle" style="margin:0 0 10px;line-height:1.55">The scrape runs on GitHub at <b>6:00 AM Central</b> every day whether or not this page is open (next run ${nextScrapeLabel()}). <b>Refresh roles</b> starts one on demand. If a morning run writes nothing — a rate limit, a quota, a network blip — it retries itself at about 10am, 2pm and 6pm Central until one completes, so a bad run costs hours rather than a whole day.</p>
         <p class="subtle" style="margin:0 0 10px;line-height:1.55">Best setup is the <b>trigger-scrape</b> Edge Function, which keeps the GitHub token in Supabase instead of in this browser — see the setup portal. The fields below are the fallback if you would rather not deploy it.</p>
         <div class="field"><label>GitHub repo <span class="subtle">owner/name</span></label><input id="setGhRepo" placeholder="lisaney/orbital" value="${esc(localStorage.getItem('orbital.ghRepo')||'')}"></div>
         <div class="field"><label>Branch</label><input id="setGhBranch" placeholder="main" value="${esc(localStorage.getItem('orbital.ghBranch')||'main')}"></div>
@@ -8238,11 +8389,17 @@ function drawerHTML(){
         <div class="field"><label>Edge Function PIN <span class="subtle">only if you set ORBITAL_PIN</span></label><input id="setGhPin" placeholder="optional" value="${esc(localStorage.getItem('orbital.ghPin')||'')}"></div>
         <p class="subtle" style="margin:0;line-height:1.5">A token pasted here is stored in this browser only. Anyone with access to this device can read it — scope it to this one repo, nothing else.</p>
       </div>`:''}
-      <div class="dsec" style="position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--panel2) 22%);padding-top:14px;margin:0 -2px">
+      <div class="dsec"><h4>This build</h4>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="dbtn" href="setup.html" style="flex:1;min-width:130px;text-align:center">Setup portal →</a>
+          <a class="dbtn" href="install-guide.html" style="flex:1;min-width:130px;text-align:center">Plain-English guide</a>
+        </div>
+        <button class="dbtn" id="hardRefresh" style="width:100%;margin-top:8px">🔄 Force hard refresh</button>
+        <p class="subtle" style="margin:8px 0 0;font-family:'JetBrains Mono',monospace;font-size:var(--fs-nano);line-height:1.6">build ${esc(ORBITAL_BUILD)}<br>If this number is older than your last upload, the server is still serving the previous file.</p>
+      </div>
+      <div class="dsec" id="drawerFooter" style="position:sticky;bottom:0;background:var(--panel2);box-shadow:0 -10px 22px -8px rgba(4,6,12,.95);padding-top:14px;margin:0 -2px">
         <button class="dbtn primary" id="saveUpdateAll" style="width:100%;font-size:var(--fs-xl);padding:13px">💾 Save &amp; update everything</button>
         <div class="savemsg" id="saveAllMsg" style="text-align:center"></div>
-        <a class="dbtn" href="setup.html" style="display:block;text-align:center;margin-top:8px">Open full setup portal →</a>
-        <a class="dbtn" href="install-guide.html" style="display:block;text-align:center;margin-top:6px">What am I setting up? · plain-English guide</a>
       </div>
     </div>
   </div>`;
@@ -8691,6 +8848,7 @@ document.addEventListener('click',e=>{
   const cvt=e.target.closest('[data-convert]'); if(cvt){ convertResume(cvt.dataset.convert); }
   const ar=e.target.closest('[data-airescore]'); if(ar){ e.stopPropagation(); runAiReScore(ar.dataset.airescore); }
   const rg=e.target.closest('[data-resumegen]'); if(rg){ e.stopPropagation(); generateTailoredResume(rg.dataset.resumegen); }
+  const osx=e.target.closest('[data-opensettings]'); if(osx){ e.stopPropagation(); openDrawer(); setTimeout(()=>{ const el=$('#setAiKey'); if(el) el.focus(); },260); }
   const cai=e.target.closest('[data-copilot-ai]'); if(cai){ e.stopPropagation(); runCopilotAI(cai.dataset.copilotAi); }
   const epaste=e.target.closest('[data-essaypaste]'); if(epaste){ e.stopPropagation(); essayUsePasted(epaste.dataset.essaypaste); }
   const einfer=e.target.closest('[data-essayinfer]'); if(einfer){ e.stopPropagation(); essayInfer(einfer.dataset.essayinfer); }
@@ -8740,17 +8898,90 @@ document.addEventListener('click',e=>{
   const oc=e.target.closest('[data-copy]'); if(oc){ oc.textContent='Copied ✓'; setTimeout(()=>{const m={linkedin:'🔗 LinkedIn Connection',email:'✉ Cold Email Channel',referral:'🤝 Referral Request'};oc.innerHTML=m[oc.dataset.copy];},1400); }
 });
 function openDrawer(){ $('#drawerBg').classList.add('open'); $('#drawer').classList.add('open'); renderScrapeHealth(); }
+/* The old readout only knew about scrapes run FROM this browser (localStorage), so a
+   GitHub Actions run — which writes straight to Supabase and never touches this device —
+   always showed nothing. This version asks Supabase directly, so it answers the real
+   question: did roles actually land, when, and are they visible in this view or filtered
+   out. Local scrape health is kept underneath when present. */
 function renderScrapeHealth(){
   const box=$('#scrapeHealthBox'); if(!box) return;
-  try{
-    const h=JSON.parse(localStorage.getItem('orbital.scrapeHealth')||'null');
-    if(!h){ box.textContent=''; return; }
-    const when=new Date(h.when).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
-    const ok = h.attempted - (h.failedCompanies||[]).length;
-    const color = (h.failedCompanies||[]).length===0 ? 'var(--good)' : (h.failedCompanies||[]).length>h.attempted/2 ? 'var(--a4)' : 'var(--gold)';
-    box.innerHTML = `<b style="color:${color}">⬤ Last scrape health</b> — ${when} · ${ok}/${h.attempted} boards OK · ${h.total} roles synced` +
-      ((h.failedCompanies||[]).length ? `<div style="margin-top:4px;color:var(--dim)">Unreachable: ${h.failedCompanies.slice(0,8).join(', ')}${h.failedCompanies.length>8?'…':''}</div>` : '');
-  }catch(e){ box.textContent=''; }
+  box.innerHTML='<span class="subtle">Checking the roles pipeline…</span>';
+  const local=(()=>{ try{ return JSON.parse(localStorage.getItem('orbital.scrapeHealth')||'null'); }catch(e){ return null; } })();
+  const localLine=(()=>{
+    if(!local) return '';
+    const when=new Date(local.when).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+    const bad=(local.failedCompanies||[]).length, ok=local.attempted-bad;
+    const color = bad===0?'var(--good)':bad>local.attempted/2?'var(--a4)':'var(--gold)';
+    return `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><b style="color:${color}">⬤ Last scrape run from this browser</b> — ${when} · ${ok}/${local.attempted} boards OK · ${local.total} roles synced${bad?`<div style="margin-top:4px;color:var(--dim)">Unreachable: ${local.failedCompanies.slice(0,8).join(', ')}${local.failedCompanies.length>8?'…':''}</div>`:''}</div>`;
+  })();
+  const ago=(iso)=>{
+    const ms=Date.now()-(+new Date(iso)); if(!isFinite(ms)) return '';
+    const h=Math.floor(ms/3600000);
+    if(h<1) return Math.max(1,Math.floor(ms/60000))+' min ago';
+    if(h<48) return h+' hour'+(h===1?'':'s')+' ago';
+    return Math.floor(h/24)+' days ago';
+  };
+  (async()=>{
+    let head='', coverage='';
+    if(!SB_URL || !SB_KEY || !window.supabase){
+      head=`<div style="color:var(--gold)">⚠ Not connected to Supabase, so nothing GitHub scrapes can reach this page. Add the project URL and anon key above, then Save &amp; reconnect.</div>`;
+    } else {
+      try{
+        const c=window.supabase.createClient(SB_URL,SB_KEY);
+        const {count,error}=await c.from('jobs').select('*',{count:'exact',head:true});
+        if(error) throw error;
+        const {data:newest}=await c.from('jobs').select('timestamp').order('timestamp',{ascending:false}).limit(1);
+        const landed=newest&&newest[0]&&newest[0].timestamp;
+        let runLine='';
+        try{
+          const {data:runs}=await c.from('scrape_runs').select('*').order('started_at',{ascending:false}).limit(1);
+          if(runs&&runs.length){
+            const r=runs[0];
+            runLine=`<div style="margin-top:4px;color:var(--dim)">Newest scrape run logged ${esc(ago(r.started_at))}${r.status?' · status '+esc(String(r.status)):''}${(r.rows!=null)?' · '+esc(String(r.rows))+' rows written':''}</div>`;
+          } else {
+            runLine=`<div style="margin-top:4px;color:var(--dim)">No entries in <code>scrape_runs</code> — either the scrape has not run since the table was created, or it is not logging its runs.</div>`;
+          }
+        }catch(e){}
+        const vis=(()=>{ try{ return jobsForRegion().length; }catch(e){ return null; } })();
+        // Which configured boards actually produced rows — "where are the Blue Origin
+        // roles?" answered directly: present, filtered out, or never scraped.
+        try{
+          const cos=await sbAll(c,'jobs','company');
+          const have={}; (cos||[]).forEach(r=>{ if(r.company){ const k=String(r.company).trim().toLowerCase(); have[k]=(have[k]||0)+1; } });
+          const cfg=await fetch('companies.json?__t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+          const names=[];
+          const walk=(v)=>{
+            if(!v) return;
+            if(Array.isArray(v)) return v.forEach(walk);
+            if(typeof v==='object'){
+              if(typeof v.company==='string') names.push(v.company.trim());
+              Object.values(v).forEach(walk);
+            }
+          };
+          walk(cfg);
+          const uniq=[...new Set(names)].filter(Boolean);
+          if(uniq.length){
+            const missing=uniq.filter(n=>!have[n.toLowerCase()]);
+            const present=uniq.length-missing.length;
+            coverage=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><b>Board coverage</b> — ${present} of ${uniq.length} configured companies have rows in Supabase.`
+              + (missing.length?`<div style="margin-top:4px;color:var(--gold);line-height:1.5">Zero rows from: ${esc(missing.slice(0,14).join(', '))}${missing.length>14?` and ${missing.length-14} more`:''}.</div><div style="margin-top:4px;color:var(--dim);line-height:1.5">A board with zero rows either returned nothing matching the space-role gate, failed during the scrape, or has a stale entry in <code>resolved_tokens.json</code> — delete that file in the repo and re-run the scrape.</div>`:'')
+              + `</div>`;
+          }
+        }catch(e){}
+        if(!count){
+          head=`<div style="color:var(--a4)">✕ Supabase is reachable but the <b>jobs</b> table is empty. GitHub has not written any roles yet — check the Actions tab for the scrape workflow, or press <b>Fetch real jobs now</b> above to populate it from here.</div>`;
+        } else {
+          const stale=landed && (Date.now()-(+new Date(landed))) > 3*864e5;
+          head=`<div style="color:var(--good)">✓ ${count} roles are in Supabase${landed?` · newest posting landed ${esc(ago(landed))}`:''}.</div>${runLine}`
+            + (stale?`<div style="margin-top:4px;color:var(--gold)">Nothing new in over three days — the daily scrape may be failing silently. Check the GitHub Actions log.</div>`:'')
+            + (vis!=null?`<div style="margin-top:6px">${vis} of them are <b>visible right now</b> in ${esc((REGIONS[region]||{}).short||'this region')} on the ${esc(track==='intern'?'Internship':track==='earlycareer'?'Early-career':'Full-time')} track.${vis<count?` The other ${count-vis} are filtered out by region, track, the ${settings.matchFloor}% match floor, or the ${ROLE_WINDOW_DAYS}-day live window (internships ${INTERN_WINDOW_DAYS}d) — not missing.`:''}</div>`:'');
+        }
+      }catch(e){
+        head=`<div style="color:var(--a4)">✕ Could not read the jobs table: ${esc(e.message||String(e))}. If this says row-level security, the anon key cannot read <b>jobs</b> — re-run the policy section of SUPABASE-SCHEMA.sql.</div>`;
+      }
+    }
+    box.innerHTML=head+coverage+localLine;
+  })();
 }
 function closeDrawer(){ const d=$('#drawer'); if(d)d.classList.remove('open'); const b=$('#drawerBg'); if(b)b.classList.remove('open'); }
 function wireDrawer(){
@@ -8851,6 +9082,17 @@ function wireDrawer(){
   };
   const f=$('#setFloor'); if(f) f.oninput=e=>{ settings.matchFloor=+e.target.value; persistSettings(); const h=e.target.closest('.dsec').querySelector('h4'); h.textContent='Match Floor — '+settings.matchFloor+'%'; };
   if(f) f.onchange=()=>{ render(); openDrawer(); };
+  // Force hard refresh — clears HTTP/Cache-Storage copies and any stale service worker,
+  // then reloads with a cache-busting query. localStorage is deliberately untouched:
+  // it holds the API key, settings and notes.
+  const hr=$('#hardRefresh');
+  if(hr) hr.onclick=async()=>{
+    hr.textContent='Clearing…'; hr.disabled=true;
+    try{ if(window.caches&&caches.keys){ const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k))); } }catch(e){}
+    try{ if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations){ const rs=await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r=>r.unregister())); } }catch(e){}
+    try{ const u=new URL(location.href); u.searchParams.set('__fresh', Date.now()); location.replace(u.toString()); }
+    catch(e){ location.reload(); }
+  };
   // ---- Claude API key — set, rotate, test, remove. The field is never pre-filled with
   // the stored secret; the state line reports what is saved by its last four characters.
   function aiKeyStateHTML(){
