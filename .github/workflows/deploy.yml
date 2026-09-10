@@ -1,31 +1,28 @@
 name: Publish website to IONOS
 
-# Auto-uploads the Orbital website to jobs.lisaney.com (IONOS) every time you
-# change the repo — so you NEVER manually upload to IONOS again.
+# Auto-uploads the Orbital website to jobs.lisaney.com (IONOS) on every push.
 #
-# IONOS's "Secure FTP" is actually SFTP over SSH (port 22), not classic FTP/FTPS —
-# confirmed from IONOS → Hosting → your site → Connection data (Protocol: SFTP + SSH).
-# Plain FTP/FTPS against that host fails with "500 'AUTH': command unrecognized"
-# because the server simply doesn't speak FTP at all.
+# IONOS's "Secure FTP" is SFTP over SSH (port 22), not FTP/FTPS — plain FTP fails with
+# "500 'AUTH': command unrecognized" because the server does not speak FTP at all.
 #
-# ONE-TIME SETUP (in your GitHub repo → Settings → Secrets and variables → Actions):
+# ONE-TIME SETUP (repo → Settings → Secrets and variables → Actions):
 #   IONOS_FTP_SERVER   = Server/Host from IONOS Connection data (e.g. home703391031.1and1-data.host)
-#   IONOS_FTP_USERNAME = User name from IONOS Connection data (e.g. u90902675)
-#   IONOS_FTP_PASSWORD = the password you set for that SFTP/SSH user
-#   IONOS_REMOTE_PATH  = OPTIONAL. The folder that actually holds the live site, if the
-#                        SFTP login does not land in it (defaults to /).
-# (Find these in IONOS → Hosting → your site → SFTP, SSH & WebDAV → Connection data.)
+#   IONOS_FTP_USERNAME = User name from IONOS Connection data (e.g. acc1355230686)
+#   IONOS_FTP_PASSWORD = the password for that SFTP user
+#   IONOS_REMOTE_PATH  = OPTIONAL. Only needed if auto-detection picks the wrong folder.
+#                        Note IONOS scopes each SFTP user to a directory ("Directory"
+#                        column): for a user jailed to /jobs, its own root IS /jobs, so
+#                        this should stay unset rather than being set to /jobs.
 #
-# After that: any push to the repo re-publishes the site automatically. You can also
-# run it by hand from the Actions tab → "Publish website to IONOS" → Run workflow.
+# WHY THIS DOES THE TRANSFER BY HAND rather than with a marketplace action:
+#   wlixcc/SFTP-Deploy-Action runs `put -r ./_publish/ <remote>`, which copies the FOLDER
+#   into the target — everything landed in <remote>/_publish/, so the live URLs 404'd.
+#   Uploading the folder's CONTENTS instead needs a './_publish/*' glob, and a shell glob
+#   skips dotfiles, which silently dropped .htaccess (the file that carries the no-cache
+#   rules). Enumerating the files with find avoids both traps.
 #
-# TWO BUGS FIXED (both caused "GitHub isn't publishing to IONOS"):
-#  1. local_path was './_publish/*'. A shell glob does NOT match dotfiles, so .htaccess
-#     was silently never uploaded — which is why the no-cache rules in it were never in
-#     effect on the live site and every deploy looked stale. Now uploads the directory.
-#  2. The `paths:` filter only republished on a handful of files. Editing anything else
-#     (install-guide.html, tools.html, this workflow) looked like a failed publish
-#     because no run was ever triggered. The filter is gone: every push publishes.
+# The site folder is DETECTED, not assumed: whichever candidate directory already holds an
+# index.html is the one the web server serves. A wrong IONOS_REMOTE_PATH self-corrects.
 
 on:
   push:
@@ -53,13 +50,10 @@ jobs:
             [ -f "$f" ] && cp "$f" _publish/ && echo "  + $f"
           done
           [ -d assets ] && cp -r assets _publish/ || true
-          # .htaccess is a dotfile: GitHub's drag-and-drop uploader hides it, so it is easy
-          # to have a repo with no .htaccess at all. Then this loop silently skips it and the
-          # no-cache rules never reach the server — every publish looks stale in the browser.
           if [ ! -f .htaccess ]; then
             echo "::warning::.htaccess is missing from the repo, so the no-cache rules cannot be published and browsers will keep serving a cached index.html. Add it with GitHub > Add file > Create new file and type .htaccess as the filename."
           fi
-          # Publish stamp so you can confirm from a browser which upload is live:
+          # Publish stamp — the live proof of which commit is being served:
           # open jobs.lisaney.com/build.txt
           date -u +"%Y-%m-%dT%H:%M:%SZ  ${GITHUB_SHA}" > _publish/build.txt
           # version.json is what every page polls (no-store) to notice it is running a
@@ -90,58 +84,58 @@ jobs:
           fi
           echo "All three IONOS secrets are present."
 
-      # Where an SFTP login lands is NOT necessarily the folder the web server serves.
-      # This prints the real remote layout into the run log, so a publish that "succeeds"
-      # into the wrong directory is visible instead of silent.
-      - name: Show where SFTP actually lands (diagnostic)
-        continue-on-error: true
+      - name: Upload to IONOS (detects the site folder, keeps dotfiles)
         env:
           H: ${{ secrets.IONOS_FTP_SERVER }}
           U: ${{ secrets.IONOS_FTP_USERNAME }}
           P: ${{ secrets.IONOS_FTP_PASSWORD }}
-          RP: ${{ secrets.IONOS_REMOTE_PATH || '/' }}
+          RP: ${{ secrets.IONOS_REMOTE_PATH }}
         run: |
           sudo apt-get -qq update && sudo apt-get -qq install -y sshpass
-          printf 'pwd\nls -la\nls -la %s\nbye\n' "$RP" > /tmp/probe.sftp
-          echo "Login home, then the configured remote_path ($RP):"
-          sshpass -p "$P" sftp -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null \
-            -P 22 -b /tmp/probe.sftp "$U@$H" || echo "(probe failed — read the error above)"
 
-      - name: Upload website to IONOS via SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
-        with:
-          server: ${{ secrets.IONOS_FTP_SERVER }}
-          username: ${{ secrets.IONOS_FTP_USERNAME }}
-          password: ${{ secrets.IONOS_FTP_PASSWORD }}
-          port: 22
-          # Trailing slash, no glob — a '*' glob skips dotfiles and left .htaccess behind.
-          local_path: './_publish/'
-          # The SSH login folder is often NOT the docroot. If the verify step below fails,
-          # read the diagnostic listing above, find the folder that holds the live site
-          # (IONOS > Hosting > your site shows it too), and set it as the optional secret
-          # IONOS_REMOTE_PATH — no YAML edit needed.
-          remote_path: ${{ secrets.IONOS_REMOTE_PATH || '/' }}
-          sftp_only: true
-          delete_remote_files: false
+          # -oBatchMode=no matters: `sftp -b` turns BatchMode ON by default, which disables
+          # password authentication entirely, and sshpass then has nothing to answer —
+          # that is the "Permission denied (publickey,password)" this step used to print.
+          sf(){ sshpass -p "$P" sftp -oBatchMode=no -oStrictHostKeyChecking=no \
+                  -oUserKnownHostsFile=/dev/null -P 22 -b "$1" "$U@$H" 2>&1; }
 
-      # Prove where the bytes actually went. For a jailed user (IONOS "Directory" column)
-      # its root IS the site folder, so build.txt should appear in the first listing.
-      - name: List the remote folder after upload
-        continue-on-error: true
-        env:
-          H: ${{ secrets.IONOS_FTP_SERVER }}
-          U: ${{ secrets.IONOS_FTP_USERNAME }}
-          P: ${{ secrets.IONOS_FTP_PASSWORD }}
-          RP: ${{ secrets.IONOS_REMOTE_PATH || '/' }}
-        run: |
-          echo "Uploaded as user: $U   into remote_path: $RP"
-          printf 'ls -la %s\nls -la /jobs\nls -la /htdocs\nbye\n' "$RP" > /tmp/after.sftp
-          sshpass -p "$P" sftp -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null \
-            -P 22 -b /tmp/after.sftp "$U@$H" || true
-          echo "The folder above that now contains build.txt is where the site must be served from."
+          probe(){ printf 'ls -la %s\nbye\n' "$1" > /tmp/probe.sftp; sf /tmp/probe.sftp; }
 
-      # The upload action reports success as soon as the bytes are written to whatever
-      # folder it was pointed at. Only the live URL proves a publish happened, so ask it.
+          echo "== login home =="
+          probe . || true
+
+          TARGET=""
+          for c in "$RP" / /jobs /htdocs /html; do
+            [ -z "$c" ] && continue
+            echo "== candidate $c =="
+            OUT="$(probe "$c" || true)"
+            echo "$OUT"
+            case "$OUT" in *index.html*) TARGET="$c"; break;; esac
+          done
+
+          if [ -z "$TARGET" ]; then
+            echo "::error::Could not find a folder holding index.html on the server. Read the listings above, then set IONOS_REMOTE_PATH to the folder that serves jobs.lisaney.com."
+            exit 1
+          fi
+          echo "Publishing into: $TARGET   (user $U)"
+
+          # Explicit per-file puts: dotfiles included, directories created first.
+          # A leading '-' on mkdir tells sftp to carry on when the folder already exists.
+          B=/tmp/upload.sftp
+          : > "$B"
+          ( cd _publish && find . -mindepth 1 -type d -printf '%P\n' ) | while read -r d; do
+            echo "-mkdir $TARGET/$d" >> "$B"
+          done
+          ( cd _publish && find . -type f -printf '%P\n' ) | while read -r f; do
+            echo "put _publish/$f $TARGET/$f" >> "$B"
+          done
+          echo "ls -la $TARGET" >> "$B"
+          echo "bye" >> "$B"
+          echo "Transferring $(grep -c '^put ' "$B") files into $TARGET"
+          sf "$B"
+
+      # The transfer above reports success as soon as the bytes are written. Only the live
+      # URL proves a publish happened, so ask the website itself.
       - name: Verify the live site is serving this commit
         run: |
           URL="https://jobs.lisaney.com/build.txt?cb=${GITHUB_RUN_ID}"
@@ -155,5 +149,5 @@ jobs:
             esac
             sleep 10
           done
-          echo "::error::Bytes uploaded, but https://jobs.lisaney.com/build.txt is not serving ${GITHUB_SHA}. The upload almost certainly went to a folder the web server does not serve. Read the 'Show where SFTP actually lands' log above, then set the IONOS_REMOTE_PATH secret to the folder that holds the live index.html."
+          echo "::error::Bytes uploaded, but https://jobs.lisaney.com/build.txt is not serving ${GITHUB_SHA}. Read the folder listings in the upload step: the directory that received build.txt is not the one jobs.lisaney.com serves. Set IONOS_REMOTE_PATH to the correct folder."
           exit 1
