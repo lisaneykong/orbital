@@ -124,6 +124,22 @@ jobs:
           sftp_only: true
           delete_remote_files: false
 
+      # Prove where the bytes actually went. For a jailed user (IONOS "Directory" column)
+      # its root IS the site folder, so build.txt should appear in the first listing.
+      - name: List the remote folder after upload
+        continue-on-error: true
+        env:
+          H: ${{ secrets.IONOS_FTP_SERVER }}
+          U: ${{ secrets.IONOS_FTP_USERNAME }}
+          P: ${{ secrets.IONOS_FTP_PASSWORD }}
+          RP: ${{ secrets.IONOS_REMOTE_PATH || '/' }}
+        run: |
+          echo "Uploaded as user: $U   into remote_path: $RP"
+          printf 'ls -la %s\nls -la /jobs\nls -la /htdocs\nbye\n' "$RP" > /tmp/after.sftp
+          sshpass -p "$P" sftp -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null \
+            -P 22 -b /tmp/after.sftp "$U@$H" || true
+          echo "The folder above that now contains build.txt is where the site must be served from."
+
       # The upload action reports success as soon as the bytes are written to whatever
       # folder it was pointed at. Only the live URL proves a publish happened, so ask it.
       - name: Verify the live site is serving this commit
