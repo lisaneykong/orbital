@@ -12,6 +12,8 @@ name: Publish website to IONOS
 #   IONOS_FTP_SERVER   = Server/Host from IONOS Connection data (e.g. home703391031.1and1-data.host)
 #   IONOS_FTP_USERNAME = User name from IONOS Connection data (e.g. u90902675)
 #   IONOS_FTP_PASSWORD = the password you set for that SFTP/SSH user
+#   IONOS_REMOTE_PATH  = OPTIONAL. The folder that actually holds the live site, if the
+#                        SFTP login does not land in it (defaults to /).
 # (Find these in IONOS → Hosting → your site → SFTP, SSH & WebDAV → Connection data.)
 #
 # After that: any push to the repo re-publishes the site automatically. You can also
@@ -46,10 +48,17 @@ jobs:
           mkdir -p _publish
           for f in index.html setup.html install-guide.html START-HERE.html tools.html \
                    manifest.json orbital-logo.png orbital-config.js companies.json \
-                   coverage-seattle-la.html score-proof.html .htaccess; do
+                   coverage-seattle-la.html score-proof.html token-probe.html \
+                   heal-probe.html .htaccess; do
             [ -f "$f" ] && cp "$f" _publish/ && echo "  + $f"
           done
           [ -d assets ] && cp -r assets _publish/ || true
+          # .htaccess is a dotfile: GitHub's drag-and-drop uploader hides it, so it is easy
+          # to have a repo with no .htaccess at all. Then this loop silently skips it and the
+          # no-cache rules never reach the server — every publish looks stale in the browser.
+          if [ ! -f .htaccess ]; then
+            echo "::warning::.htaccess is missing from the repo, so the no-cache rules cannot be published and browsers will keep serving a cached index.html. Add it with GitHub > Add file > Create new file and type .htaccess as the filename."
+          fi
           # Publish stamp so you can confirm from a browser which upload is live:
           # open jobs.lisaney.com/build.txt
           date -u +"%Y-%m-%dT%H:%M:%SZ  ${GITHUB_SHA}" > _publish/build.txt
@@ -63,6 +72,41 @@ jobs:
           echo "Build stamp: $BUILD"
           echo "Staged for upload:" && ls -a _publish
 
+      # A publish that cannot possibly work should fail LOUDLY here rather than show a
+      # green check while nothing reaches the server.
+      - name: Check the IONOS secrets are actually set
+        env:
+          H: ${{ secrets.IONOS_FTP_SERVER }}
+          U: ${{ secrets.IONOS_FTP_USERNAME }}
+          P: ${{ secrets.IONOS_FTP_PASSWORD }}
+        run: |
+          MISSING=""
+          [ -z "$H" ] && MISSING="$MISSING IONOS_FTP_SERVER"
+          [ -z "$U" ] && MISSING="$MISSING IONOS_FTP_USERNAME"
+          [ -z "$P" ] && MISSING="$MISSING IONOS_FTP_PASSWORD"
+          if [ -n "$MISSING" ]; then
+            echo "::error::Repo secrets not set:$MISSING — Settings > Secrets and variables > Actions. Nothing can publish until these exist."
+            exit 1
+          fi
+          echo "All three IONOS secrets are present."
+
+      # Where an SFTP login lands is NOT necessarily the folder the web server serves.
+      # This prints the real remote layout into the run log, so a publish that "succeeds"
+      # into the wrong directory is visible instead of silent.
+      - name: Show where SFTP actually lands (diagnostic)
+        continue-on-error: true
+        env:
+          H: ${{ secrets.IONOS_FTP_SERVER }}
+          U: ${{ secrets.IONOS_FTP_USERNAME }}
+          P: ${{ secrets.IONOS_FTP_PASSWORD }}
+          RP: ${{ secrets.IONOS_REMOTE_PATH || '/' }}
+        run: |
+          sudo apt-get -qq update && sudo apt-get -qq install -y sshpass
+          printf 'pwd\nls -la\nls -la %s\nbye\n' "$RP" > /tmp/probe.sftp
+          echo "Login home, then the configured remote_path ($RP):"
+          sshpass -p "$P" sftp -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null \
+            -P 22 -b /tmp/probe.sftp "$U@$H" || echo "(probe failed — read the error above)"
+
       - name: Upload website to IONOS via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
@@ -72,14 +116,28 @@ jobs:
           port: 22
           # Trailing slash, no glob — a '*' glob skips dotfiles and left .htaccess behind.
           local_path: './_publish/'
-          # IONOS's web root for this account — most standard hosting plans use this path.
-          # If your site doesn't appear after a successful run, check IONOS -> Hosting ->
-          # your site for the exact web-root folder name and update this.
-          remote_path: '/'
+          # The SSH login folder is often NOT the docroot. If the verify step below fails,
+          # read the diagnostic listing above, find the folder that holds the live site
+          # (IONOS > Hosting > your site shows it too), and set it as the optional secret
+          # IONOS_REMOTE_PATH — no YAML edit needed.
+          remote_path: ${{ secrets.IONOS_REMOTE_PATH || '/' }}
           sftp_only: true
           delete_remote_files: false
 
-      - name: Confirm what went up
+      # The upload action reports success as soon as the bytes are written to whatever
+      # folder it was pointed at. Only the live URL proves a publish happened, so ask it.
+      - name: Verify the live site is serving this commit
         run: |
-          echo "Published $(date -u +%FT%TZ) from ${GITHUB_SHA}"
-          echo "Verify: https://jobs.lisaney.com/build.txt should show the same commit."
+          URL="https://jobs.lisaney.com/build.txt?cb=${GITHUB_RUN_ID}"
+          for i in 1 2 3 4 5 6; do
+            BODY="$(curl -fsS --max-time 20 -H 'Cache-Control: no-cache' "$URL" || true)"
+            echo "attempt $i: ${BODY:-<no response>}"
+            case "$BODY" in
+              *"${GITHUB_SHA}"*)
+                echo "Live site is serving ${GITHUB_SHA}. Publish confirmed."
+                exit 0;;
+            esac
+            sleep 10
+          done
+          echo "::error::Bytes uploaded, but https://jobs.lisaney.com/build.txt is not serving ${GITHUB_SHA}. The upload almost certainly went to a folder the web server does not serve. Read the 'Show where SFTP actually lands' log above, then set the IONOS_REMOTE_PATH secret to the folder that holds the live index.html."
+          exit 1
