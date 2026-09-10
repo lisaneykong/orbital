@@ -10,8 +10,42 @@ install, no command line, no local server. If you can copy & paste,
 you can do it.
 
 ------------------------------------------------------------
-NEW IN THIS VERSION   (build 2026-09-09.2)
+NEW IN THIS VERSION   (build 2026-09-09.6)
 ------------------------------------------------------------
+· THE MATCH REPORT IS NOW THE WHOLE DOSSIER. The download on
+  every role carries what the screen shows: role summary, day in
+  the life, culture, score build-up, requirement-by-requirement
+  coverage, coursework alignment, why-you're-suited and the
+  challenge, ERAU timeline, ATS parse with the keywords to add,
+  full salary breakdown against the lifestyle floor, relocation,
+  all ten application essays with word counts, outreach drafts,
+  alumni referral leads with live LinkedIn searches, the
+  pre-submit checklist, your saved notes, and the posting text
+  as an appendix.
+· CUSTOM COVER LETTER on every role, downloaded as a .docx
+  alongside the tailored résumé. Written from your master résumé
+  only; the space background is stated as graduate coursework,
+  not industry experience; anything only you can know is left as
+  a [bracketed slot] and the panel counts them for you.
+  "Convert Résumé" is gone — the tailored résumé replaced it.
+· HONEST AI FAILURES. Rate limits and overloads retry on their
+  own with backoff (up to three attempts, respecting the
+  server's retry-after). An empty Anthropic credit balance is
+  never retried, because retrying cannot fix it: the app says
+  the key works, the account is out of credit, nothing was
+  drafted, and links you to billing.
+· THE IONOS PUBLISH PROVES ITSELF. It fails loudly when the
+  secrets are missing, prints the folder the SFTP login actually
+  lands in, and passes only when jobs.lisaney.com/build.txt
+  shows the commit it just pushed. Set IONOS_REMOTE_PATH if the
+  log says the upload went somewhere the web server does not
+  serve. The old copy-paste workflow in START-HERE used FTPS,
+  which IONOS does not speak at all — replaced.
+· DEAD CODE REMOVED and the build stamp on setup.html,
+  START-HERE.html and install-guide.html now matches index.html,
+  so a fresh install no longer force-reloads those pages once.
+
+Carried over from build 2026-09-09.2:
 · THE WHOLE BOARD NOW LOADS. Supabase caps every reply at 1000
   rows and does it silently — a request for 2000 came back as
   exactly 1000 rows with no error at all. With 1722 roles
@@ -141,6 +175,10 @@ read, so the scraper has nothing to write with. The check catches it.
 
 To publish to IONOS automatically you also need three more:
   IONOS_FTP_SERVER · IONOS_FTP_USERNAME · IONOS_FTP_PASSWORD
+
+Optional fourth, only if the SFTP login does not land in the folder the site is
+served from (the publish workflow prints that folder and tells you):
+  IONOS_REMOTE_PATH
 
 ------------------------------------------------------------
 ONE THING THAT NEEDS THE INTERNET

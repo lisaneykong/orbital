@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<meta name="orbital-build" content="2026-09-08.1" />
+<meta name="orbital-build" content="2026-09-09.6" />
 <script>
 (function(){
   try{
@@ -332,36 +332,89 @@ jobs:
             <div class="codewrap" style="margin-top:12px">
               <div class="codebar"><span>.github/workflows/deploy.yml</span><button class="copybtn" data-copy="ymlDeploy">Copy</button></div>
 <pre id="ymlDeploy">name: Publish website to IONOS
+# IONOS "Secure FTP" is SFTP over SSH on port 22. Plain FTP/FTPS cannot connect at all.
 on:
   push:
     branches: [ main, master ]
-    paths:
-      - 'index.html'
-      - 'setup.html'
-      - 'START-HERE.html'
-      - 'manifest.json'
-      - 'orbital-logo.png'
-      - 'assets/**'
   workflow_dispatch: {}
+concurrency:
+  group: ionos-publish
+  cancel-in-progress: true
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Upload website to IONOS via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+
+      - name: Stage the public website files
+        run: |
+          mkdir -p _publish
+          for f in index.html setup.html install-guide.html START-HERE.html tools.html \
+                   manifest.json orbital-logo.png orbital-config.js companies.json \
+                   coverage-seattle-la.html score-proof.html token-probe.html \
+                   heal-probe.html .htaccess; do
+            [ -f "$f" ] &amp;&amp; cp "$f" _publish/ &amp;&amp; echo "  + $f"
+          done
+          [ -d assets ] &amp;&amp;&amp;&amp; cp -r assets _publish/ || true
+          if [ ! -f .htaccess ]; then
+            echo "::warning::.htaccess is missing from the repo, so the no-cache rules cannot publish. Add it with Add file > Create new file and type .htaccess as the name."
+          fi
+          date -u +"%Y-%m-%dT%H:%M:%SZ  ${GITHUB_SHA}" > _publish/build.txt
+          BUILD=$(sed -n 's/.*name="orbital-build" content="\([^"]*\)".*/\1/p' index.html | head -1)
+          if [ -z "$BUILD" ]; then echo "::error::no orbital-build meta in index.html"; exit 1; fi
+          printf '{"build":"%s","commit":"%s","published":"%s"}\n' \
+            "$BUILD" "$GITHUB_SHA" "$(date -u +%FT%TZ)" > _publish/version.json
+
+      - name: Check the IONOS secrets are actually set
+        env:
+          H: ${{ secrets.IONOS_FTP_SERVER }}
+          U: ${{ secrets.IONOS_FTP_USERNAME }}
+          P: ${{ secrets.IONOS_FTP_PASSWORD }}
+        run: |
+          MISSING=""
+          [ -z "$H" ] &amp;&amp; MISSING="$MISSING IONOS_FTP_SERVER"
+          [ -z "$U" ] &amp;&amp; MISSING="$MISSING IONOS_FTP_USERNAME"
+          [ -z "$P" ] &amp;&amp; MISSING="$MISSING IONOS_FTP_PASSWORD"
+          if [ -n "$MISSING" ]; then
+            echo "::error::Repo secrets not set:$MISSING"; exit 1
+          fi
+
+      - name: Show where SFTP actually lands (diagnostic)
+        continue-on-error: true
+        env:
+          H: ${{ secrets.IONOS_FTP_SERVER }}
+          U: ${{ secrets.IONOS_FTP_USERNAME }}
+          P: ${{ secrets.IONOS_FTP_PASSWORD }}
+          RP: ${{ secrets.IONOS_REMOTE_PATH || '/' }}
+        run: |
+          sudo apt-get -qq update &amp;&amp;&amp;&amp; sudo apt-get -qq install -y sshpass
+          printf 'pwd\nls -la\nls -la %s\nbye\n' "$RP" > /tmp/probe.sftp
+          sshpass -p "$P" sftp -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null \
+            -P 22 -b /tmp/probe.sftp "$U@$H" || echo "(probe failed - read the error above)"
+
+      - name: Upload website to IONOS via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
           server: ${{ secrets.IONOS_FTP_SERVER }}
           username: ${{ secrets.IONOS_FTP_USERNAME }}
           password: ${{ secrets.IONOS_FTP_PASSWORD }}
-          protocol: ftps
-          exclude: |
-            **/.git*
-            **/.github/**
-            scraper.py
-            requirements.txt
-            README.txt
-          server-dir: ./</pre>
+          port: 22
+          local_path: './_publish/'
+          remote_path: ${{ secrets.IONOS_REMOTE_PATH || '/' }}
+          sftp_only: true
+          delete_remote_files: false
+
+      - name: Verify the live site is serving this commit
+        run: |
+          URL="https://jobs.lisaney.com/build.txt?cb=${GITHUB_RUN_ID}"
+          for i in 1 2 3 4 5 6; do
+            BODY="$(curl -fsS --max-time 20 -H 'Cache-Control: no-cache' "$URL" || true)"
+            echo "attempt $i: ${BODY:-&lt;no response&gt;}"
+            case "$BODY" in *"${GITHUB_SHA}"*) echo "Publish confirmed."; exit 0;; esac
+            sleep 10
+          done
+          echo "::error::Uploaded, but jobs.lisaney.com/build.txt does not show ${GITHUB_SHA}. The files went to a folder the web server does not serve - read the diagnostic listing above and set IONOS_REMOTE_PATH."
+          exit 1</pre>
             </div>
           </div>
         </details>
@@ -393,10 +446,11 @@ jobs:
         <div class="kv">
           <div class="cell"><div class="kk">IONOS_FTP_SERVER</div><div class="vv">your IONOS host (e.g. access-xxxx.webspace-data.io)</div></div>
           <div class="cell"><div class="kk">IONOS_FTP_USERNAME</div><div class="vv">your IONOS FTP username</div></div>
-          <div class="cell"><div class="kk">IONOS_FTP_PASSWORD</div><div class="vv">your IONOS FTP password</div></div>
+          <div class="cell"><div class="kk">IONOS_FTP_PASSWORD</div><div class="vv">your IONOS SFTP password</div></div>
         </div>
+        <span class="hint">Optional fourth: <b>IONOS_REMOTE_PATH</b> — only needed if the SFTP login does not land in the folder the website is served from. The workflow prints that folder in its log and tells you when to set this.</span>
       </li>
-      <li><b>Publish it.</b> Repo → <b>Actions</b> tab → <i>“Publish website to IONOS”</i> → <b>Run workflow</b>. In ~1 minute your site is live at jobs.lisaney.com. (From now on it re-publishes itself automatically whenever the repo changes.)</li>
+      <li><b>Publish it.</b> Repo → <b>Actions</b> tab → <i>“Publish website to IONOS”</i> → <b>Run workflow</b>. The last step checks the live site itself: it passes only when <a class="lnk" href="https://jobs.lisaney.com/build.txt" target="_blank">jobs.lisaney.com/build.txt</a> shows the commit it just pushed. A red X there means the upload landed somewhere the web server does not serve — the log names the folder to put in IONOS_REMOTE_PATH. (From then on it re-publishes on every push.)</li>
       <li><b>Open <a class="lnk" href="https://jobs.lisaney.com/setup.html" target="_blank">jobs.lisaney.com/setup.html</a></b>, paste your Supabase <b>Project URL</b> + <b>anon key</b> from Step 1, run the first fetch, and finish the GitHub gate. Log in with PIN <b>1725</b> to edit.</li>
     </ol>
     <div class="note good" style="border-width:2px">

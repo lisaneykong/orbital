@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<meta name="orbital-build" content="2026-09-09.2" />
+<meta name="orbital-build" content="2026-09-09.6" />
 <script>
 (function(){
   try{
@@ -1731,7 +1731,7 @@ let SB_URL = localStorage.getItem(LS.url) || (window.ORBITAL_CONFIG&&window.ORBI
 let SB_KEY = localStorage.getItem(LS.key) || (window.ORBITAL_CONFIG&&window.ORBITAL_CONFIG.anonKey) || '';
 let region = localStorage.getItem(LS.region) || 'global';
 let track = 'fulltime';     // fulltime | intern
-const ORBITAL_BUILD = '2026-09-09.2';   // shown in Settings so you can tell what the server is actually serving
+const ORBITAL_BUILD = '2026-09-09.6';   // shown in Settings so you can tell what the server is actually serving
 let query = '';
 let companyFilter = '';     // click a bar → filter to this company
 let favOnly = false;        // Favorites filter
@@ -1839,17 +1839,6 @@ const REGIONS = {
 const REGION_ORDER = ['global','seattle','la','nz','us','intl'];
 
 // jobs — salary is first-class (salMin/salMax). match >=70 firewall.
-const CAREERS={
-  'Boeing':'https://jobs.boeing.com/','Blue Origin':'https://www.blueorigin.com/careers','SpaceX':'https://www.spacex.com/careers/',
-  'Amazon':'https://www.amazon.jobs/','Stoke Space':'https://www.stokespace.com/careers/','Microsoft':'https://careers.microsoft.com/',
-  'Starfish Space':'https://www.starfishspace.com/careers/','Kuiper Systems':'https://www.amazon.jobs/en/teams/projectkuiper',
-  'Riot Games':'https://www.riotgames.com/en/work-with-us/jobs','Relativity Space':'https://www.relativityspace.com/careers',
-  'Vast Space':'https://www.vastspace.com/careers','Impulse Space':'https://www.impulsespace.com/careers','Snap Inc.':'https://careers.snap.com/',
-  'Northrop':'https://www.northropgrumman.com/careers','Apex Space':'https://www.apexspace.com/careers',
-  'Rocket Lab':'https://www.rocketlabusa.com/careers/','Xero':'https://www.xero.com/about/careers/','Datacom':'https://careers.datacom.com/',
-  'Stats NZ':'https://www.stats.govt.nz/about-us/careers/','Spark NZ':'https://careers.spark.co.nz/','Fisher & Paykel':'https://careers.fisherpaykel.com/',
-  'NZX':'https://www.nzx.com/careers','ANZ':'https://www.anz.com.au/careers/','Fulton Hogan':'https://www.fultonhogan.com/careers',
-};
 // Real ATS job boards — tokens mirror the VERIFIED roster in companies.json (probed
 // live 2026-09-05). Anything that 404'd lives in companies.json → needs_route and is
 // deliberately absent here: a link to a dead board is worse than no link.
@@ -2028,7 +2017,6 @@ function applyHint(j){
 const SPACE_COMPANIES=new Set(['SpaceX','Blue Origin','Rocket Lab','Relativity Space','Stoke Space','Impulse Space','Vast Space','Apex Space','Astranis','Varda Space','Planet Labs','Sierra Space','Maxar','Spire Global','Kepler Communications','BlackSky','Firefly Aerospace','Starfish Space','Aerojet Rocketdyne','Spaceflight Inc.','Xplore','Gravitics','Dawn Aerospace','Kea Aerospace','Zenno Astronautics','LeoLabs NZ']);
 const SPACE_WORDS=/\b(space|satellite|spacecraft|rocket|launch|orbit|orbital|payload|constellation|aerospace|mission)\b/i;
 const TITLE_EXCLUDE=/\b(propulsion|gnc|guidance|navigation|thermal|structural|stress|rf engineer|avionics|aerodynamics|flight dynamics|embedded|flight software|c\+\+|fpga|firmware|software engineer|design engineer|mechanical engineer|electrical engineer|technician|machinist|inspector|assembler|a&p|coordinator|administrative|data scientist|ux designer)\b/i;
-const TITLE_INCLUDE=/\b(program manager|tpm|technical program|mission integration|mission manager|operations manager|business operations|s&op|systems integration|systems engineer|systems engineering|requirements engineer|verification and validation|model-based systems|mbse|incose|solutions architect|lifecycle|launch operations|mission assurance|spaceport)\b/i;
 function spaceQualifies(j){
   const co=j.company||'';
   const companyOK = SPACE_COMPANIES.has(co) || SPACE_WORDS.test(co);
@@ -2241,9 +2229,9 @@ const OWNER = {
   // the résumé, not aspirational.
   skills:['Systems Engineering','Program Management','Technical Project Management','Requirements Development','Verification & Validation','Trade Studies','Schedule Management','Critical Path Management','Risk Management','Risk Mitigation','Lifecycle Management','Budget & Resource Planning','Capacity Planning','Stakeholder Management','Cross-functional Leadership','Process Automation','Root Cause Analysis','Supplier Negotiation','Regulatory Compliance','Operational Excellence','Mission Assurance','Space Mission Operations','Payload Integration','Agile Operations','Enterprise Systems','Data Analysis','P&L Ownership','Startup Scaling','MS Project','JIRA','Python','Tableau','Power BI','Salesforce'],
   education:[
-    ['Master of Space Operations','Embry-Riddle Aeronautical University, Worldwide','expected December 2026','Specialization in Systems Engineering'],
-    ['Graduate Certificate in Systems Engineering','Embry-Riddle Aeronautical University, Worldwide','expected December 2026','Requirements development and management, verification and validation, fault-tolerant design'],
-    ['Master of Science in Space Systems','Embry-Riddle Aeronautical University, Worldwide','expected September 2027','30 credit hours, College of Aviation (Worldwide & Online). Core coursework: Overview of the Space Ecosystem, Cybersecurity Applications in Space, Principles of Space Systems, Space Law and Policy, Earth Observation Systems, Human Spaceflight Systems, Space Transportation Systems, SATCOM Systems, Space Science Systems, Fundamentals of Systems Engineering.'],
+    ['Master of Space Operations','Embry-Riddle Aeronautical University, Worldwide','expected December 2026',''],
+    ['Graduate Certificate in Systems Engineering','Embry-Riddle Aeronautical University, Worldwide','expected February 2027','Requirements development and management, verification and validation, fault-tolerant design'],
+    ['Master of Science in Space Systems','Embry-Riddle Aeronautical University, Worldwide','expected August 2027','30 credit hours, College of Aviation (Worldwide & Online). Core coursework: Overview of the Space Ecosystem, Cybersecurity Applications in Space, Principles of Space Systems, Space Law and Policy, Earth Observation Systems, Human Spaceflight Systems, Space Transportation Systems, SATCOM Systems, Space Science Systems, Fundamentals of Systems Engineering.'],
     ['B.A. Theatre Arts, Minor in Dance','Catawba College, Salisbury, NC','2008',''],
   ],
   certs:[
@@ -2301,7 +2289,6 @@ try{
 OWNER.coreSkills = ['Systems Engineering','Requirements Development','Verification & Validation',
   'Trade Studies','Technical Project Management','Program Management','Space Mission Operations',
   'Mission Assurance','Payload Integration','Schedule Management','Critical Path Management','Python'];
-const OWNER_LEVEL = 3;   // targets Senior IC / Manager band (10+ yrs experience)
 // Two acceptable bands, not one point. Lisaney is a career-changer entering a new
 // industry mid-career: new-grad / associate on-ramps are a legitimate way in and must not
 // be scored as a bad fit, while lead/principal/director titles he won't be handed cold
@@ -2740,19 +2727,64 @@ async function pullTracking(){
    Anthropic API key (stored locally, never synced) via direct browser access -> clear error.
    This also FIXES the AI Re-Score on the deployed site: window.claude only exists inside
    Claude.ai artifacts, so on jobs.lisaney.com it had always failed silently. */
-async function aiComplete(prompt){
-  if(window.claude && window.claude.complete) return await window.claude.complete(prompt);
+/* Anthropic transport with honest failure classes. Retries ONLY what is genuinely
+   transient — rate limit (429), overload (529/5xx), dropped network — with backoff that
+   respects retry-after. An empty credit balance is never retried: Anthropic returns it as
+   a 400 invalid_request_error, no amount of retrying fixes it, so the UI says plainly that
+   credits are needed rather than spinning or falling back to invented text. */
+const AI_MAX_ATTEMPTS=3;
+function aiSleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function aiHttpError(status,type,detail){
+  const d=String(detail||'');
+  const e=new Error('API '+status+(type?' '+type:'')+(d?': '+d.slice(0,160):''));
+  e.status=status; e.apiType=type||''; e.detail=d;
+  e.code = (status===401||status===403||/authentication_error/i.test(type)) ? 'AUTH'
+    : /credit balance is too low|insufficient (funds|credit)|billing/i.test(d) ? 'BILLING'
+    : status===429 ? 'RATE'
+    : (status===529||status>=500) ? 'BUSY'
+    : status===0 ? 'NET' : 'OTHER';
+  return e;
+}
+async function anthropicPost(body,onNote){
   const key=(localStorage.getItem('orbital.anthropicKey')||'').trim();
   if(!key) throw new Error('NO_AI_KEY');
-  const r=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':key,
-      'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
-  });
-  if(!r.ok){ const t=await r.text(); throw new Error('API '+r.status+': '+t.slice(0,120)); }
-  const data=await r.json();
-  return (data.content||[]).map(c=>c.text||'').join('\n');
+  let last=null;
+  for(let attempt=1;attempt<=AI_MAX_ATTEMPTS;attempt++){
+    let r=null;
+    try{
+      r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':key,
+          'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify(body)
+      });
+    }catch(netErr){
+      last=aiHttpError(0,'network_error',(netErr&&netErr.message)||'request failed');
+    }
+    if(r && r.ok){ const data=await r.json(); return (data.content||[]).map(c=>c.text||'').join('\n'); }
+    if(r){
+      const raw=await r.text();
+      let type='',detail=raw;
+      try{ const j=JSON.parse(raw); type=(j.error&&j.error.type)||''; detail=(j.error&&j.error.message)||raw; }catch(_){}
+      last=aiHttpError(r.status,type,detail);
+    }
+    last.attempts=attempt;
+    const transient=last.code==='RATE'||last.code==='BUSY'||last.code==='NET';
+    if(transient && attempt<AI_MAX_ATTEMPTS){
+      const ra=r?parseFloat(r.headers.get('retry-after')||'0'):0;
+      const wait=Math.min(30000, ra>0?ra*1000:Math.pow(2,attempt-1)*2000);
+      if(onNote) onNote((last.code==='RATE'?'Rate limited by Anthropic':last.code==='BUSY'?'Anthropic is overloaded':'Network dropped')
+        +' \u2014 retrying in '+Math.round(wait/1000)+'s (attempt '+(attempt+1)+' of '+AI_MAX_ATTEMPTS+')\u2026');
+      await aiSleep(wait);
+      continue;
+    }
+    throw last;
+  }
+  throw last;
+}
+async function aiComplete(prompt,onNote){
+  if(window.claude && window.claude.complete) return await window.claude.complete(prompt);
+  return await anthropicPost({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]},onNote);
 }
 // An Anthropic auth failure (bad/rotated/revoked key) is recoverable — the UI should
 // offer a replacement field rather than printing the raw 401.
@@ -2788,16 +2820,72 @@ function wireAiKeySave(boxId, retry){
   b.onclick=()=>{ const v=(document.getElementById('aikey-'+boxId)||{}).value||'';
     if(v.trim()){ localStorage.setItem('orbital.anthropicKey', v.trim()); retry(); } };
 }
+// One classifier for every AI failure, so no box has to guess what a raw status means.
+function aiErrKind(e){
+  const m=String((e&&e.message)||e||'');
+  if(m==='NO_AI_KEY') return 'nokey';
+  if(e&&e.code) return {AUTH:'auth',BILLING:'billing',RATE:'rate',BUSY:'busy',NET:'net'}[e.code]||'other';
+  if(/credit balance is too low/i.test(m)) return 'billing';
+  if(aiAuthFailed(e)) return 'auth';
+  if(/\b429\b/.test(m)) return 'rate';
+  if(/\b529\b|overloaded/i.test(m)) return 'busy';
+  return 'other';
+}
+function aiErrText(e){
+  switch(aiErrKind(e)){
+    case 'nokey':   return 'No Anthropic key saved yet.';
+    case 'auth':    return 'Anthropic rejected the saved key \u2014 replace it in Settings.';
+    case 'billing': return 'The key works, but the Anthropic account is out of credit. Add credit, then retry \u2014 nothing was drafted.';
+    case 'rate':    return 'Rate limited \u2014 retried '+AI_MAX_ATTEMPTS+' times and still throttled. Wait a minute, then retry.';
+    case 'busy':    return 'Anthropic is overloaded \u2014 retried '+AI_MAX_ATTEMPTS+' times. Retry shortly.';
+    case 'net':     return 'Could not reach api.anthropic.com \u2014 check the connection, then retry.';
+    default:        return String((e&&e.message)||'unknown error');
+  }
+}
+// Exhausted balance is a billing fact, not a bug and not a transient hiccup: say so, and
+// do not pretend a retry loop will help.
+function aiBillingHTML(boxId){
+  return `<p class="subtle" style="margin:0 0 8px;color:var(--bad)">The saved key is valid, but the Anthropic account has no credit left \u2014 so nothing was drafted. No partial or invented text was written.</p>
+    <p class="subtle" style="margin:0 0 8px">Retrying cannot fix this. Add credit at <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener">console.anthropic.com &rarr; Billing</a>, then press Retry.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="dbtn primary" data-airetry="${boxId}">Retry</button>
+      <button class="dbtn" data-opensettings="1">Open Settings</button>
+    </div>`;
+}
+function aiRetryHTML(boxId,msg){
+  return `<p class="subtle" style="margin:0 0 8px;color:var(--bad)">${esc(msg)}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="dbtn primary" data-airetry="${boxId}">Retry</button>
+      <button class="dbtn" data-opensettings="1">Open Settings</button>
+    </div>`;
+}
+function aiErrorHTML(e,boxId){
+  const k=aiErrKind(e);
+  if(k==='nokey')   return aiKeyPromptHTML(boxId);
+  if(k==='auth')    return aiKeyRejectedHTML(boxId);
+  if(k==='billing') return aiBillingHTML(boxId);
+  return aiRetryHTML(boxId, aiErrText(e));
+}
+function wireAiError(boxId, retry){
+  wireAiKeySave(boxId, retry);
+  const b=document.querySelector(`[data-airetry="${boxId}"]`);
+  if(b) b.onclick=()=>retry();
+}
+// Live status line inside a drafting box — used to report retry waits as they happen.
+function aiNoter(box){
+  return t=>{ const p=box.querySelector('[data-ainote]'); if(p){ p.textContent=t; p.style.color='var(--gold)'; } };
+}
 async function runAiReScore(id){
   const j = findJobById(id); if(!j) return;
   const box = document.getElementById('airescore-'+id); if(!box) return;
   box.style.display='block';
-  box.innerHTML = `<h4>🧠 AI Semantic Re-Score</h4><p class="subtle" style="margin:0">Reading the full posting against your résumé…</p>`;
+  box.innerHTML = `<h4>🧠 AI Semantic Re-Score</h4><p class="subtle" style="margin:0" data-ainote>Reading the full posting against your résumé…</p>`;
+  const note=aiNoter(box);
   try{
     const resumeText = (OWNER.blurb||'') + ' Skills: ' + (OWNER.skills||[]).join(', ');
     const desc = (j.description||'').slice(0,3000);
     const prompt = `You are helping a candidate assess real job fit. Candidate background: """${resumeText}""" \n\nJob posting — ${j.title} at ${j.company}: """${desc || j.title}"""\n\nRespond with EXACTLY three lines, no extra text:\nSCORE: <0-100 integer>\nVERDICT: <one short sentence — genuine strengths AND gaps>\nWATCHOUT: <one real risk or mismatch to be aware of, or "None obvious">`;
-    const text = await aiComplete(prompt);
+    const text = await aiComplete(prompt, note);
     const scoreM = text.match(/SCORE:\s*(\d{1,3})/i);
     const verdictM = text.match(/VERDICT:\s*(.+)/i);
     const watchM = text.match(/WATCHOUT:\s*(.+)/i);
@@ -2808,12 +2896,8 @@ async function runAiReScore(id){
       ${watchM?`<p style="margin:0;font-size:var(--fs-md);color:var(--gold)">⚠ ${esc(watchM[1])}</p>`:''}
       <p class="subtle" style="margin-top:8px;font-size:var(--fs-2xs)">Semantic read from the full posting — a second opinion alongside (not a replacement for) the ${j.match}% keyword-based match above.</p>`;
   }catch(e){
-    if(String(e.message)==='NO_AI_KEY'){
-      box.innerHTML = `<h4>AI Semantic Re-Score</h4>${aiKeyPromptHTML('rescore-'+id)}`;
-      wireAiKeySave('rescore-'+id, ()=>runAiReScore(id));
-    } else {
-      box.innerHTML = `<h4>AI Semantic Re-Score</h4><p class="subtle" style="color:var(--bad)">Couldn't complete the AI re-score right now (${esc(e.message||'unknown error')}). Try again in a moment.</p>`;
-    }
+    box.innerHTML = `<h4>🧠 AI Semantic Re-Score</h4>${aiErrorHTML(e,'rescore-'+id)}`;
+    wireAiError('rescore-'+id, ()=>runAiReScore(id));
   }
 }
 // Looks up a job by id whether we're in live (Supabase) or sample data mode.
@@ -3209,26 +3293,16 @@ function mergeTailoring(master, delta){
 }
 
 /* ---------- 4. AI CALL (higher token budget than aiComplete) ---------- */
-async function aiCompleteLong(system, user, maxTokens){
+async function aiCompleteLong(system, user, maxTokens, onNote){
   if(window.claude && window.claude.complete){
     return await window.claude.complete(system + '\n\n' + user);
   }
-  const key=(localStorage.getItem('orbital.anthropicKey')||'').trim();
-  if(!key) throw new Error('NO_AI_KEY');
-  const r=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':key,
-      'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-6',
-      max_tokens:maxTokens||8000,
-      system:system,
-      messages:[{role:'user',content:user}]
-    })
-  });
-  if(!r.ok){ const t=await r.text(); throw new Error('API '+r.status+': '+t.slice(0,160)); }
-  const data=await r.json();
-  return (data.content||[]).map(c=>c.text||'').join('\n');
+  return await anthropicPost({
+    model:'claude-sonnet-4-6',
+    max_tokens:maxTokens||8000,
+    system:system,
+    messages:[{role:'user',content:user}]
+  }, onNote);
 }
 
 /* ---------- 5. FILENAME ---------- */
@@ -3242,14 +3316,15 @@ async function generateTailoredResume(jobId){
   const j = findJobById(jobId); if(!j) return;
   const box = document.getElementById('resumegen-'+jobId); if(!box) return;
   box.style.display='block';
-  box.innerHTML = `<h4>📄 Tailored Résumé</h4><p class="subtle" style="margin:0">Reading the posting and tailoring…</p>`;
+  box.innerHTML = `<h4>📄 Tailored Résumé</h4><p class="subtle" style="margin:0" data-ainote>Reading the posting and tailoring…</p>`;
+  const note=aiNoter(box);
 
   try{
     const master = masterResume();
     const posting = `${j.title} at ${j.company}\nLocation: ${j.location||j.location_hub||''}\n\n${(j.description||'').slice(0,6000)}\n\n${(j.requirements||'').slice(0,3000)}`;
     const user = `MASTER RÉSUMÉ JSON:\n${JSON.stringify(master)}\n\nJOB POSTING:\n"""${posting}"""`;
 
-    let text = await aiCompleteLong(RESUME_TAILOR_RULES, user, 3000);
+    let text = await aiCompleteLong(RESUME_TAILOR_RULES, user, 3000, note);
     text = text.replace(/```json|```/g,'').trim();
     const out = JSON.parse(text);
     const tailored = mergeTailoring(master, out);
@@ -3272,17 +3347,102 @@ async function generateTailoredResume(jobId){
         }">${esc(g.level)}</b> — ${esc(g.note)}</p>`).join('')}</div>`:''}
       <p class="subtle" style="margin-top:10px;font-size:var(--fs-2xs)">Open in Word and export to PDF before submitting. Read every line — the generator handles layout, not judgment.</p>`;
   }catch(e){
-    if(String(e.message)==='NO_AI_KEY'){
-      box.innerHTML = `<h4>Tailored Résumé</h4>${aiKeyPromptHTML('resume-'+jobId)}`;
-      wireAiKeySave('resume-'+jobId, ()=>generateTailoredResume(jobId));
-    } else if(aiAuthFailed(e)){
-      box.innerHTML = `<h4>Tailored Résumé</h4>${aiKeyRejectedHTML('resume-'+jobId)}`;
-      wireAiKeySave('resume-'+jobId, ()=>generateTailoredResume(jobId));
-    } else {
-      box.innerHTML = `<h4>Tailored Résumé</h4><p class="subtle" style="color:var(--bad)">Couldn't generate (${esc(e.message||'unknown error')}).</p>
-        <div style="margin-top:9px"><button class="dbtn" data-opensettings="1">Open Settings</button></div>`;
-    }
+    box.innerHTML = `<h4>Tailored Résumé</h4>${aiErrorHTML(e,'resume-'+jobId)}`;
+    wireAiError('resume-'+jobId, ()=>generateTailoredResume(jobId));
   }
+}
+
+/* =========================================================================
+   COVER LETTER — a per-role letter drafted from the master résumé only, downloaded
+   as a .docx alongside the tailored résumé and the match report.
+   ========================================================================= */
+const COVER_LETTER_RULES = `You draft cover letters for one real candidate. You are given her master résumé as JSON and one job posting.
+
+HARD RULES
+- Use ONLY facts present in the master résumé JSON. Never invent an employer, metric, credential, clearance, tool or date.
+- Her space and systems engineering background is GRADUATE COURSEWORK, not industry experience. State that boundary plainly once, in her own voice. Never imply otherwise.
+- Any company-specific reason (a program she follows, a launch she watched, a person she knows) is something only she can supply: leave it as a literal [bracketed slot] with a short instruction inside the brackets.
+- Mirror the posting's own terminology only where the experience behind it is real.
+- No clichés: no "I am writing to apply", no "passion for space", no "perfect fit", no "thrilled", no "leverage", no em-dash pileups.
+- Plain, matter-of-fact, first person. Short sentences. No metadiscourse.
+
+OUTPUT
+- The letter BODY only: 4 paragraphs separated by one blank line. No greeting, no sign-off, no subject line, no markdown.
+- 320-380 words total.
+- Paragraph 1: what she is applying for and the one-line honest summary of what she brings.
+- Paragraph 2: the most relevant real experience, with the specific numbers from the résumé.
+- Paragraph 3: the coursework/capstone, and the coursework-not-industry boundary.
+- Paragraph 4: why this company — with the [bracketed slot] — and a plain closing ask.`;
+function coverLetterParas(text){
+  return String(text||'').replace(/```/g,'')
+    .split(/\n\s*\n/).map(s=>s.replace(/\s*\n\s*/g,' ').trim())
+    .filter(p=>p && !/^(dear\b|sincerely|regards|best regards|yours)/i.test(p));
+}
+function buildCoverLetterDoc(d, j, paras){
+  const { Document, Paragraph, TextRun, ExternalHyperlink, AlignmentType, SectionType } = docx;
+  const r=(text,o={})=>new TextRun({text, font:RZ.FONT, size:o.size||RZ.BODY, bold:!!o.bold, color:o.color||RZ.COLOR});
+  const link=(label,url)=>new ExternalHyperlink({link:url, children:[ new TextRun({text:label, font:RZ.FONT, size:RZ.BODY, color:RZ.LINK, underline:{}}) ]});
+  const p=(children,o={})=>new Paragraph(Object.assign({children, spacing:{after:o.after===undefined?200:o.after}}, o.align?{alignment:o.align}:{}));
+  const kids=[];
+  kids.push(p([r(d.name,{size:RZ.NAME,bold:true})],{align:AlignmentType.CENTER, after:40}));
+  const cl=[r(d.contact.location), r(RZ.SEP), r(d.contact.phone), r(RZ.SEP), link(d.contact.email,'mailto:'+d.contact.email)];
+  kids.push(p(cl,{align:AlignmentType.CENTER, after:320}));
+  kids.push(p([r(new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}))],{after:200}));
+  kids.push(p([r('Hiring Team')],{after:0}));
+  kids.push(p([r(j.company||'')],{after:0}));
+  if(j.location) kids.push(p([r(j.location)],{after:200}));
+  kids.push(p([r('Re: '+(j.title||'')+(j.reqId?' · '+j.reqId:''),{bold:true})],{after:200}));
+  kids.push(p([r('Dear Hiring Team,')],{after:200}));
+  paras.forEach(t=>kids.push(p([r(t)],{after:200})));
+  kids.push(p([r('Sincerely,')],{after:240}));
+  kids.push(p([r(d.name)],{after:0}));
+  return new Document({sections:[{properties:{type:SectionType.CONTINUOUS}, children:kids}]});
+}
+async function generateCoverLetter(jobId){
+  const j = findJobById(jobId); if(!j) return;
+  const box = document.getElementById('coverletter-'+jobId); if(!box) return;
+  box.style.display='block';
+  box.innerHTML = `<h4>✉ Cover Letter</h4><p class="subtle" style="margin:0" data-ainote>Drafting against the posting and your résumé…</p>`;
+  const note=aiNoter(box);
+  try{
+    const master = masterResume();
+    const an = tailoringAnalysis(j);
+    const posting = `${j.title} at ${j.company}\nLocation: ${j.location||j.location_hub||''}\n\n${(j.description||'').slice(0,6000)}\n\n${(j.requirements||'').slice(0,2000)}`;
+    const user = `MASTER RÉSUMÉ JSON:\n${JSON.stringify(master)}\n\nJOB POSTING:\n"""${posting}"""\n\nREQUIREMENTS SHE ALREADY COVERS: ${an.rows.filter(r=>r.ok).map(r=>r.line).slice(0,6).join(' | ')||'(none detected)'}\nREQUIREMENTS WITH NO DETECTED COVERAGE: ${an.rows.filter(r=>!r.ok).map(r=>r.line).slice(0,6).join(' | ')||'(none)'}\nPOSTING LANGUAGE WORTH MIRRORING: ${an.mirror.join(', ')||'(none)'}`;
+    const text = await aiCompleteLong(COVER_LETTER_RULES, user, 1600, note);
+    const paras = coverLetterParas(text);
+    if(!paras.length) throw new Error('The model returned no usable paragraphs — try again.');
+    const blob = await docx.Packer.toBlob(buildCoverLetterDoc(masterResume(), j, paras));
+    const fn = `Kong_CoverLetter_${pascal(j.company)}_${pascal(j.title)}.docx`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=fn; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
+    const words = paras.join(' ').split(/\s+/).filter(Boolean).length;
+    const slots = (paras.join(' ').match(/\[[^\]]+\]/g)||[]).length;
+    coverLetterCache(jobId, paras.join('\n\n'));
+    box.innerHTML = `<h4>✉ Cover Letter</h4>
+      <p style="margin:0 0 8px;font-size:var(--fs-rg);color:#cfdcec">Downloaded <b>${esc(fn)}</b> · ${words} words</p>
+      ${slots?`<p style="margin:0 0 8px;font-size:var(--fs-md);color:var(--gold)">⚠ ${slots} bracketed slot${slots===1?'':'s'} left for you — the company-specific reason is the one thing the draft can't know.</p>`:''}
+      <div style="max-height:260px;overflow:auto;padding-right:6px;margin:0 0 9px">${paras.map(t=>`<p style="margin:0 0 10px;font-size:var(--fs-rg);color:#cfdcec;line-height:1.65">${esc(t)}</p>`).join('')}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="dbtn" data-clcopy="${esc(jobId)}">Copy text</button>
+        <button class="dbtn" data-coverletter="${esc(jobId)}">Draft again</button>
+      </div>
+      <p class="subtle" style="margin-top:10px;font-size:var(--fs-2xs)">Open in Word, fill the brackets, and read every line before sending — the generator handles structure, not judgment.</p>`;
+  }catch(e){
+    box.innerHTML = `<h4>✉ Cover Letter</h4>${aiErrorHTML(e,'cover-'+jobId)}`;
+    wireAiError('cover-'+jobId, ()=>generateCoverLetter(jobId));
+  }
+}
+function coverLetterCache(id, text){
+  try{
+    const all=JSON.parse(localStorage.getItem('orbital.coverLetters')||'{}');
+    if(text===undefined) return all[id];
+    all[id]={text, when:new Date().toISOString()};
+    localStorage.setItem('orbital.coverLetters', JSON.stringify(all));
+    return all[id];
+  }catch(e){ return null; }
 }
 
 /* =========================================================================
@@ -3376,10 +3536,6 @@ const HOT_DAYS = 5;
 // board. Recency still is not enough on its own.
 const HOT_MATCH_FLOOR = 10;
 function isHot(j){ return daysOnMarket(j)<=HOT_DAYS && (j.match||0) >= HOT_MATCH_FLOOR; }
-// The flame markup, used everywhere a hot role is labelled.
-function hotFlame(size){
-  return `<span class="hot" title="Hot — posted in the last ${HOT_DAYS} days and matches at least ${HOT_MATCH_FLOOR}%"${size?` style="font-size:${size};vertical-align:middle"`:''}>🔥</span>`;
-}
 
 // The live window: a role stays on the board for its first ROLE_WINDOW_DAYS days on market.
 // Internships keep a much longer tail on purpose — programs post 6-9 months before the
@@ -3416,6 +3572,39 @@ function tempBadge(j, size){
   return `<span class="tempchip t-${t.k}" title="${esc(tempTip(j))}">${t.label}</span>`;
 }
 function targetSalary(){ return +localStorage.getItem('orbital.targetGross') || 165000; }
+/* Credential dates in one place so no prose has to re-type them, and tense is derived
+   rather than written. On September 9 2026 the report was crediting the L'SPACE academy
+   with completed proposal work; the program had not started. Nothing is described in the
+   past until its end date has actually passed. */
+const CRED_SCHEDULE={
+  mso:  {label:'Master of Space Operations',                    ends:'2026-12-31', endsLabel:'December 2026'},
+  syse: {label:'Graduate Certificate in Systems Engineering',   ends:'2027-02-28', endsLabel:'February 2027'},
+  mss:  {label:'M.S. Space Systems',                            ends:'2027-08-31', endsLabel:'August 2027'},
+  npwee:{label:"NASA L'SPACE NPWEE", starts:'2026-09-10', startsLabel:'September 10, 2026', ends:'2026-12-15', endsLabel:'December 2026'},
+};
+function credState(k){
+  const c=CRED_SCHEDULE[k]; if(!c) return null;
+  const now=Date.now();
+  const started=c.starts?Date.parse(c.starts+'T00:00:00')<=now:true;
+  const done=c.ends?Date.parse(c.ends+'T23:59:59')<now:false;
+  return {...c, started, done};
+}
+function courseworkSentence(){
+  const degs=['mso','syse','mss'].map(credState);
+  const held=degs.filter(d=>d.done), pending=degs.filter(d=>!d.done);
+  const list=a=>a.map(d=>d.label+' ('+d.endsLabel+')').join(', ');
+  const np=credState('npwee');
+  const npt = np.done
+    ? "NASA L'SPACE NPWEE (Fall 2026) covered proposal development on the Lucy mission and a seat on a NASA proposal review panel."
+    : np.started
+      ? "NASA L'SPACE NPWEE (Fall 2026) is underway \u2014 proposal development on the Lucy mission and a seat on a NASA proposal review panel, running to "+np.endsLabel+"."
+      : "NASA L'SPACE NPWEE (Fall 2026) \u2014 accepted participant; program begins "+np.startsLabel+".";
+  const deg = pending.length
+    ? (held.length?'Completed: '+list(held)+'. Still in progress, and expected rather than held: '+list(pending)+'.'
+                  :'Three ERAU credentials are in progress, expected rather than held: '+list(pending)+'.')
+    : 'ERAU credentials complete: '+list(held)+'.';
+  return deg+' '+npt;
+}
 function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function planetRow(n){
   let h='<span class="planets">';
@@ -4108,25 +4297,76 @@ const JD_KEYWORDS={
   software:['Software Engineering','Cloud','AWS','CI/CD','Automation','Distributed Systems','Agile','APIs','Testing'],
   ops:['Business Operations','Process Automation','S&OP','Salesforce','CRM','P&L','Stakeholder Management','Pipeline Management','KPIs','Contract Negotiation'],
 };
-// owner transferable strengths: maps a required competency → how owner covers it
+/* ===== EVIDENCE TIERS =====
+   This used to print "Proven, direct experience" for anything a keyword touched — including
+   Systems Engineering, Mission Integration and Mission Assurance, none of which are paid
+   work. That is stronger language than the résumé itself uses and a bad thing to read the
+   night before an interview. Every competency now resolves to an evidence tier seeded from
+   the résumé, nothing reaches 'professional' unless it was a paying job, and an unlisted
+   skill defaults to 'adjacent' — never upward. */
+const EVIDENCE_TIERS={
+  professional:{rank:3, weight:1,   label:'Professional experience'},
+  coursework:  {rank:2, weight:0.5, label:'Graduate coursework — not industry experience'},
+  adjacent:    {rank:1, weight:0.35,label:'Adjacent / transferable'},
+  none:        {rank:0, weight:0,   label:'No experience'},
+};
+// Authoritative, read off the résumé. Anything absent here is 'adjacent' by default.
+const SKILL_EVIDENCE_SEED={
+  professional:['Program Management','Technical Project Management','Schedule Management','Budget & Resource Planning',
+    'Risk Management','Risk Mitigation','Supplier Negotiation','Cross-functional Leadership','Stakeholder Management',
+    'Process Automation','Root Cause Analysis','Capacity Planning','Lifecycle Management','MS Project','JIRA','Python',
+    'Tableau','Power BI','Salesforce','Data Analysis','P&L Ownership'],
+  coursework:['Systems Engineering','Requirements Development','Trade Studies'],
+  none:['Mission Assurance','Payload Integration','Mission Integration','Space Mission Operations',
+    'Modeling & Simulation','MBSE','SysML','DOORS','Jama','MATLAB'],
+};
+// The archetype vocabulary and the résumé wording differ for a handful of competencies.
+// Mapped explicitly rather than guessed at, so the tier is never inferred by accident.
+const COMPETENCY_ALIAS={
+  'requirements management':'Requirements Development',
+  'cross-functional coordination':'Cross-functional Leadership',
+  'stakeholder communication':'Stakeholder Management',
+  'business operations':'Program Management',
+  'data analytics':'Data Analysis',
+  's&op':'Capacity Planning',
+  'salesforce / crm':'Salesforce',
+};
+function skillEvidenceMap(){
+  if(skillEvidenceMap._m) return skillEvidenceMap._m;
+  const m={};
+  for(const tier of ['professional','coursework','none'])
+    for(const s of SKILL_EVIDENCE_SEED[tier]) m[s.toLowerCase()]=tier;
+  try{
+    const saved=JSON.parse(localStorage.getItem('orbital.skillEvidence')||'{}');
+    for(const k in saved) if(EVIDENCE_TIERS[saved[k]]) m[String(k).toLowerCase()]=saved[k];
+  }catch(e){}
+  return (skillEvidenceMap._m=m);
+}
+function evidenceOf(skill){
+  let s=String(skill||'').toLowerCase().trim();
+  if(COMPETENCY_ALIAS[s]) s=COMPETENCY_ALIAS[s].toLowerCase();
+  const m=skillEvidenceMap();
+  if(m[s]) return m[s];
+  let best=null;
+  for(const k in m){ if(s===k||s.includes(k)||k.includes(s)){ if(!best||k.length>best.length) best=k; } }
+  return best ? m[best] : 'adjacent';
+}
+// A competency like "Risk & Mission Assurance" bundles paid work (risk management) with work
+// never done (mission assurance). Splitting it and reporting BOTH parts is the only honest
+// answer; the badge takes the weakest part, so a row can never over-claim on a bundle.
+function evidenceFor(competency){
+  const parts=String(competency||'').split(/\s*(?:&|\/|,| and )\s*/i).map(s=>s.trim()).filter(Boolean);
+  const scored=(parts.length>1?parts:[String(competency||'')]).map(p=>({name:p, tier:evidenceOf(p)}));
+  const weakest=scored.reduce((a,b)=>EVIDENCE_TIERS[b.tier].rank<EVIDENCE_TIERS[a.tier].rank?b:a, scored[0]);
+  const mixed=scored.length>1 && scored.some(s=>s.tier!==scored[0].tier);
+  const weight=scored.reduce((a,s)=>a+EVIDENCE_TIERS[s.tier].weight,0)/scored.length;
+  return {tier:weakest.tier, label:EVIDENCE_TIERS[weakest.tier].label, weight, parts:scored, mixed,
+    note: mixed ? scored.map(s=>s.name+': '+EVIDENCE_TIERS[s.tier].label.toLowerCase()).join(' · ')
+                : EVIDENCE_TIERS[weakest.tier].label};
+}
 function coverFor(reqSkill){
-  const own=OWNER.skills.map(s=>s.toLowerCase());
-  const r=reqSkill.toLowerCase();
-  const direct=[
-    ['program management','program management'],['mission integration','mission integration'],
-    ['systems engineering','space mission'],['business operations','business operations'],
-    ['process automation','process automation'],['s&op','s&op'],['salesforce','salesforce'],
-    ['crm','crm'],['stakeholder','stakeholder'],['p&l','p&l'],['risk','risk'],['mission assurance','mission assurance'],
-    ['cross-functional','stakeholder'],['roadmap','pipeline'],['go-to-market','startup'],['product strategy','solutions'],
-    ['requirements management','lifecycle'],['agile','agile'],['ci/cd','process automation'],['data analytics','kpi'],
-    ['stakeholder communication','stakeholder'],['stakeholder management','stakeholder'],['problem solving','root cause'],
-  ];
-  for(const [k,needle] of direct){ if(r.includes(k) && own.some(s=>s.includes(needle))) return {lvl:'direct',note:'Proven, direct experience'}; }
-  // transferable (operations-adjacent or lightly held)
-  const transfer=['sql','analytics','statistical','a/b','prototyp','roadmap','go-to-market','cloud','aws','distributed','modeling','simulation','python','requirements'];
-  if(transfer.some(t=>r.includes(t))) return {lvl:'transfer',note:'Adjacent / transferable from ops & solutions work'};
-  // hard technical gaps
-  return {lvl:'gap',note:'Stretch — frame via systems/ops leadership, not hands-on build'};
+  const ev=evidenceFor(reqSkill);
+  return {lvl:ev.tier, note:ev.note, evidence:ev};
 }
 function archetypeFor(j){
   const t=(j.title||'').toLowerCase();
@@ -4137,11 +4377,15 @@ function skillsMatch(j){
   const arch=archetypeFor(j);
   const rows=arch.req.map(([skill,weight])=>({skill,weight,...coverFor(skill)}));
   const totW=rows.reduce((a,r)=>a+r.weight,0);
-  const gotW=rows.reduce((a,r)=>a+r.weight*(r.lvl==='direct'?1:r.lvl==='transfer'?0.5:0),0);
+  const gotW=rows.reduce((a,r)=>a+r.weight*(r.evidence?r.evidence.weight:0),0);
   const coverage=Math.round(gotW/totW*100);
-  const direct=rows.filter(r=>r.lvl==='direct').length;
-  const gaps=rows.filter(r=>r.lvl==='gap');
-  return {rows,coverage,direct,gaps,total:rows.length,blended:Math.round(coverage*0.55+(j.match||75)*0.45)};
+  // 'professional' is the only tier that may be counted as experience. Coursework and gaps
+  // are reported line by line, never totalled into a claim.
+  const professional=rows.filter(r=>r.lvl==='professional').length;
+  const coursework=rows.filter(r=>r.lvl==='coursework').length;
+  const gaps=rows.filter(r=>r.lvl==='none');
+  return {rows,coverage,professional,coursework,direct:professional,gaps,total:rows.length,
+    blended:Math.round(coverage*0.55+(j.match||75)*0.45)};
 }
 function matchColor(p){ return p>=85?'#37e0a0':p>=70?'#37d6e6':p>=55?'#f5c560':'#ff6f86'; }
 // Redundant icon+color encoding (not color alone — hard to distinguish with astigmatism/color
@@ -4202,15 +4446,20 @@ function atsBlock(j){
 }
 function skillsMatchBlock(j){
   const m=skillsMatch(j); const col=matchColor(m.coverage); const fit=lifestyleFit(j);
-  const lvlPill=l=>l==='direct'?'<span class="cv direct">✓ Direct</span>':l==='transfer'?'<span class="cv transfer">~ Transferable</span>':'<span class="cv gap">△ Stretch</span>';
+  const lvlPill=l=>({
+    professional:'<span class="cv direct">✓ Professional</span>',
+    coursework:'<span class="cv" style="background:rgba(193,123,255,.14);color:#d8b4ff;border-color:rgba(193,123,255,.38)">◐ Coursework</span>',
+    adjacent:'<span class="cv transfer">~ Adjacent</span>',
+    none:'<span class="cv gap">△ None</span>',
+  }[l]||'<span class="cv transfer">~ Adjacent</span>');
   const rows=m.rows.map(r=>`<tr><td><b>${esc(r.skill)}</b><span class="wt">${'●'.repeat(r.weight)}</span></td><td>${lvlPill(r.lvl)}</td><td class="nt">${esc(r.note)}</td></tr>`).join('');
   return `<div class="dblock"><h4>🎯 Required Skills → Your Alignment</h4>
     <div class="matchmeter">
       <div class="ringbig" style="background:conic-gradient(${col} ${m.coverage*3.6}deg, rgba(255,255,255,.08) 0)"><div style="width:50px;height:50px;border-radius:50%;background:var(--panel);display:grid;place-items:center;font-weight:700">${m.coverage}%</div></div>
-      <div class="mtext"><b style="color:${col}">${m.direct} of ${m.total} required competencies — direct match</b><span>Weighted coverage of what this posting actually screens for. Blended fit (skills + role signal): <b style="color:#fff">${m.blended}%</b>.</span></div>
+      <div class="mtext"><b style="color:${col}">${m.professional} of ${m.total} screened competencies are professional experience</b><span>${m.coursework?`${m.coursework} more ${m.coursework===1?'comes':'come'} from ERAU coursework rather than industry. `:''}Weighted coverage of what this posting screens for. Blended fit (skills + role signal): <b style="color:#fff">${m.blended}%</b>.</span></div>
     </div>
     <table class="sktab"><thead><tr><th>Required competency</th><th>You</th><th>Why</th></tr></thead><tbody>${rows}</tbody></table>
-    ${m.gaps.length?`<p class="gapnote">⚑ Position the ${m.gaps.map(g=>esc(g.skill)).join(' & ')} stretch as <b>systems-leadership over the build</b> — you ran the data/ops network managing delivery, not the hands-on hardware.</p>`:'<p class="gapnote" style="border-color:rgba(55,224,160,.3);background:rgba(55,224,160,.06);color:#bdf0d6">✓ Full coverage of the screened competencies — lead with proven, direct experience.</p>'}
+    ${m.gaps.length?`<p class="gapnote">⚑ You have no experience in ${m.gaps.map(g=>esc(g.skill)).join(' & ')}. Position that as <b>systems-leadership over the build</b> — you ran the data/ops network managing delivery, not the hands-on hardware — and do not describe it as experience.</p>`:'<p class="gapnote" style="border-color:rgba(55,224,160,.3);background:rgba(55,224,160,.06);color:#bdf0d6">✓ No outright gaps among the screened competencies. Lead only with the rows marked <b>Professional</b>.</p>'}
     <div class="solfit ${fit.ok===false?'under':''}"><div class="solh">🏠 Standard-of-living fit</div><p>${esc(fit.txt)}</p></div>
   </div>`;
 }
@@ -5717,7 +5966,7 @@ function candidatesView(){
       <div class="cs"><h4>Profile Summary</h4><p style="font-size:var(--fs-rg);color:#c8d6ea;line-height:1.6;margin:0">${esc(OWNER.blurb)}</p></div>
       <div class="cs">
         <h4>${cic("sat",14)} Résumé</h4>
-        <p class="subtle" style="margin:0 0 9px">Your active résumé powers matching + every role's "Convert résumé." Upload a fresh PDF anytime your skills level up.</p>
+        <p class="subtle" style="margin:0 0 9px">Your active résumé powers matching, the tailored résumé and the cover letter on every role. Upload a fresh PDF anytime your skills level up.</p>
         <label class="upload" id="resumeDropP"><input type="file" id="resumeFileP" accept="application/pdf" hidden>
           <span class="upic">${cic("rocket",22)}</span>
           <span class="uptext" id="resumeNameP">${esc('Current: '+resumeName())}</span>
@@ -5728,6 +5977,16 @@ function candidatesView(){
         </div>
         <div class="savemsg" id="resumeMsgP"></div>
         <div id="resumeHistoryP"></div>
+      </div>
+      <div class="cs">
+        <h4>${cic("doc",14)} Compensation floor</h4>
+        <p class="subtle" style="margin:0 0 9px">One number, read by the gold line on the Days-on-Market chart, the standard-of-living note in every dossier, and the recruiter-screen prompt in Strategy. Most of the roles you are targeting post $95K–$150K, so a floor of $${targetSalary().toLocaleString('en-US')} sits above the majority of them by design — lower it if you want the charts to reflect the market you are actually applying into.</p>
+        <div class="field"><label>Annual gross floor <span class="subtle">USD</span></label><input class="tinput" id="targetGross" type="number" min="1000" step="1000" value="${targetSalary()}"></div>
+        <div style="display:flex;gap:8px;margin-top:9px;flex-wrap:wrap">
+          <button class="dbtn primary" id="targetGrossSave">Save floor</button>
+          <button class="dbtn" id="targetGrossReset">↺ Reset to $165,000</button>
+        </div>
+        <div class="savemsg" id="targetGrossMsg"></div>
       </div>
       <div class="cs" style="border-bottom:0">
         <h4>${cic("doc",14)} Master résumé JSON</h4>
@@ -5913,7 +6172,7 @@ function skillRankPanel(){
 function strategyView(){
   const phases=[
     {n:'01',t:'Application',d:'Resume + tailored pitch submitted. Match ≥85% and ATS keywords woven in.',done:true},
-    {n:'02',t:'Recruiter Screen',d:'30-min call. Confirm comp range clears your $165K lifestyle floor + relocation.',done:true},
+    {n:'02',t:'Recruiter Screen',d:`30-min call. Confirm comp range clears your ${money(targetSalary())} lifestyle floor + relocation.`,done:true},
     {n:'03',t:'Hiring Manager',d:'Story-driven: 166% over quota, S&OP architecture, mission-integration framing.',done:false},
     {n:'04',t:'Technical / Assignment',d:'Take-home or panel. Frame SaaS automation as the data layer over hardware loops.',done:false},
     {n:'05',t:'Onsite / Loop',d:'Multi-interviewer day. Use the reverse-interview playbook to vet culture + fit.',done:false},
@@ -6403,19 +6662,8 @@ function jobDetail(j){
   };
 }
 function salaryBreakdownBlock(j){
-  const R=REGIONS[j.region]||REGIONS[region];
-  const gross=salaryValue(j); if(!gross) return '';
-  const reloc=R.reloc||{}; const floor=targetSalary();
-  // effective tax estimate per hub
-  const taxRate=j.region==='la'?0.093:j.region==='nz'?0.30:0.0;
-  const stateTax=Math.round(gross*taxRate);
-  const fed=Math.round(gross*0.18);
-  const net=gross-stateTax-fed;
-  const rentNum=parseInt(String(reloc.rent||'$2200').replace(/[^\d]/g,''))||2200;
-  const rentYr=rentNum*12;
-  const housingPct=Math.round(rentYr/net*100);
-  const leftover=net-rentYr;
-  const ok=gross>=floor;
+  const f=salaryFacts(j); if(!f) return '';
+  const {R, gross, floor, taxRate, stateTax, fed, net, rentYr, housingPct, leftover, ok}=f;
   const bar=(label,val,color)=>`<div class="brk"><span class="bl">${label}</span><div class="btk"><i style="width:${Math.max(4,Math.round(val/gross*100))}%;background:${color}"></i></div><span class="bv">${money(val)}</span></div>`;
   return `<div class="dblock"><h4>💵 Full Salary Breakdown · vs your standard of living</h4>
     <div class="brkwrap">
@@ -6431,26 +6679,16 @@ function salaryBreakdownBlock(j){
       <div><b style="color:${ok?'var(--good)':'var(--bad)'}">${ok?'✓ Clears':'△ Below'}</b><span>your ${money(floor)} lifestyle floor</span></div>
     </div>
     <p class="brknote">${ok
-      ? `At ${money(gross)} in ${esc(R.short)}, this sustains your 4-dog detached-home standard with ${money(leftover)} of annual headroom after housing — even against ${esc(R.short)}'s ${esc(reloc.col||'local')} cost of living.`
-      : `At ${money(gross)} in ${esc(R.short)}, you'd fall under your ${money(floor)} lifestyle floor once ${esc(R.short)}'s ${esc(reloc.col||'higher')} cost of living and the 4-dog detached-home requirement are factored in — negotiate up or weigh relocation trade-offs.`}</p>
+      ? `At ${money(gross)} in ${esc(R.short)}, this sustains your 4-dog detached-home standard with ${money(leftover)} of annual headroom after housing — even against ${esc(R.short)}'s ${esc(f.col)} cost of living.`
+      : `At ${money(gross)} in ${esc(R.short)}, you'd fall under your ${money(floor)} lifestyle floor once ${esc(R.short)}'s ${esc(f.col)} cost of living and the 4-dog detached-home requirement are factored in — negotiate up or weigh relocation trade-offs.`}</p>
   </div>`;
 }
 function relocationDetailBlock(j){
-  const r=(j.reloc||'').trim();
-  if(!r || r==='—') return `<div class="dblock"><h4>🧳 Relocation Assistance</h4><p style="margin:0;font-size:var(--fs-rg);color:#cfdcec">No relocation package listed for this role — confirm with the recruiter; many ${esc(j.company)} roles offer it case-by-case.</p></div>`;
-  const low=r.toLowerCase();
-  const perks=[];
-  if(/full/.test(low)) perks.push(['🚚','Full relocation','Door-to-door move covered — packing, freight, and transport.']);
-  if(/housing|temp/.test(low)) perks.push(['🏠','Temporary housing','Short-term housing while you settle in.']);
-  if(/sign-?on|bonus/.test(low)) perks.push(['💰','Sign-on bonus','Cash bonus that can offset out-of-pocket move costs.']);
-  if(/visa|sponsor/.test(low)) perks.push(['🛂','Visa sponsorship','Employer sponsors your work-visa pathway.']);
-  if(/4wd|allowance|stipend/.test(low)) perks.push(['🧭','Relocation allowance','Lump-sum stipend you allocate as needed.']);
-  if(/partial/.test(low)) perks.push(['📦','Partial relocation','A capped contribution toward moving expenses.']);
-  if(/regional/.test(low)) perks.push(['🗺️','Regional support','Assistance for an in-country/regional move.']);
-  if(!perks.length) perks.push(['🧳','Relocation offered',r]);
+  const rf=relocFacts(j);
+  if(!rf.offered) return `<div class="dblock"><h4>🧳 Relocation Assistance</h4><p style="margin:0;font-size:var(--fs-rg);color:#cfdcec">No relocation package listed for this role — confirm with the recruiter; many ${esc(j.company)} roles offer it case-by-case.</p></div>`;
   return `<div class="dblock"><h4>🧳 Relocation Assistance · this role</h4>
-    <p style="margin:0 0 10px;font-size:var(--fs-rg);color:#cfdcec">${esc(j.company)} offers <b style="color:var(--a3)">${esc(r)}</b> for this position. What that typically covers:</p>
-    <div class="reloperks">${perks.map(p=>`<div class="reloperk"><span class="ri">${p[0]}</span><div><b>${esc(p[1])}</b><span>${esc(p[2])}</span></div></div>`).join('')}</div>
+    <p style="margin:0 0 10px;font-size:var(--fs-rg);color:#cfdcec">${esc(j.company)} offers <b style="color:var(--a3)">${esc(rf.offered)}</b> for this position. What that typically covers:</p>
+    <div class="reloperks">${rf.perks.map(p=>`<div class="reloperk"><span class="ri">${p[0]}</span><div><b>${esc(p[1])}</b><span>${esc(p[2])}</span></div></div>`).join('')}</div>
     <p style="margin:9px 2px 0;font-size:var(--fs-xs);color:var(--dim)">For your move from Nashville with four dogs, confirm pet-transport coverage and a fenced-yard housing search — see the Relocation tab for the full ${esc((REGIONS[j.region]||REGIONS[region]).short)} dossier.</p></div>`;
 }
 // ---------------------------------------------------------------------
@@ -6565,86 +6803,46 @@ function internBlock(j){
     ${skillsHtml}</div>`;
 }
 function eligibilityBlock(j){
-  // Two ERAU credentials complete together in December 2026 (Master of Space Operations +
-  // Graduate Certificate in Systems Engineering); the M.S. Space Systems follows in
-  // September 2027, and NASA L'SPACE NPWEE sits alongside them.
-  const ft = j.type!=='Internship';
-  const note = ft
-    ? 'Two credentials complete in <b>December 2026</b>: ERAU\'s <b>Master of Space Operations</b> (Systems Engineering specialization) and the <b>Graduate Certificate in Systems Engineering</b>. A second master\'s, <b>M.S. Space Systems</b>, follows in <b>September 2027</b>. Full-time roles starting Q1 2027 align directly — flag start-date flexibility if they need someone sooner.'
-    : 'Internship timing fits the ERAU calendar — a summer or capstone-term placement lands before the December 2026 graduation, with the M.S. Space Systems continuing through September 2027.';
+  // Dates and tense both come from CRED_SCHEDULE via eligibilityFacts — the Master of Space
+  // Operations carries no specialization (the Systems Engineering certificate is a separate
+  // standalone credential), and nothing is written in the past until its end date has passed.
+  const ef=eligibilityFacts(j);
   return `<div class="dblock"><h4>📅 Eligibility &amp; Timeline · ERAU</h4>
-    <p style="margin:0 0 10px;font-size:var(--fs-rg);color:#cfdcec;line-height:1.55">${note}</p>
+    <p style="margin:0 0 10px;font-size:var(--fs-rg);color:#cfdcec;line-height:1.55">${ef.note}</p>
     <div class="edu-track">
-      <div class="edu-step done"><b>NASA L'SPACE NPWEE</b><span>Fall 2026 · NASA Lucy Mission proposal team + review panel</span></div>
-      <div class="edu-step"><b>M. Space Operations · Grad Cert Systems Engineering</b><span>December 2026 · both complete</span></div>
-      <div class="edu-step"><b>M.S. Space Systems</b><span>September 2027</span></div>
+      ${ef.steps.map(s=>`<div class="edu-step${s.done?' done':''}"><b>${esc(s.label)}</b><span>${esc(s.detail)}</span></div>`).join('')}
     </div>
-    <div class="techtags">${['Space Enterprise & Launch Systems','Mission Integration & Operations','Systems Engineering Architecture','Spacecraft Systems'].map(m=>{
-      const hit=(j.title+' '+(j.tech||[]).join(' ')).toLowerCase();
-      const on = /integrat|mission|system|launch|operation|propuls|avionic/.test(hit);
-      return `<span style="${on?'border-color:color-mix(in srgb,var(--good) 45%,transparent);background:color-mix(in srgb,var(--good) 12%,transparent);color:var(--good)':''}">${on?'✓ ':''}${esc(m)}</span>`;
-    }).join('')}</div>
+    <div class="techtags">${ef.modules.map(m=>`<span style="${m.on?'border-color:color-mix(in srgb,var(--good) 45%,transparent);background:color-mix(in srgb,var(--good) 12%,transparent);color:var(--good)':''}">${m.on?'✓ ':''}${esc(m.m)}</span>`).join('')}</div>
     <p style="margin:8px 2px 0;font-size:var(--fs-xs);color:var(--dim)">Highlighted ERAU modules map directly to this role — cite them in your application.</p></div>`;
 }
 function alumniBlock(j){
-  // deterministic ERAU alumni footprint + contactable leads per company
-  let h=0; for(const c of (j.company||'')) h=(h*31+c.charCodeAt(0))%9973;
-  const alumni=6+(h%26);
+  const af=alumniFacts(j);
   const co=j.company||'';
-  const coQ=encodeURIComponent(co);
-  // LinkedIn people-search deep links: ERAU alumni at this company, filtered by relevant role
-  const liBase='https://www.linkedin.com/search/results/people/?keywords=';
-  const leadDefs=[
-    ['Program / Mission roles','Embry-Riddle '+co+' program manager mission integration'],
-    ['Operations / S&OP','Embry-Riddle '+co+' operations'],
-    ['Recent grads (warm, peer-level)','Embry-Riddle '+co+' space operations'],
-    ['ERAU alumni group','Embry-Riddle Aeronautical University '+co],
-  ];
-  // sample named-style leads (search-backed, not fabricated profiles) to make outreach concrete
-  const roleSeeds=['Sr. Program Manager','Mission Integration Lead','Director of Operations','Systems Engineer'];
-  const leads=leadDefs.map((d,i)=>({label:d[0], role:roleSeeds[i], url: liBase+encodeURIComponent(d[1])+'&origin=GLOBAL_SEARCH_HEADER'}));
   return `<div class="dblock"><h4>🤝 ERAU Alumni at ${esc(co)} · referral leads</h4>
-    <p style="margin:0 0 10px;font-size:var(--fs-rg);color:#cfdcec;line-height:1.55"><b style="color:var(--a3);font-family:'JetBrains Mono'">~${alumni}</b> Embry-Riddle alumni are estimated on staff. A referral here beats a cold apply roughly 10×, so open these LinkedIn searches, find a friendly face, and ask for a 15-minute intro before you apply.</p>
-    <div class="alumlist">${leads.map(l=>`<a class="alumrow" href="${l.url}" target="_blank" rel="noreferrer">
+    <p style="margin:0 0 10px;font-size:var(--fs-rg);color:#cfdcec;line-height:1.55"><b style="color:var(--a3);font-family:'JetBrains Mono'">~${af.count}</b> Embry-Riddle alumni are estimated on staff. A referral here beats a cold apply roughly 10×, so open these LinkedIn searches, find a friendly face, and ask for a 15-minute intro before you apply.</p>
+    <div class="alumlist">${af.leads.map(l=>`<a class="alumrow" href="${l.url}" target="_blank" rel="noreferrer">
       <span class="ali">in</span>
       <span class="alm"><b>${esc(l.label)}</b><span>Search ERAU alumni · ${esc(l.role)}-level at ${esc(co)}</span></span>
       <span class="alarrow">↗</span></a>`).join('')}</div>
     <div class="linkbtns" style="margin-top:10px">
-      <a href="https://www.linkedin.com/school/embry-riddle-aeronautical-university/people/?keyword=${coQ}" target="_blank" rel="noreferrer">in ERAU alumni directory → ${esc(co)}</a>
-      <a href="https://www.linkedin.com/company/${coQ}/people/" target="_blank" rel="noreferrer">in ${esc(co)} team on LinkedIn</a>
+      <a href="${af.dirUrl}" target="_blank" rel="noreferrer">in ERAU alumni directory → ${esc(co)}</a>
+      <a href="${af.coUrl}" target="_blank" rel="noreferrer">in ${esc(co)} team on LinkedIn</a>
     </div>
     <p style="margin:9px 2px 0;font-size:var(--fs-xs);color:var(--dim)">Links open live LinkedIn searches — names update in real time, so you always see current employees.</p></div>`;
 }
 function fitNarrativeBlock(j){
-  const m=skillsMatch(j);
-  const fit=lifestyleFit(j);
-  const aligned=(m.rows||[]).filter(r=>r.lvl==='direct').map(r=>r.skill).slice(0,4);
-  const gaps=(m.rows||[]).filter(r=>r.lvl==='gap').map(r=>r.skill).slice(0,3);
-  const alignedTxt = aligned.length ? aligned.join(', ') : 'program management, operations, and stakeholder leadership';
-  const why = `You're a strong fit for ${j.company}'s ${j.title}. Ten-plus years running SaaS operations and solutions engineering — exceeding milestones by 166% at SoftwareOne, 300% at Achievers, and architecting the Salesforce enterprise system at Vault.co — map directly onto this role's core needs: ${alignedTxt}. Your ERAU M.S. in Space Operations adds the domain language (mission integration, systems engineering, launch operations) to translate that commercial track record into the aerospace context.`;
-  const edge = `Your real edge here is integration: you've repeatedly been the person who connects disconnected teams, tools, and data into one accountable pipeline — exactly what high-cadence space programs struggle with. At a ${roleTags(j).some(t=>t.k==='SpaaS')?'launch-cadence':'mission-driven'} company like ${j.company}, that "single source of truth" discipline is a differentiator, not a nice-to-have.`;
-  const challenge = gaps.length
-    ? `The honest challenge: this role leans on ${gaps.join(', ')}, where your background is lighter. Reframe it — position your SaaS-automation and operations depth as the data and verification layer that manages the hardware loop, rather than hands-on bench work, and name any ERAU coursework that closes the gap. Being a 40-year-old career-changer is an asset here: you bring operational maturity most candidates don't.`
-    : `The main challenge is simply competition and timing — this is a desirable seat. Move fast (apply within 48 hours of a HOT posting), lead with quantified wins, and secure a warm ERAU referral to clear the resume screen.`;
-  const money = fit && fit.txt ? `On lifestyle: ${fit.txt}` : '';
+  const n=narrativeFacts(j);
   return `<div class="dblock"><h4>🧭 Why You're Suited — &amp; What to Watch</h4>
-    <p style="margin:0 0 10px;font-size:var(--fs-lg);color:#cfdcec;line-height:1.65">${esc(why)}</p>
-    <p style="margin:0 0 10px;font-size:var(--fs-lg);color:#cfdcec;line-height:1.65">${esc(edge)}</p>
-    <p style="margin:0 0 ${money?'10px':'0'};font-size:var(--fs-lg);color:#e7d9b6;line-height:1.65"><b style="color:var(--gold)">Challenge:</b> ${esc(challenge)}</p>
-    ${money?`<p style="margin:0;font-size:var(--fs-rg);color:#9fb0c9;line-height:1.6">${esc(money)}</p>`:''}</div>`;
+    <p style="margin:0 0 10px;font-size:var(--fs-lg);color:#cfdcec;line-height:1.65">${esc(n.why)}</p>
+    <p style="margin:0 0 10px;font-size:var(--fs-lg);color:#cfdcec;line-height:1.65">${esc(n.edge)}</p>
+    <p style="margin:0 0 ${n.money?'10px':'0'};font-size:var(--fs-lg);color:#e7d9b6;line-height:1.65"><b style="color:var(--gold)">Challenge:</b> ${esc(n.challenge)}</p>
+    ${n.money?`<p style="margin:0;font-size:var(--fs-rg);color:#9fb0c9;line-height:1.6">${esc(n.money)}</p>`:''}</div>`;
 }
 function missionAssuranceBlock(j){
-  const items=[
-    'Resume keywords match the JD (see ATS Keyword Delta above)',
-    'Cover/pain-letter names a specific '+esc(j.company)+' problem I\'ve solved',
-    'ERAU MSO modules relevant to this role are cited',
-    'Quantified wins included (166% / 300% / largest enterprise contract)',
-    'Comp clears my $165K lifestyle floor + relocation confirmed',
-    'Warm intro attempted before submitting',
-  ];
+  const ma=maChecklist(j);
   return `<div class="dblock caveat"><h4>✅ Mission Assurance · pre-submit checklist</h4>
-    <ul class="machecks">${items.map((t,i)=>`<li><label><input type="checkbox" data-ma="${i}"> <span>${t}</span></label></li>`).join('')}</ul>
-    <p style="margin:8px 2px 0;font-size:var(--fs-sm);color:#cfdcec"><b>Reverse-interview playbook:</b> ask them — "What does success in the first 90 days look like?", "How does this team handle integration hand-offs?", "Why is the seat open?" You're qualifying them too.</p></div>`;
+    <ul class="machecks">${ma.items.map((t,i)=>`<li><label><input type="checkbox" data-ma="${i}"> <span>${esc(t)}</span></label></li>`).join('')}</ul>
+    <p style="margin:8px 2px 0;font-size:var(--fs-sm);color:#cfdcec"><b>Reverse-interview playbook:</b> ask them — ${ma.playbook.map(q=>'"'+esc(q)+'"').join(', ')} You're qualifying them too.</p></div>`;
 }
 function careerImpactBlock(j){
   const t=(j.title||'').toLowerCase(), d=(j.description||'').toLowerCase();
@@ -6676,40 +6874,8 @@ function careerImpactBlock(j){
     </div></div>`;
 }
 function fullDescriptionBlock(j){
-  let raw=(j.description||'').trim();
-  if(!raw || raw.length<40) return '';   // only show when we have a real scraped description
-  // Scraped descriptions can arrive HTML-encoded (&lt;p&gt;) or with raw tags — decode entities
-  // (twice, for double-encoded), then hand the result to a REAL element for tag stripping
-  // (a regex can't reliably parse quoted attribute values that contain a literal ">", which
-  // left broken tag fragments like "<span dat" visible in some Google-Docs-pasted postings).
-  const dec=s=>{ const ta=document.createElement('textarea'); ta.innerHTML=s; return ta.value; };
-  const stripTags=s=>{ const d=document.createElement('div'); d.innerHTML=s; return (d.textContent||'').replace(/\u00a0/g,' '); };
-  raw=stripTags(dec(dec(raw))).replace(/[ \t]+/g,' ').trim();
-  // Only recognize a real section heading when it's followed by a colon (how ATS postings
-  // actually format them) — matching bare words like "skills"/"experience" mid-sentence was
-  // shredding ordinary prose into garbled fragments.
-  const HEAD=/\b(responsibilities|what you'?ll do|what you will do|the role|about the role|requirements|qualifications|what you'?ll bring|what you bring|basic qualifications|preferred qualifications|minimum qualifications|who you are|skills|experience|about you|day to day|key duties|essential functions)\s*:/ig;
-  // ATS postings very often title their sections in ALL CAPS with no colon at all
-  // ("WHAT YOU'LL GET TO DO", "ABOUT ROCKET LAB") — ordinary sentence prose is never
-  // written as 2+ consecutive capitalized words, so this is a safe, reliable heading signal.
-  const CAPSHEAD=/\b([A-Z][A-Z'&]*(?:\s+[A-Z][A-Z'&()]*){1,7})\s*:?(?=\s|$)/g;
-  // ATS postings also commonly use Title-Case intro labels ending in a colon
-  // ("About Us:", "Job Summary:", "The Opportunity:") — treat these as headings too,
-  // so the intro block doesn't run on as one dense wall of text.
-  const SOFTHEAD=/\b(about us|about the company|about the team|company overview|job summary|position summary|role summary|overview|the opportunity|who we are)\s*:/ig;
-  let txt=raw;
-  // Preserve any real line breaks already in the text (from earlier structured scrapes),
-  // and split on real bullet glyphs — never guess bullets from ordinary hyphens/dashes,
-  // which appear constantly in normal sentences ("5-7 years", "in-person", asides).
-  txt=txt.replace(/\r/g,'').replace(/\n{2,}/g,'\n').replace(/[•▪●‣]/g,'\n• ');
-  txt=txt.replace(SOFTHEAD,m=>'\n### '+m.replace(/:$/,'').trim()+'\n');
-  txt=txt.replace(HEAD,m=>'\n### '+m.replace(/:$/,'').trim()+'\n');
-  txt=txt.replace(CAPSHEAD,(m,words)=>{
-    const wc=words.trim().split(/\s+/).length;
-    // require a real multi-word ALL-CAPS run (not just an acronym like "FSS" or "NASA")
-    return wc>=2 ? '\n### '+words.trim()+'\n' : m;
-  });
-  const lines=txt.split('\n').map(s=>s.trim()).filter(Boolean);
+  const lines=descLines(j);
+  if(!lines.length) return '';   // only show when we have a real scraped description
   let html='', inList=false;
   const closeList=()=>{ if(inList){ html+='</ul>'; inList=false; } };
   for(const ln of lines){
@@ -6841,14 +7007,85 @@ function explainRequirement(r){
   if(a.years) return `Asks for ${t(a.years+'+ years')} of the experience described. Nothing in your skills list matches this line's subject.`;
   return `No skill in your list overlaps this line. If the wording is just unfamiliar rather than the work being new to you, toggle it.`;
 }
+/* Requirement extraction. The old version sentence-split the entire description and kept
+   anything containing "experience" or "required" — which on the Starfish posting pulled two
+   lines out of "About Starfish" and "Position Description", company marketing copy, and then
+   reported "0 of 2 requirements covered". A denominator built from the wrong paragraphs is
+   worse than no denominator, so this reads the qualifications section specifically and
+   refuses to produce a percentage when it cannot find one. */
+const REQ_SECTION_IN=/qualifications|requirements|what you.{0,3}ll bring|basic qualifications|minimum qualifications|desired|preferred|you have|about you/i;
+function reqSectionOut(company){
+  const co=String(company||'').trim().replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return new RegExp('about (us|the company'+(co?'|'+co:'')+')|who we are|position description|our mission|why work|benefits|equal opportunity|company overview','i');
+}
+const REQ_SHAPE=/\b(experience|degree|proficien|familiar|knowledge of|ability to|required|preferred|must|strong|working (with|knowledge)|background in|skills? (in|with)|expertise|understanding of|years)\b/i;
+function extractRequirements(j){
+  const desc=String(j.description||'');
+  if(!desc.trim()) return {lines:[], source:'none', reliable:false};
+  const OUT=reqSectionOut(j.company);
+  const clean=l=>l.replace(/^[-*\u2022\u2013\u25AA\u00B7\u25CF\s]+/,'').replace(/\s+/g,' ').trim();
+  const bulletish=l=>/^[-*\u2022\u2013\u25AA\u00B7\u25CF]/.test(String(l).trim());
+  const raw=desc.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  // A heading is short, unpunctuated or colon-terminated — enough to segment a job post.
+  const isHeading=l=>l.length<90 && (/:$/.test(l) || (l===l.toUpperCase() && /[A-Z]{3}/.test(l))
+    || (!/[.!?]$/.test(l) && l.split(/\s+/).length<=8 && !bulletish(l)));
+  let state='neutral';
+  const buckets={in:[], neutral:[]};
+  for(const l of raw){
+    if(isHeading(l)){
+      if(OUT.test(l)){ state='out'; continue; }
+      if(REQ_SECTION_IN.test(l)){ state='in'; continue; }
+      state='neutral'; continue;
+    }
+    if(state==='out') continue;               // company boilerplate never becomes a requirement
+    buckets[state==='in'?'in':'neutral'].push(l);
+  }
+  // Inside a section, real list items beat prose.
+  const pick=arr=>{
+    const bl=arr.filter(bulletish);
+    const pool=(bl.length>=3?bl:arr).map(clean);
+    return [...new Set(pool)].filter(l=>l.length>18 && l.length<260);
+  };
+  let lines=pick(buckets.in), source='section';
+  if(lines.length<3){                          // no qualifications heading — try bullets elsewhere
+    const b=pick(buckets.neutral.filter(bulletish));
+    if(b.length>=3){ lines=b; source='bullets'; }
+  }
+  if(lines.length<3){                          // last resort: prose, which is what misfired before
+    const prose=desc.split(/\n|(?<=[.;])\s+(?=[A-Z])/).map(clean)
+      .filter(l=>l.length>25 && l.length<240).filter(l=>REQ_SHAPE.test(l) && !OUT.test(l));
+    const kept=[...new Set(prose)];
+    if(kept.length){ lines=kept; source='prose'; }
+  }
+  lines=lines.slice(0,14);
+  // A percentage is only honest from a named qualifications section or a real bullet list,
+  // and only with enough lines that dividing by them means something.
+  return {lines, source, reliable: lines.length>=3 && (source==='section'||source==='bullets')};
+}
+/* Hard blockers — screens the résumé cannot pass today. Each one costs an evening to find
+   by hand, so they print above the score, where they decide whether the score matters. */
+function hardBlockers(lines){
+  const out=[];
+  const add=(kind,label,line)=>{ if(!out.some(o=>o.kind===kind&&o.line===line)) out.push({kind,label,line}); };
+  for(const line of (lines||[])){
+    const l=String(line);
+    for(const s of l.split(/(?<=[.;])\s+/)){
+      // An explicit equivalence clause is the posting saying the degree is negotiable.
+      const eq=/\bor equivalent (experience|qualifications)\b/i.test(s);
+      const d=s.match(/bachelor'?s?.{0,40}(in|of).{0,60}(engineering|computer science|physics|mathematics|chemistry|life science)/i);
+      if(d && !eq) add('degree','Degree in a field you do not hold — '+d[2].toLowerCase(), l);
+      if(/(active|current).{0,20}(clearance|TS\/SCI|secret)/i.test(s)) add('clearance','Active clearance required at hire', l);
+      const y=s.match(/(\d+)\+?\s*years?.{0,40}(in|of)\s+(aerospace|intelligence|biopharmaceutical|investigations|flight hardware|mission management)/i);
+      if(y) add('years', y[1]+'+ years in '+y[3].toLowerCase(), l);
+    }
+  }
+  return out;
+}
 function tailoringAnalysis(j){
   const desc=(j.description||'');
   const skills=userSkillSet();
-  // 1) Pull the requirement-shaped lines out of the real posting
-  const lines=desc.split(/\n|(?<=[.;])\s+(?=[A-Z])/).map(l=>l.replace(/^[-*\u2022\s]+/,'').trim())
-    .filter(l=>l.length>25 && l.length<240)
-    .filter(l=>/\b(experience|degree|proficien|familiar|knowledge of|ability to|required|preferred|must|strong|working (with|knowledge)|background in|skills? (in|with)|expertise|understanding of)\b/i.test(l));
-  const reqs=[...new Set(lines)].slice(0,14);
+  const ex=extractRequirements(j);
+  const reqs=ex.lines;
   // 2) Verdict per requirement: which of YOUR skills appears in it
   const GENERIC=new Set(['management','operations','business','engineering','analysis','tracking','planning','systems','process','solutions','administration','implementation','ownership','mitigation','scaling','negotiation']);
   const rows=reqs.map(line=>{
@@ -6884,7 +7121,8 @@ function tailoringAnalysis(j){
     'flight software','propulsion','program management','earned value','stakeholder'];
   const dl=desc.toLowerCase();
   const mirror=LEX.filter(t=>dl.includes(t) && !skills.some(sk=>sk.includes(t)||t.includes(sk))).slice(0,10);
-  return {rows, covered, autoCovered, manual, total:rows.length, mirror};
+  return {rows, covered, autoCovered, manual, total:rows.length, mirror,
+    reliable:ex.reliable, source:ex.source, blockers:hardBlockers(reqs)};
 }
 function jdPasteBox(j,lead){
   if(!canEdit()) return `<p class="subtle" style="margin:0">This posting has no description text loaded, so there is nothing real to analyze.</p>`;
@@ -6923,7 +7161,9 @@ function copilotHTML(j){
       <div class="cp-terms">${a.mirror.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>
       <p class="subtle" style="margin:6px 0 0">Only claim what's true &mdash; but where you HAVE the experience under a different name, rename it to theirs.</p></div>`:'';
   return `
-    ${a.total?`<div class="cp-score">You cover <b style="color:${pct>=70?'var(--good)':pct>=40?'var(--gold)':'var(--bad)'}">${a.covered} of ${a.total}</b> requirement lines this posting states (${pct}%)${a.manual?`<br><span class="cp-manual">${a.autoCovered} matched from your skills list, ${a.manual} marked by you.</span>`:''}</div>${rows}`:
+    ${a.total?(a.reliable
+      ? `<div class="cp-score">You cover <b style="color:${pct>=70?'var(--good)':pct>=40?'var(--gold)':'var(--bad)'}">${a.covered} of ${a.total}</b> requirement lines this posting states (${pct}%)${a.manual?`<br><span class="cp-manual">${a.autoCovered} matched from your skills list, ${a.manual} marked by you.</span>`:''}</div>`
+      : `<div class="cp-score" style="border-color:var(--gold)">Couldn't reliably extract a requirements list from this posting &mdash; paste it manually.<br><span class="cp-manual">The lines below came from prose rather than a qualifications section, so no coverage percentage is shown. A wrong denominator is worse than none.</span></div>`)+rows:
       jdPasteBox(j,'This description has no parseable requirement lines &mdash; the posting is one long prose blob, or its qualifications section sits past where the scrape truncated. Paste the Requirements section and each line gets checked against your skills list. The language analysis below still applies.')}
     ${mirror}
     ${j.descPasted?`<div class="jd-src">Analyzed from text you pasted.
@@ -6934,6 +7174,137 @@ function copilotHTML(j){
     </div>
     <div id="copilot-ai-${esc(j.id)}"></div>`;
 }
+/* ---------------------------------------------------------------------
+   DOSSIER FACTS — one source of truth for the numbers and narrative that both the
+   on-screen dossier and the downloadable match report print. The panel blocks below
+   render these; matchReportHTML() renders the same values in print styling, so the
+   two can never drift apart.
+   --------------------------------------------------------------------- */
+function salaryFacts(j){
+  const R=REGIONS[j.region]||REGIONS[region];
+  const gross=salaryValue(j); if(!gross) return null;
+  const reloc=R.reloc||{}; const floor=targetSalary();
+  const taxRate=j.region==='la'?0.093:j.region==='nz'?0.30:0.0;
+  const stateTax=Math.round(gross*taxRate);
+  const fed=Math.round(gross*0.18);
+  const net=gross-stateTax-fed;
+  const rentNum=parseInt(String(reloc.rent||'$2200').replace(/[^\d]/g,''))||2200;
+  const rentYr=rentNum*12;
+  return {R, gross, floor, taxRate, stateTax, fed, net, rentYr,
+    housingPct:Math.round(rentYr/net*100), leftover:net-rentYr, ok:gross>=floor,
+    col:reloc.col||'local', hub:R.short};
+}
+function relocFacts(j){
+  const r=(j.reloc||'').trim();
+  if(!r || r==='—') return {offered:'', perks:[]};
+  const low=r.toLowerCase(); const perks=[];
+  if(/full/.test(low)) perks.push(['🚚','Full relocation','Door-to-door move covered — packing, freight, and transport.']);
+  if(/housing|temp/.test(low)) perks.push(['🏠','Temporary housing','Short-term housing while you settle in.']);
+  if(/sign-?on|bonus/.test(low)) perks.push(['💰','Sign-on bonus','Cash bonus that can offset out-of-pocket move costs.']);
+  if(/visa|sponsor/.test(low)) perks.push(['🛂','Visa sponsorship','Employer sponsors your work-visa pathway.']);
+  if(/4wd|allowance|stipend/.test(low)) perks.push(['🧭','Relocation allowance','Lump-sum stipend you allocate as needed.']);
+  if(/partial/.test(low)) perks.push(['📦','Partial relocation','A capped contribution toward moving expenses.']);
+  if(/regional/.test(low)) perks.push(['🗺️','Regional support','Assistance for an in-country/regional move.']);
+  if(!perks.length) perks.push(['🧳','Relocation offered',r]);
+  return {offered:r, perks};
+}
+// note carries app-generated <b> markup; dates inside it are already escaped.
+function eligibilityFacts(j){
+  const ft = j.type!=='Internship';
+  const mso=credState('mso'), syse=credState('syse'), mss=credState('mss'), np=credState('npwee');
+  const note = ft
+    ? `ERAU's <b>Master of Space Operations</b> ${mso.done?'completed':'is expected'} <b>${mso.endsLabel}</b>, followed by the separate <b>Graduate Certificate in Systems Engineering</b> in <b>${syse.endsLabel}</b> and the <b>M.S. Space Systems</b> in <b>${mss.endsLabel}</b>. Full-time roles starting Q1 2027 align directly — flag start-date flexibility if they need someone sooner.`
+    : `Internship timing fits the ERAU calendar — a summer or capstone-term placement lands before the ${mso.endsLabel} graduation, with the M.S. Space Systems continuing through ${mss.endsLabel}.`;
+  const steps=[
+    {label:"NASA L'SPACE NPWEE", detail:(np.done?'Fall 2026 · NASA Lucy Mission proposal team + review panel':np.started?'Underway · NASA Lucy Mission proposal team + review panel':'Accepted · begins '+np.startsLabel), done:np.done},
+    {label:'Master of Space Operations', detail:mso.endsLabel, done:mso.done},
+    {label:'Grad Cert · Systems Engineering', detail:syse.endsLabel, done:syse.done},
+    {label:'M.S. Space Systems', detail:mss.endsLabel, done:mss.done},
+  ];
+  const hit=(j.title+' '+(j.tech||[]).join(' ')).toLowerCase();
+  const on=/integrat|mission|system|launch|operation|propuls|avionic/.test(hit);
+  const modules=['Space Enterprise & Launch Systems','Mission Integration & Operations','Systems Engineering Architecture','Spacecraft Systems'].map(m=>({m, on}));
+  return {note, steps, modules};
+}
+function alumniFacts(j){
+  let h=0; for(const c of (j.company||'')) h=(h*31+c.charCodeAt(0))%9973;
+  const co=j.company||'', coQ=encodeURIComponent(co);
+  const liBase='https://www.linkedin.com/search/results/people/?keywords=';
+  const leadDefs=[
+    ['Program / Mission roles','Embry-Riddle '+co+' program manager mission integration'],
+    ['Operations / S&OP','Embry-Riddle '+co+' operations'],
+    ['Recent grads (warm, peer-level)','Embry-Riddle '+co+' space operations'],
+    ['ERAU alumni group','Embry-Riddle Aeronautical University '+co],
+  ];
+  const roleSeeds=['Sr. Program Manager','Mission Integration Lead','Director of Operations','Systems Engineer'];
+  return {
+    count:6+(h%26),
+    leads:leadDefs.map((d,i)=>({label:d[0], role:roleSeeds[i], url: liBase+encodeURIComponent(d[1])+'&origin=GLOBAL_SEARCH_HEADER'})),
+    dirUrl:'https://www.linkedin.com/school/embry-riddle-aeronautical-university/people/?keyword='+coQ,
+    coUrl:'https://www.linkedin.com/company/'+coQ+'/people/',
+    logged:alumniForCompany(co),
+  };
+}
+function narrativeFacts(j){
+  const m=skillsMatch(j);
+  const fit=lifestyleFit(j);
+  const aligned=(m.rows||[]).filter(r=>r.lvl==='direct').map(r=>r.skill).slice(0,4);
+  const gaps=(m.rows||[]).filter(r=>r.lvl==='gap').map(r=>r.skill).slice(0,3);
+  const alignedTxt = aligned.length ? aligned.join(', ') : 'program management, operations, and stakeholder leadership';
+  return {
+    why:`You're a strong fit for ${j.company}'s ${j.title}. Ten-plus years running SaaS operations and solutions engineering — exceeding milestones by 166% at SoftwareOne, 300% at Achievers, and architecting the Salesforce enterprise system at Vault.co — map directly onto this role's core needs: ${alignedTxt}. Your ERAU M.S. in Space Operations adds the domain language (mission integration, systems engineering, launch operations) to translate that commercial track record into the aerospace context.`,
+    edge:`Your real edge here is integration: you've repeatedly been the person who connects disconnected teams, tools, and data into one accountable pipeline — exactly what high-cadence space programs struggle with. At a ${roleTags(j).some(t=>t.k==='SpaaS')?'launch-cadence':'mission-driven'} company like ${j.company}, that "single source of truth" discipline is a differentiator, not a nice-to-have.`,
+    challenge: gaps.length
+      ? `The honest challenge: this role leans on ${gaps.join(', ')}, where your background is lighter. Reframe it — position your SaaS-automation and operations depth as the data and verification layer that manages the hardware loop, rather than hands-on bench work, and name any ERAU coursework that closes the gap. Being a 40-year-old career-changer is an asset here: you bring operational maturity most candidates don't.`
+      : `The main challenge is simply competition and timing — this is a desirable seat. Move fast (apply within 48 hours of a HOT posting), lead with quantified wins, and secure a warm ERAU referral to clear the resume screen.`,
+    money: fit && fit.txt ? `On lifestyle: ${fit.txt}` : '',
+  };
+}
+function maChecklist(j){
+  return {
+    items:[
+      'Resume keywords match the JD (see ATS Keyword Delta above)',
+      'Cover/pain-letter names a specific '+(j.company||'company')+' problem I\'ve solved',
+      'ERAU MSO modules relevant to this role are cited',
+      'Quantified wins included (166% / 300% / largest enterprise contract)',
+      'Comp clears my $165K lifestyle floor + relocation confirmed',
+      'Warm intro attempted before submitting',
+    ],
+    playbook:['What does success in the first 90 days look like?','How does this team handle integration hand-offs?','Why is the seat open?'],
+  };
+}
+/* Outreach drafts — assembled from OWNER facts only. Anything only Lisaney knows (why this
+   company, who the contact is) stays a visible [bracketed slot] rather than being invented,
+   and the coursework-not-industry boundary is stated rather than blurred. */
+function outreachDrafts(j){
+  const co=j.company||'this company', title=j.title||'this role';
+  return {
+    linkedin:`Hi [first name] — I'm applying for the ${title} role at ${co} and saw you came through Embry-Riddle as well. I spent a decade running cross-functional programs and I'm finishing an M.S. in Space Operations plus a systems engineering certificate at ERAU. Would you be open to 15 minutes before I submit? Happy to work around your schedule.`,
+    email:`Subject: ${title} — program/ops background, ERAU space operations\n\nHi [first name],\n\nI'm applying for the ${title} opening at ${co}. Two lines on where I'm coming from: I spent more than a decade running cross-functional programs — integrated schedules and dependencies in MS Project and JIRA, requirements gathered across IT, operations and business teams, and the reporting layer built on systems I stood up in Salesforce, Tableau and Power BI. Before that I owned P&L, vendors and facilities across four locations through to a sale.\n\nMy space and systems engineering background is graduate coursework rather than industry experience, and I would rather say that plainly: a Master of Space Operations, a graduate certificate in systems engineering, and an M.S. in Space Systems at Embry-Riddle, with a sole-authored Active Debris Removal capstone (weighted trade study, TRL gating, $290.5M lifecycle cost estimate) and selection into NASA's L'SPACE NPWEE Academy.\n\n[One sentence on the specific ${co} program or problem you have actually followed.]\n\nIf there's someone closer to this team I should talk to instead, I'd appreciate the pointer.\n\nLisaney Kong\nNashville · willing to relocate`,
+    referral:`Hi [first name] — I'm putting in for the ${title} role at ${co} and I'm told a referral there beats a cold apply by a wide margin. Quick context so you can decide whether it's something you'd be comfortable passing on: a decade of cross-functional program and operations delivery, and three ERAU credentials in space operations and systems engineering — coursework, not industry experience, which I'm upfront about. My capstone was a sole-authored Active Debris Removal conceptual design with a weighted trade study and a $290.5M lifecycle cost estimate.\n\nIf you'd rather not refer someone you haven't worked with, a 15-minute call is just as useful — [name the one thing you most want to ask them].`,
+  };
+}
+// Normalized description lines ('### ' heading, '• ' bullet, else paragraph), shared by the
+// dossier's Full Role Description block and the match report's appendix.
+function descLines(j){
+  let raw=(j.description||'').trim();
+  if(!raw || raw.length<40) return [];
+  const dec=s=>{ const ta=document.createElement('textarea'); ta.innerHTML=s; return ta.value; };
+  const stripTags=s=>{ const d=document.createElement('div'); d.innerHTML=s; return (d.textContent||'').replace(/\u00a0/g,' '); };
+  raw=stripTags(dec(dec(raw))).replace(/[ \t]+/g,' ').trim();
+  const HEAD=/\b(responsibilities|what you'?ll do|what you will do|the role|about the role|requirements|qualifications|what you'?ll bring|what you bring|basic qualifications|preferred qualifications|minimum qualifications|who you are|skills|experience|about you|day to day|key duties|essential functions)\s*:/ig;
+  const CAPSHEAD=/\b([A-Z][A-Z'&]*(?:\s+[A-Z][A-Z'&()]*){1,7})\s*:?(?=\s|$)/g;
+  const SOFTHEAD=/\b(about us|about the company|about the team|company overview|job summary|position summary|role summary|overview|the opportunity|who we are)\s*:/ig;
+  let txt=raw;
+  txt=txt.replace(/\r/g,'').replace(/\n{2,}/g,'\n').replace(/[•▪●‣]/g,'\n• ');
+  txt=txt.replace(SOFTHEAD,m=>'\n### '+m.replace(/:$/,'').trim()+'\n');
+  txt=txt.replace(HEAD,m=>'\n### '+m.replace(/:$/,'').trim()+'\n');
+  txt=txt.replace(CAPSHEAD,(m,words)=>{
+    const wc=words.trim().split(/\s+/).length;
+    return wc>=2 ? '\n### '+words.trim()+'\n' : m;
+  });
+  return txt.split('\n').map(s=>s.trim()).filter(Boolean);
+}
 /* =========================================================================
    MATCH REPORT — the whole analysis as one downloadable document
    Everything the dossier shows about fit, in reading order, as a standalone
@@ -6943,7 +7314,9 @@ function matchReportHTML(j){
   const a=tailoringAnalysis(j);
   const sm=skillsMatch(j);
   const fit=lifestyleFit(j);
-  const bd=j.matchBreakdown||{};
+  // Score the row if it arrived unscored — an empty breakdown is what produced a table of
+  // blank rows in the September 9 report.
+  const bd=j.matchBreakdown||(function(){ try{ return (enhanceMatch(j)||{}).matchBreakdown||{}; }catch(e){ return {}; } })();
   const ats=atsDelta(j);
   const gates=a.rows.filter(r=>!r.autoOk && r.asks && (r.asks.gate||r.asks.degree));
   const gaps=a.rows.filter(r=>!r.ok);
@@ -6951,6 +7324,22 @@ function matchReportHTML(j){
   const dt=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   const pct=a.total?Math.round(a.covered/a.total*100):0;
   const row=(k,v)=>v?`<tr><th>${esc(k)}</th><td>${v}</td></tr>`:'';
+  // Everything else the on-screen dossier shows, so the download is the whole dossier.
+  const det=jobDetail(j);
+  const sal=salaryFacts(j);
+  const rel=relocFacts(j);
+  const elig=eligibilityFacts(j);
+  const alum=alumniFacts(j);
+  const narr=narrativeFacts(j);
+  const ma=maChecklist(j);
+  const out=outreachDrafts(j);
+  const eqs=essayQuestions(j.id);
+  const erec=essayRec(j.id);
+  const esrc=erec.src==='pasted'?'Pasted from the real application':erec.src==='inferred'?'Predicted from this posting — not confirmed':'Likely questions — not confirmed against their form';
+  const draft=(aiDrafts()||{})[j.id];
+  const note=(roleNotes()||{})[j.id];
+  const dlines=descLines(j);
+  const wc=s=>s&&s.trim()?s.trim().split(/\s+/).length:0;
   return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <title>Match report — ${esc(j.title)} at ${esc(j.company)}</title>
 <style>
@@ -6985,37 +7374,83 @@ function matchReportHTML(j){
   .gap{background:#fdeacf;color:#8a5a12}
   .chips span{display:inline-block;font-size:12px;padding:3px 9px;border:1px solid #cfd8e3;border-radius:20px;margin:0 5px 5px 0}
   .note{font-size:13px;color:#5b6b7f;border-left:3px solid #cfd8e3;padding:2px 0 2px 12px;margin:12px 0}
+  .blockers{border:2px solid #b3261e;background:#fdf3f2;border-radius:6px;padding:14px 16px;margin:22px 0 2px}
+  .blockers .bh{margin:0 0 9px;font-size:15px;font-weight:700;color:#8a1c15;letter-spacing:-.01em}
+  .blockers ul{margin:0;padding-left:18px}
+  .blockers li{margin-bottom:8px;font-size:13px;color:#5b6b7f}
+  .blockers li b{display:block;font-size:14px;color:#12181f;font-weight:600;margin-bottom:2px}
+  .tier{font-weight:600}
+  .tsub{display:block;color:#5b6b7f;font-size:13px;margin-top:2px}
+  h2{break-after:avoid}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}
+  .essay{break-inside:avoid;margin:0 0 20px;padding-bottom:16px;border-bottom:1px solid #e6ebf1}
+  .essay .q{font-weight:600;font-size:15px;margin:0 0 2px}
+  .essay .qt{font-size:12px;color:#77879a;margin:0 0 8px}
+  .essay .ans{white-space:pre-wrap;margin:0}
+  .essay .wc{font-size:12px;color:#77879a;margin:6px 0 0}
+  pre.draft{white-space:pre-wrap;font:14px/1.6 inherit;background:#f5f7fa;border:1px solid #e1e8f0;
+    border-radius:5px;padding:13px 15px;margin:0 0 14px;break-inside:avoid}
+  .checks li{list-style:none;margin-left:-20px;padding-left:22px;position:relative}
+  .checks li:before{content:'\\2610';position:absolute;left:0;font-size:15px;color:#5b6b7f}
+  .lead{font-size:14px;margin:0 0 5px}
+  .lead a{color:#28497f}
+  .appendix h3{margin:16px 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#5b6b7f}
+  .appendix p{font-size:14px}
   footer{margin-top:38px;padding-top:14px;border-top:1px solid #dbe2ea;font-size:12px;color:#77879a}
   @media print{.wrap{padding:0}}
 </style></head><body><div class="wrap">
 <header>
-  <p class="eyebrow">Orbital CRM · Match report · ${esc(dt)}</p>
+  <p class="eyebrow">Orbital CRM · Match report · full dossier · ${esc(dt)}</p>
   <h1>${esc(j.title)}</h1>
   <p class="sub">${esc(j.company)} · ${esc(j.location||REGIONS[j.region]&&REGIONS[j.region].short||'')} · ${esc(salaryLabel(j))}</p>
 </header>
 
+${a.blockers&&a.blockers.length?`<div class="blockers">
+  <p class="bh">${a.blockers.length} hard blocker${a.blockers.length>1?'s':''} — likely auto-screened</p>
+  <ul>${a.blockers.map(b=>`<li><b>${esc(b.label)}</b>&ldquo;${esc(b.line)}&rdquo;</li>`).join('')}</ul>
+</div>`:''}
+
 <div class="score">
   <div><div class="big">${j.match||0}%</div><div class="lab">Overall fit</div></div>
-  <div><div class="big">${a.covered}/${a.total||0}</div><div class="lab">Stated requirements covered</div></div>
-  <div><div class="big">${sm.coverage}%</div><div class="lab">Core skill coverage</div></div>
+  ${a.reliable?`<div><div class="big">${a.covered}/${a.total||0}</div><div class="lab">Stated requirements covered</div></div>`:''}
   <div><div class="big">${j.erauFit||0}</div><div class="lab">Coursework relevance</div></div>
 </div>
 
-<h2>How the score was built</h2>
-<table>
-  ${row('Starting signal', bd.base!=null?bd.base+'%':'')}
-  ${row('Skills re-weighted against the posting', bd.skillReweight!=null?bd.skillReweight+'%':'')}
-  ${row('Seniority band', bd.seniorityLevel?`${esc(String(bd.seniorityLevel))} (${bd.seniorityAdj>0?'+':''}${bd.seniorityAdj||0})`:'')}
-  ${row('Coursework alignment', bd.erauAdj?`+${bd.erauAdj}`:'')}
-  ${row('Proposal / capture experience', bd.proposalBonus?`+${bd.proposalBonus}`:'')}
-  ${row('Relocation signal', bd.relocationBonus?`${bd.relocationBonus>0?'+':''}${bd.relocationBonus}`:'')}
-  ${row('Learned from roles you kept', bd.learnedNudge?`${bd.learnedNudge>0?'+':''}${bd.learnedNudge}`:'')}
-  ${row('Learned from roles you removed', bd.rejectionNudge?`${bd.rejectionNudge}`:'')}
-  ${row('Dealbreakers found', bd.dealbreakerPenalty?`${bd.dealbreakerPenalty} — ${esc((j.matchFlags||[]).join(', '))}`:'')}
-</table>
+${(function(){ const t=[
+  row('Starting signal', bd.base!=null?bd.base+'%':''),
+  row('Skills re-weighted against the posting', bd.skillReweight!=null?bd.skillReweight+'%':''),
+  row('Seniority band', bd.seniorityLevel?`${esc(String(bd.seniorityLevel))} (${bd.seniorityAdj>0?'+':''}${bd.seniorityAdj||0})`:''),
+  row('Coursework alignment', bd.erauAdj?`+${bd.erauAdj}`:''),
+  row('Proposal / capture experience', bd.proposalBonus?`+${bd.proposalBonus}`:''),
+  row('Relocation signal', bd.relocationBonus?`${bd.relocationBonus>0?'+':''}${bd.relocationBonus}`:''),
+  row('Learned from roles you kept', bd.learnedNudge?`${bd.learnedNudge>0?'+':''}${bd.learnedNudge}`:''),
+  row('Learned from roles you removed', bd.rejectionNudge?`${bd.rejectionNudge}`:''),
+  row('Dealbreakers found', bd.dealbreakerPenalty?`${bd.dealbreakerPenalty} — ${esc((j.matchFlags||[]).join(', '))}`:''),
+].join(''); return t?'<h2>How the score was built</h2>\n<table>'+t+'</table>':''; })()}
+
+<h2>The role</h2>
+<p>${esc(det.summary)}</p>
+<div class="two">
+  <div>
+    <h3>Stated requirements</h3>
+    <ul>
+      <li><b>${esc(j.type)}</b> level${j.clearance&&j.clearance!=='NONE'?` · <b>${esc(j.clearance)}</b> clearance`:''}</li>
+      <li>Core stack: ${esc((j.tech||[]).slice(0,4).join(', ')||'—')}</li>
+      <li>On-site in ${esc(j.location||'')}</li>
+    </ul>
+  </div>
+  <div>
+    <h3>A day in the life</h3>
+    <ul>${(det.day||[]).map(d=>`<li>${esc(d)}</li>`).join('')}</ul>
+  </div>
+</div>
+<h3>Company culture · ${esc(j.company)}</h3>
+<p>${esc(det.culture)}</p>
 
 <h2>Requirement by requirement</h2>
-${a.total?`<p>${a.covered} of ${a.total} stated requirement lines are covered (${pct}%)${a.manual?`, of which ${a.manual} you marked yourself`:''}.</p>
+${a.total?`<p>${a.reliable
+  ? `${a.covered} of ${a.total} stated requirement lines are covered (${pct}%)${a.manual?`, of which ${a.manual} you marked yourself`:''}.`
+  : `Couldn't reliably extract a requirements list from this posting — paste it manually. No coverage figure is printed: these lines came from prose rather than a qualifications section, and a percentage over the wrong denominator would measure nothing.`}</p>
 ${a.rows.map(r=>{
   const tag=r.overridden?'<span class="tag mine">Yours</span>':r.kind==='exact'?'<span class="tag hit">Match</span>':r.kind==='partial'?'<span class="tag inf">Inferred</span>':'<span class="tag gap">Gap</span>';
   const why=explainRequirement(r).replace(/<span class="gate">/g,'<b>').replace(/<\/span>/g,'</b>').replace(/<span class="term">/g,'<b>');
@@ -7028,16 +7463,17 @@ ${gates.length?`<h2>Credential gates</h2>
 <ul>${gates.map(r=>`<li>${esc(r.line)}</li>`).join('')}</ul>`:''}
 
 <h2>How the coursework aligns</h2>
-<p>Two ERAU credentials complete in <b>December 2026</b> — the Master of Space Operations (Systems Engineering specialization) and the Graduate Certificate in Systems Engineering. The M.S. Space Systems follows in <b>September 2027</b>. NASA L'SPACE NPWEE (Fall 2026) covered proposal development on the Lucy mission and a seat on a NASA proposal review panel.</p>
+<p>${courseworkSentence()}</p>
 ${(j.erauCreds&&j.erauCreds.length)?`<p>Credentials this posting actually calls for:</p><ul>${j.erauCreds.map(k=>`<li><b>${esc(ERAU_CREDS[k].label)}</b> — matched on the posting's own language</li>`).join('')}</ul>`
   :`<p class="note">This posting's text does not name work the Space Operations, Space Systems, or Systems Engineering coursework maps to directly. Lead with transferable programme delivery instead.</p>`}
 
-<h2>Skills against this archetype</h2>
-<table>${sm.rows.map(r=>`<tr><th>${esc(r.skill)}</th><td>${esc(r.note||'')}</td></tr>`).join('')}</table>
-
-${ats.missing.length?`<h2>Keywords to weave in</h2>
-<p>Terms this posting or its archetype expects that your résumé bank does not currently carry. Only claim what is true.</p>
-<div class="chips">${ats.missing.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}
+<h2>Skills against a generic archetype for this role family</h2>
+<p class="note">This compares a generic competency set for roles of this type against your own skills list. It is not a match to this posting, and any single percentage it produces reads high by construction — the archetype and the skills list overlap by design. Read the tiers.</p>
+<table>${sm.rows.map(r=>{
+  const lab=(EVIDENCE_TIERS[r.lvl]||EVIDENCE_TIERS.adjacent).label;
+  const extra=(r.note&&r.note!==lab)?`<span class="tsub">${esc(r.note)}</span>`:'';
+  return `<tr><th>${esc(r.skill)}</th><td><span class="tier">${esc(lab)}</span>${extra}</td></tr>`;
+}).join('')}</table>
 
 ${a.mirror.length?`<h2>Their language</h2>
 <p>Domain terms the posting uses that your skills list words differently. Where you have the experience, rename it to theirs.</p>
@@ -7047,17 +7483,114 @@ ${gaps.length?`<h2>Open gaps</h2>
 <p>Address these directly in the cover note rather than hoping they go unnoticed.</p>
 <ul>${gaps.map(r=>`<li>${esc(r.line)}</li>`).join('')}</ul>`:''}
 
+<h2>Why you're suited &mdash; and what to watch</h2>
+<p>${esc(narr.why)}</p>
+<p>${esc(narr.edge)}</p>
+<p><b>Challenge:</b> ${esc(narr.challenge)}</p>
+${narr.money?`<p>${esc(narr.money)}</p>`:''}
+
+<h2>Eligibility and timeline &middot; ERAU</h2>
+<p>${elig.note}</p>
+<table>${elig.steps.map(s=>`<tr><th>${esc(s.label)}</th><td>${esc(s.detail)}${s.done?' &middot; complete':''}</td></tr>`).join('')}</table>
+<p>Modules that map to this role: ${elig.modules.filter(m=>m.on).map(m=>esc(m.m)).join(', ')||'none flagged for this posting'}. Cite them in the application.</p>
+
+<h2>ATS keyword delta</h2>
+<p>${ats.parse}% estimated parse rate against what a tracking system scans for in this posting.</p>
+${ats.have.length?`<h3>Already on your r&eacute;sum&eacute;</h3><div class="chips">${ats.have.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}
+${ats.missing.length?`<h3>Missing &mdash; weave these in</h3><div class="chips">${ats.missing.map(t=>`<span>${esc(t)}</span>`).join('')}</div>
+<p class="note">Add these verbatim to the skills line and to a bullet, but only where the experience is real.</p>`:''}
+
 <h2>Compensation and logistics</h2>
 <table>
   ${row('Posted range', esc(salaryLabel(j)))}
   ${row('Against your floor', esc(fit.txt||''))}
-  ${row('Relocation', esc(j.reloc&&j.reloc!=='—'?j.reloc:'Nothing listed — confirm with recruiting'))}
+  ${row('Relocation', esc(rel.offered||'Nothing listed — confirm with recruiting'))}
   ${row('Days on market', daysOnMarket(j)+' days')}
   ${row('Sourced via', esc(jobSource(j)))}
   ${row('Posting', j.url&&j.url!=='#'?`<a href="${esc(j.url)}">${esc(j.url)}</a>`:'No direct link on this row')}
 </table>
 
-<footer>Generated by Orbital CRM for Lisaney Kong · ${esc(dt)}. Scores are decision support, not a verdict — every claim above traces to the posting text or your own résumé data.</footer>
+${sal?`<h3>Salary against your standard of living</h3>
+<table>
+  ${row('Gross base (top of range)', money(sal.gross))}
+  ${row('Est. federal tax (~18%)', '&minus; '+money(sal.fed))}
+  ${row(`State/income tax (${(sal.taxRate*100).toFixed(1)}%)`, '&minus; '+money(sal.stateTax))}
+  ${row('Take-home (net)', money(sal.net))}
+  ${row('Annual housing (1BR median)', '&minus; '+money(sal.rentYr))}
+  ${row('Net after housing', money(sal.leftover)+` &middot; ${sal.housingPct}% of net to housing${sal.housingPct<=30?' (healthy)':' (tight)'}`)}
+  ${row('Your lifestyle floor', money(sal.floor)+(sal.ok?' &mdash; clears it':' &mdash; falls under it'))}
+</table>
+<p>${sal.ok
+  ? `At ${money(sal.gross)} in ${esc(sal.hub)}, this sustains the 4-dog detached-home standard with ${money(sal.leftover)} of annual headroom after housing — even against ${esc(sal.hub)}'s ${esc(sal.col)} cost of living.`
+  : `At ${money(sal.gross)} in ${esc(sal.hub)}, you'd fall under the ${money(sal.floor)} lifestyle floor once ${esc(sal.hub)}'s ${esc(sal.col)} cost of living and the 4-dog detached-home requirement are factored in — negotiate up or weigh the trade-offs.`}</p>`:''}
+
+<h3>Relocation</h3>
+${rel.offered
+  ? `<p>${esc(j.company)} offers <b>${esc(rel.offered)}</b> for this position. What that typically covers:</p>
+     <ul>${rel.perks.map(p=>`<li><b>${esc(p[1])}</b> — ${esc(p[2])}</li>`).join('')}</ul>
+     <p class="note">For the move from Nashville with four dogs, confirm pet-transport coverage and a fenced-yard housing search.</p>`
+  : `<p>No relocation package is listed on this row — confirm with the recruiter; many ${esc(j.company)} roles handle it case-by-case.</p>`}
+
+<h2>Application essays &middot; ${eqs.length} question${eqs.length===1?'':'s'}</h2>
+<p class="note">Question source: ${esc(esrc)}. Application essay prompts cannot be read from a real portal, so anything not pasted in by hand is a forecast rather than their actual form. Drafts are assembled from your own r&eacute;sum&eacute;, capstone and ERAU coursework; a <b>[bracketed slot]</b> marks a company-specific reason only you can supply.</p>
+${eqs.map((p,i)=>{
+  const ans=essayAnswerFor(j.id,p.k,j)||'';
+  const edited=!!(erec.answers&&typeof erec.answers[p.k]==='string');
+  return `<div class="essay">
+    <p class="q">${i+1}. ${esc(essayPromptText(p,j))}</p>
+    <p class="qt">${esc(p.tag||'')}${edited?' &middot; your edited version':''}</p>
+    <p class="ans">${esc(ans)||'<i>Not drafted yet.</i>'}</p>
+    <p class="wc">${wc(ans)} words</p>
+  </div>`;
+}).join('')}
+
+${draft&&draft.text?`<h2>Tailoring copilot draft</h2>
+<p class="note">Drafted ${esc(new Date(draft.when).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}))} against this posting. Read every line before sending.</p>
+<pre class="draft">${esc(draft.text)}</pre>`:''}
+
+<h2>Outreach drafts</h2>
+<p class="note">Built from your r&eacute;sum&eacute; facts only, with the coursework-not-industry boundary stated rather than blurred. Fill every [bracketed slot] before sending.</p>
+<h3>LinkedIn connection note</h3>
+<pre class="draft">${esc(out.linkedin)}</pre>
+<h3>Cold email</h3>
+<pre class="draft">${esc(out.email)}</pre>
+<h3>Referral request</h3>
+<pre class="draft">${esc(out.referral)}</pre>
+
+<h2>Alumni and referral leads</h2>
+<p>~${alum.count} Embry-Riddle alumni are estimated on staff at ${esc(j.company)}. A referral beats a cold apply by roughly 10&times;, so work these searches before you submit.</p>
+${alum.logged.length
+  ? `<h3>Logged contacts</h3><ul>${alum.logged.map(c=>`<li><b>${esc(c.name||'—')}</b>${c.role?' — '+esc(c.role):''}${c.status?` (${esc(c.status)})`:''}</li>`).join('')}</ul>`
+  : `<p class="note">No alumni logged yet at ${esc(j.company)} in the CRM.</p>`}
+<h3>LinkedIn searches</h3>
+${alum.leads.map(l=>`<p class="lead"><b>${esc(l.label)}</b> &middot; ${esc(l.role)}-level<br><a href="${l.url}">${l.url}</a></p>`).join('')}
+<p class="lead"><a href="${alum.dirUrl}">ERAU alumni directory &rarr; ${esc(j.company)}</a></p>
+<p class="lead"><a href="${alum.coUrl}">${esc(j.company)} team on LinkedIn</a></p>
+
+<h2>Pre-submit checklist</h2>
+<ul class="checks">${ma.items.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>
+<p><b>Reverse-interview playbook</b> — ask them: ${ma.playbook.map(q=>'&ldquo;'+esc(q)+'&rdquo;').join(' ')} You're qualifying them too.</p>
+
+${(j.tech||[]).length?`<h2>Required technology competencies</h2>
+<div class="chips">${(j.tech||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}
+
+${note&&note.t?`<h2>My notes</h2>
+<p class="note">Saved ${esc(new Date(note.ts).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}))}</p>
+<pre class="draft">${esc(note.t)}</pre>`:''}
+
+${dlines.length?`<h2>Full role description</h2>
+<div class="appendix">${(function(){
+  let h='', inList=false;
+  const closeList=()=>{ if(inList){ h+='</ul>'; inList=false; } };
+  for(const ln of dlines){
+    if(ln.startsWith('### ')){ closeList(); h+=`<h3>${esc(ln.slice(4))}</h3>`; }
+    else if(ln.startsWith('• ')){ if(!inList){ h+='<ul>'; inList=true; } h+=`<li>${esc(ln.slice(2))}</li>`; }
+    else { closeList(); splitIntoParagraphs(ln).forEach(p=>{ h+=`<p>${esc(p)}</p>`; }); }
+  }
+  closeList(); return h;
+})()}</div>`:''}
+
+<footer>Generated by Orbital CRM for Lisaney Kong &middot; ${esc(dt)}. Scores are decision support, not a verdict &mdash; every claim above traces to the posting text or your own r&eacute;sum&eacute; data. Space and systems engineering background is graduate coursework, not industry experience.</footer>
 </div></body></html>`;
 }
 function downloadMatchReport(id){
@@ -7070,12 +7603,15 @@ function downloadMatchReport(id){
     a.download=`Match report — ${j.company} — ${j.title}.html`.replace(/[\/\\:*?"<>|]/g,'-');
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),4000);
-    scrapeNote('Match report downloaded. Open it in any browser — print to PDF from there if you want a copy to send.');
+    scrapeNote('Full dossier downloaded — fit, essays, outreach, alumni leads, comp and the posting itself. Open it in any browser; print to PDF from there to send.');
   }catch(e){ scrapeNote('Could not build the report: '+(e.message||e)); }
 }
 function copilotPlainText(j){
   const a=tailoringAnalysis(j);
-  let out=`TAILORING BRIEF \u2014 ${j.title} @ ${j.company}\nCoverage: ${a.covered}/${a.total} stated requirements`;
+  let out=`TAILORING BRIEF \u2014 ${j.title} @ ${j.company}\n`+(a.reliable
+    ? `Coverage: ${a.covered}/${a.total} stated requirements`
+    : `Coverage: not scored — no qualifications list could be extracted from this posting`);
+  if(a.blockers&&a.blockers.length) out+=`\nHARD BLOCKERS: ${a.blockers.map(b=>b.label).join('; ')}`;
   if(a.manual) out+=` (${a.autoCovered} matched, ${a.manual} marked by you)`;
   out+=`\n\n`;
   a.rows.forEach(r=>{
@@ -7122,7 +7658,8 @@ function autoDraftCopilot(id){
 async function runCopilotAI(id){
   const j=findJobById(id); if(!j) return;
   const box=document.getElementById('copilot-ai-'+id); if(!box) return;
-  box.innerHTML='<p class="subtle" style="margin:10px 0 0">Drafting against the real posting\u2026</p>';
+  box.innerHTML='<p class="subtle" style="margin:10px 0 0" data-ainote>Drafting against the real posting\u2026</p>';
+  const note=aiNoter(box);
   try{
     const a=tailoringAnalysis(j);
     // Overridden lines are strengths, not gaps — feeding them to the model as shortfalls
@@ -7130,16 +7667,13 @@ async function runCopilotAI(id){
     const gaps=a.rows.filter(r=>!r.ok).map(r=>r.line).slice(0,5);
     const hits=a.rows.filter(r=>r.ok).map(r=>r.line).slice(0,5);
     const prompt=`You are a career copilot helping tailor an application. STRICT RULE: never invent experience the candidate does not claim; only reframe what is true.\n\nCandidate: ${OWNER.blurb||''}\nSkills: ${userSkillSet().join(', ')}\n\nRole: ${j.title} at ${j.company}\nRequirements they state that the candidate ALREADY covers: ${hits.join(' | ')||'(none detected)'}\nRequirements with NO detected coverage: ${gaps.join(' | ')||'(none)'}\nPosting language to mirror: ${a.mirror.join(', ')||'(none)'}\n\nProduce exactly:\nBULLETS:\n- 3 r\u00e9sum\u00e9 bullet rewrites using THEIR terminology, each grounded ONLY in the candidate's stated skills\nCOVER:\nA 110-130 word cover note, specific to this role, honest about the transition, no clich\u00e9s.`;
-    const text=await aiComplete(prompt);
+    const text=await aiComplete(prompt, note);
     saveAiDraft(id, text);
     renderAiDraft(id, text, new Date().toISOString());
   }catch(e){
-    if(String(e.message)==='NO_AI_KEY'){
-      box.innerHTML=aiKeyPromptHTML('copilot-'+id);
-      wireAiKeySave('copilot-'+id, ()=>runCopilotAI(id));
-    } else {
-      box.innerHTML=`<p class="subtle" style="color:var(--bad);margin:10px 0 0">AI drafting failed: ${esc(e.message||'unknown')}. The local analysis above still stands.</p>`;
-    }
+    box.innerHTML=aiErrorHTML(e,'copilot-'+id)
+      +`<p class="subtle" style="margin:8px 0 0;font-size:var(--fs-2xs)">The local analysis above still stands — it needs no AI.</p>`;
+    wireAiError('copilot-'+id, ()=>runCopilotAI(id));
   }
 }
 /* =====================================================================================
@@ -7392,7 +7926,7 @@ async function essayInfer(id){
     essayRerender(id);
     scrapeNote(`${lines.length} predicted questions loaded. These are a forecast, not their real form.`);
   }catch(e){
-    scrapeNote(e.message==='NO_AI_KEY' ? 'No AI key saved yet.' : 'Prediction failed: '+e.message);
+    scrapeNote('Prediction failed — '+aiErrText(e));
   }
 }
 async function essayRegen(id,k){
@@ -7435,7 +7969,7 @@ Return ONLY the answer text.`;
     scrapeNote('Redrafted. Read it before you send it.');
   }catch(e){
     ta.disabled=false; ta.value=prev;
-    scrapeNote(e.message==='NO_AI_KEY' ? 'No AI key saved yet.' : 'Draft failed: '+e.message);
+    scrapeNote('Draft failed — '+aiErrText(e));
   }
 }
 function essayExport(id){
@@ -7522,6 +8056,7 @@ function dossierHTML(j){
     ${essayBlock(j)}
     <div id="airescore-${esc(j.id)}" class="dblock" style="display:none"></div>
     <div id="resumegen-${esc(j.id)}" class="dblock" style="display:none"></div>
+    <div id="coverletter-${esc(j.id)}" class="dblock" style="display:none"></div>
     ${role==='owner'?`<div class="dblock notes-block"><h4>📝 My Notes ${roleNotes()[j.id]?`<span class="notes-ts">saved ${new Date(roleNotes()[j.id].ts).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>`:''}</h4>
       <textarea class="tinput notes-ta" data-noteid="${esc(j.id)}" rows="3" placeholder="Recruiter names, referral status, interview prep, gut feel — anything worth remembering about this one…">${esc((roleNotes()[j.id]||{}).t||'')}</textarea>
       <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
@@ -7551,17 +8086,17 @@ function dossierHTML(j){
     <div class="dblock"><h4>✨ Required Technology Competencies</h4>
       <div class="techtags">${(j.tech||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div></div>
     <div class="dblock"><h4>💬 Personalized Outreach Suite</h4>
-      <div class="outreach"><button data-copy="linkedin">🔗 LinkedIn Connection</button><button data-copy="email">✉ Cold Email Channel</button><button data-copy="referral">🤝 Referral Request</button></div></div>
+      <div class="outreach"><button data-copy="linkedin" data-copyjob="${esc(j.id)}">🔗 LinkedIn Connection</button><button data-copy="email" data-copyjob="${esc(j.id)}">✉ Cold Email Channel</button><button data-copy="referral" data-copyjob="${esc(j.id)}">🤝 Referral Request</button></div></div>
   </div>
   <div class="dactions">
     <a class="apply" href="${esc(j.url||'#')}" target="_blank" rel="noreferrer" title="${esc(applyHint(j))}">${esc(applyLabel(j))} ↗</a>
     <button data-applied="${j.id}" style="${appliedJobs.has(j.id)?'color:var(--good);border-color:rgba(0,230,162,.4);background:rgba(0,230,162,.08)':''}">${appliedJobs.has(j.id)?'✔ Applied':'📌 I Applied'}</button>
     <button data-airescore="${j.id}" title="Ask Claude to read the full posting vs. your résumé for a semantic fit check">🧠 AI Re-Score</button>
     <button data-resumegen="${j.id}" title="Generate a résumé tailored to this posting">📄 Tailored Résumé</button>
-    <button data-convert="${j.id}" title="Generate a tailored résumé PDF"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Convert Résumé</button>
+    <button data-coverletter="${j.id}" title="Draft and download a cover letter written for this posting">✉ Cover Letter</button>
     <button data-share="${j.id}"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg> Share</button>
     <button data-newwin="${j.id}"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3h7v7M21 3l-9 9M5 5h5M5 5v14h14v-5"/></svg> New window</button>
-    <button data-report="${j.id}" title="Download the full match analysis — requirement-by-requirement coverage, coursework alignment, gaps and strategy"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> Download match report</button>
+    <button data-report="${j.id}" title="Download the whole dossier — score build-up, requirement coverage, essays, outreach drafts, alumni leads, comp breakdown and the posting itself"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> Download match report</button>
     <button data-notmatch="${j.id}" class="notmatch" title="Remove this role and record why — the ranking learns from it">⊘ Not a match</button>
   </div>`;
 }
@@ -7642,79 +8177,6 @@ function openShare(id){
   $('#modal').innerHTML=shareHTML(j);
   $('#modalBg').classList.add('open');
 }
-/* ===== Convert Résumé → generate a revised PDF with missing skills woven in ===== */
-function pdfEscape(s){ return String(s).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)'); }
-function buildResumePDF(lines){
-  // lines: [{t:'text', size, bold, gap}] — single Letter page, Helvetica
-  const W=612,H=792,L=54; let y=H-64; const ops=[];
-  ops.push(`0.02 0.04 0.08 rg 0 0 ${W} ${H} re f`);            // dark bg
-  ops.push(`0.216 0.839 0.902 rg 0 ${H-6} ${W} 6 re f`);        // accent bar
-  for(const ln of lines){
-    const size=ln.size||10.5, bold=ln.bold;
-    if(ln.gap) y-=ln.gap;
-    if(ln.rule){ ops.push(`0.15 0.21 0.30 RG 0.8 w ${L} ${y+4} m ${W-L} ${y+4} l S`); }
-    const col = ln.accent ? '0.216 0.839 0.902' : (ln.dim?'0.55 0.62 0.73':'0.91 0.94 0.98');
-    const f = bold?'/F2':'/F1';
-    // wrap
-    const max=Math.floor((W-L*2)/(size*0.5));
-    const words=String(ln.t||'').split(' '); let cur='';
-    const flush=t=>{ ops.push(`BT ${f} ${size} Tf ${col} rg 1 0 0 1 ${L} ${y} Tm (${pdfEscape(t)}) Tj ET`); y-=size*1.5; };
-    if(!ln.t){ y-=size*1.5; continue; }
-    for(const w of words){ if((cur+' '+w).length>max && cur){ flush(cur); cur=w; } else cur=cur?cur+' '+w:w; }
-    if(cur) flush(cur);
-  }
-  const content=ops.join('\n');
-  const objs=[];
-  objs.push('<< /Type /Catalog /Pages 2 0 R >>');
-  objs.push('<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
-  objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>`);
-  objs.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
-  objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
-  objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
-  let pdf='%PDF-1.4\n'; const off=[];
-  objs.forEach((o,i)=>{ off.push(pdf.length); pdf+=`${i+1} 0 obj\n${o}\nendobj\n`; });
-  const xref=pdf.length; pdf+=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`;
-  off.forEach(o=>{ pdf+=String(o).padStart(10,'0')+' 00000 n \n'; });
-  pdf+=`trailer\n<< /Size ${objs.length+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
-  return pdf;
-}
-function convertResume(id){
-  const j=findJob(id); if(!j) return;
-  const m=skillsMatch(j);
-  const missing=(m.rows||[]).filter(r=>r.lvl!=='direct').map(r=>r.skill);
-  const merged=[...OWNER.skills];
-  missing.forEach(s=>{ if(!merged.some(x=>x.toLowerCase()===s.toLowerCase())) merged.push(s); });
-  const lines=[
-    {t:OWNER.name, size:22, bold:true},
-    {t:`${OWNER.title}  ·  Nashville, TN  ·  lisaney@lisaney.com`, size:9.5, dim:true},
-    {t:`Tailored for ${j.title} — ${j.company}`, size:9.5, accent:true, gap:2},
-    {t:'', gap:4},
-    {t:'PROFESSIONAL SUMMARY', size:11, bold:true, accent:true, rule:true, gap:10},
-    {t:OWNER.blurb, size:10},
-    {t:'', gap:6},
-    {t:'CORE SKILLS', size:11, bold:true, accent:true, rule:true, gap:10},
-    {t:merged.join('  ·  '), size:10},
-    {t:'', gap:6},
-    {t:'EXPERIENCE', size:11, bold:true, accent:true, rule:true, gap:10},
-    {t:'Senior Operations & Solutions Lead — SoftwareOne', size:10.5, bold:true},
-    {t:'Exceeded operational milestones by 166%; architected the Salesforce enterprise system and automated the cross-functional operations pipeline.', size:10},
-    {t:'Strategic Accounts — Achievers', size:10.5, bold:true, gap:4},
-    {t:'Drove 300% over quota; owned S&OP cadence and stakeholder alignment across product, sales, and delivery.', size:10},
-    {t:'Solutions Engineering — Vault.co', size:10.5, bold:true, gap:4},
-    {t:'Negotiated the largest enterprise contract in company history; built lifecycle and CRM process automation.', size:10},
-    {t:'', gap:6},
-    {t:'EDUCATION', size:11, bold:true, accent:true, rule:true, gap:10},
-    {t:'Master of Space Operations — Embry-Riddle Aeronautical University', size:10},
-    {t:'Graduate Certificate in Systems Engineering — Embry-Riddle Aeronautical University', size:10},
-  ];
-  const pdf=buildResumePDF(lines);
-  const blob=new Blob([pdf],{type:'application/pdf'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download=`Lisaney Kong — Résumé — ${j.company} ${j.title}.pdf`.replace(/[\/\\:]/g,'-');
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),4000);
-}
 function openNewWindow(id){
   const j=findJob(id); if(!j) return;
   const w=window.open('','_blank','width=760,height=900');
@@ -7769,7 +8231,6 @@ async function extractSkillsFromPdf(file){
 /* =========================================================================
    LOGIN GATE — Google SSO (owner) / guest read-only
    ========================================================================= */
-const GOOGLE_G = `<svg viewBox="0 0 48 48" width="18" height="18"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.4 1.1 7.3 2.8l5.7-5.7C33.6 6.1 29.1 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c2.8 0 5.4 1.1 7.3 2.8l5.7-5.7C33.6 6.1 29.1 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-2.6-11.3-7l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C39.9 36.6 44 31 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>`;
 function gateHTML(){
   return `<div class="gate" id="gate" style="position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:24px"><div class="vaultfx"><span></span><span></span><span></span></div><div class="gatecard" style="width:100%;max-width:430px;border:1px solid rgba(120,160,235,.2);border-radius:var(--r2);overflow:hidden;background:linear-gradient(180deg,rgba(16,24,40,.97),rgba(7,11,19,.97));box-shadow:0 40px 120px rgba(0,0,0,.7);text-align:center;position:relative;z-index:2">
     <div class="gtop" style="padding:28px 26px 18px">
@@ -8307,7 +8768,7 @@ function drawerHTML(){
         <p class="subtle">Sign-ins from this address (or any <b>@lisaney.com</b>) get full owner control. Everyone else is read-only.</p>
       </div>
       <div class="dsec"><h4>🛰 Résumé Refresh</h4>
-        <p class="subtle" style="margin:0 0 9px">Drop a fresh PDF anytime your skills or network level up — each upload becomes a new revision and instantly powers matching + every role's <b>Convert Résumé</b>.</p>
+        <p class="subtle" style="margin:0 0 9px">Drop a fresh PDF anytime your skills or network level up — each upload becomes a new revision and instantly powers matching + every role's <b>Tailored Résumé</b>.</p>
         <label class="upload" id="resumeDrop"><input type="file" id="resumeFile" accept="application/pdf" hidden>
           <span class="upic">🚀</span>
           <span class="uptext" id="resumeName">${esc('Current: '+resumeName())}</span>
@@ -8845,7 +9306,9 @@ document.addEventListener('click',e=>{
   const cl=e.target.closest('[data-close]'); if(cl){ closeModal(); }
   const sh=e.target.closest('[data-share]'); if(sh && e.target.closest('#modal')){ openShare(sh.dataset.share); }
   const nw=e.target.closest('[data-newwin]'); if(nw){ openNewWindow(nw.dataset.newwin); }
-  const cvt=e.target.closest('[data-convert]'); if(cvt){ convertResume(cvt.dataset.convert); }
+  const cvt=e.target.closest('[data-coverletter]'); if(cvt){ e.stopPropagation(); generateCoverLetter(cvt.dataset.coverletter); }
+  const clc=e.target.closest('[data-clcopy]'); if(clc){ e.stopPropagation(); const c=coverLetterCache(clc.dataset.clcopy);
+    if(c&&c.text){ try{ navigator.clipboard.writeText(c.text); }catch(_){} clc.textContent='Copied ✓'; setTimeout(()=>clc.textContent='Copy text',1400); } }
   const ar=e.target.closest('[data-airescore]'); if(ar){ e.stopPropagation(); runAiReScore(ar.dataset.airescore); }
   const rg=e.target.closest('[data-resumegen]'); if(rg){ e.stopPropagation(); generateTailoredResume(rg.dataset.resumegen); }
   const osx=e.target.closest('[data-opensettings]'); if(osx){ e.stopPropagation(); openDrawer(); setTimeout(()=>{ const el=$('#setAiKey'); if(el) el.focus(); },260); }
@@ -8895,7 +9358,10 @@ document.addEventListener('click',e=>{
   const az=e.target.closest('#acctSnooze'); if(az){ localStorage.setItem('orbital.cadenceSnooze', new Date().toDateString()); refreshContent(); }
     const pv=e.target.closest('[data-previewshare]'); if(pv){ location.hash='share='+pv.dataset.previewshare; location.reload(); }
   const cp=e.target.closest('#copyBtn'); if(cp){ const i=$('#shareLink'); i.select(); document.execCommand('copy'); cp.textContent='Copied ✓'; setTimeout(()=>cp.textContent='Copy link',1500); }
-  const oc=e.target.closest('[data-copy]'); if(oc){ oc.textContent='Copied ✓'; setTimeout(()=>{const m={linkedin:'🔗 LinkedIn Connection',email:'✉ Cold Email Channel',referral:'🤝 Referral Request'};oc.innerHTML=m[oc.dataset.copy];},1400); }
+  const oc=e.target.closest('[data-copy]'); if(oc){
+    const j=oc.dataset.copyjob?findJobById(oc.dataset.copyjob):null;
+    if(j){ const d=outreachDrafts(j); const t=d[oc.dataset.copy]; if(t){ try{ navigator.clipboard.writeText(t); }catch(_){} } }
+    oc.textContent='Copied ✓'; setTimeout(()=>{const m={linkedin:'🔗 LinkedIn Connection',email:'✉ Cold Email Channel',referral:'🤝 Referral Request'};oc.innerHTML=m[oc.dataset.copy];},1400); }
 });
 function openDrawer(){ $('#drawerBg').classList.add('open'); $('#drawer').classList.add('open'); renderScrapeHealth(); }
 /* The old readout only knew about scrapes run FROM this browser (localStorage), so a
@@ -9037,6 +9503,23 @@ function wireDrawer(){
   wireResumeUI({file:'#resumeFile',msg:'#resumeMsg',drop:'#resumeDrop',view:'#resumeView',actions:'#resumeActions',clear:'#resumeClear',history:'#resumeHistory',reopenDrawer:true});
   wireResumeUI({file:'#resumeFileP',msg:'#resumeMsgP',drop:'#resumeDropP',view:'#resumeViewP',actions:'#resumeActionsP',clear:'#resumeClearP',history:'#resumeHistoryP',reopenDrawer:false});
   // Master résumé JSON editor — the source the tailored-résumé generator builds from.
+  const tg=$('#targetGross');
+  if(tg){
+    const tgMsg=$('#targetGrossMsg');
+    const tgSay=(t,c)=>{ if(tgMsg){ tgMsg.style.color=c; tgMsg.textContent=t; } };
+    const tgs=$('#targetGrossSave');
+    if(tgs) tgs.onclick=()=>{
+      const v=Math.round(+tg.value||0);
+      if(!v||v<1000){ tgSay('Enter an annual gross figure, e.g. 120000. Nothing was saved.','var(--bad)'); return; }
+      localStorage.setItem('orbital.targetGross', String(v));
+      tgSay('Saved. Charts, dossiers and the recruiter-screen prompt measure against $'+v.toLocaleString('en-US')+' from here on.','var(--good)');
+    };
+    const tgr=$('#targetGrossReset');
+    if(tgr) tgr.onclick=()=>{
+      localStorage.removeItem('orbital.targetGross');
+      tg.value=165000; tgSay('Reset to $165,000.','var(--muted)');
+    };
+  }
   const mrTA=$('#masterResumeTA');
   if(mrTA){
     mrTA.value=JSON.stringify(masterResume(),null,2);
@@ -9132,7 +9615,7 @@ function wireDrawer(){
       const r=await aiComplete('Reply with the single word: ready');
       akSet('✓ Working — the API replied "'+String(r||'').trim().slice(0,24)+'".','var(--good)');
     }catch(e){
-      akSet('✕ '+(e.message==='NO_AI_KEY'?'No key saved.':e.message),'var(--bad)');
+      akSet('✕ '+aiErrText(e),'var(--bad)');
     }
     akTest.disabled=false;
   };
