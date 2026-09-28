@@ -12,7 +12,9 @@ you can do it.
 ------------------------------------------------------------
 BUILD 17  —  CLEAN-INSTALL KIT   (build 2026-09-28.1)
 ------------------------------------------------------------
-2026-09-28 update: index.html changed. The résumé generator and
+2026-09-28 update: index.html and scraper.py changed. Hot now
+means the role was originally posted within 7 days, measured from the
+job board's posting date and never the scrape date. The résumé generator and
 cover letter now follow the job kit, essay answers are labelled as
 drafts, and the app is live-data only: no sample jobs, and no
 hardcoded chart numbers. See HANDOFF.md.

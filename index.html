@@ -4221,8 +4221,7 @@ function salaryLabel(j){
   return money(j.salMin)+' – '+money(j.salMax)+(j.estimated?' (est.)':'');
 }
 function salaryValue(j){ return j.salMax || (j.internRate? j.internRate*40*(j.internWeeks||1):0); }
-// Live window is ROLE_WINDOW_DAYS (60d; internships 270d); ≤HOT_DAYS (5d) + match floor = HOT
-const DAY_OVERRIDE={j1:3,j2:9,j3:18,j4:6,j5:27,j6:12,j7:1,j8:4,j9:22,j10:31,j11:2,j12:8,j13:5,j14:14,j15:25,j16:1,j17:11,j18:38};
+// Live window is ROLE_WINDOW_DAYS (60d; internships 270d); ≤HOT_DAYS (7d) + match floor = HOT
 // Early-career / new-grad detector — shared everywhere so the whole platform treats this
 // as a first-class category, not just one widget: track filter, badges, and match scoring.
 const EARLY_CAREER_RE=/\b(intern|co-?op|fellow|new ?grad|early ?career|associate|entry.level|junior|jr\.?|university|graduate|rotational|apprentice)\b/i;
@@ -4238,10 +4237,23 @@ function isEarlyCareer(j){
   if(!byTitle && !byBody) return false;
   return seniorityOf(j.title)<=(byBody?2:1);   // body-only matches allow the mid-level default title
 }
-function daysOnMarket(j){ return DAY_OVERRIDE[j.id] ?? (j.days!=null ? j.days : 0); }
+// Days since the employer ORIGINALLY posted the role — read from the posting date the job
+// board reports (the jobs.timestamp column), recomputed on every load so it never freezes at
+// the value it had when the scraper last saw the row. It is never the date the role was
+// scraped or added to Orbital. A board that gives no posting date yields NaN ("date
+// unknown"): NaN fails every <= / >= test, so an undated role is never hot, never "fresh",
+// and never archived.
+function daysOnMarket(j){
+  if(j.postedAt) return Math.max(0, Math.floor((Date.now()-j.postedAt)/864e5));
+  if(j.days!=null && j.days!=='' && !isNaN(+j.days)) return +j.days;
+  return NaN;
+}
+function dateKnown(j){ return !isNaN(daysOnMarket(j)); }
+function domSort(j){ const d=daysOnMarket(j); return isNaN(d) ? 1e6 : d; }
+function daysLabel(j, suffix){ const d=daysOnMarket(j); return isNaN(d) ? 'posting date unknown' : d+(suffix||'d listed'); }
 // HOT = both conditions: posted within the last HOT_DAYS days AND at least HOT_MATCH_FLOOR% match.
 // Recency alone is "new", not hot.
-const HOT_DAYS = 5;
+const HOT_DAYS = 7;
 // Hotness runs on its own low floor, independent of the pipeline match floor: a brand-new
 // posting is worth seeing even when it scores well under the threshold that governs the
 // board. Recency still is not enough on its own.
@@ -4265,6 +4277,7 @@ const TEMP_BANDS = [
 ];
 function roleTemp(j){
   const d=daysOnMarket(j);
+  if(isNaN(d)) return {k:'unknown', max:null, label:'Date unknown', color:'var(--dim)'};
   let b=TEMP_BANDS[TEMP_BANDS.length-1];
   for(const x of TEMP_BANDS){ if(d<=x.max){ b=x; break; } }
   if(b.k==='hot' && (j.match||0) < HOT_MATCH_FLOOR) b=TEMP_BANDS[1];
@@ -4272,6 +4285,7 @@ function roleTemp(j){
 }
 function tempTip(j){
   const t=roleTemp(j), d=daysOnMarket(j);
+  if(t.k==='unknown') return 'The job board did not give an original posting date, so this role cannot be rated hot';
   if(t.k==='hot') return `Hot — posted ${d} day${d===1?'':'s'} ago and matches ${j.match||0}% (hot needs ${HOT_MATCH_FLOOR}%+)`;
   if(t.k==='warm') return `Warm — ${d} days on market${(j.match||0)<HOT_MATCH_FLOOR?`, and matches only ${j.match||0}%`:''}`;
   if(t.k==='lukewarm') return `Lukewarm — ${d} days on market; the first wave of applicants is already in`;
@@ -4528,7 +4542,8 @@ function mapLiveJob(r){
     id:r.id, company:r.company, title:r.title, region,
     salMin, salMax, internRate:r.intern_rate||0, internWeeks:r.intern_weeks||0,
     match, planets: r.planets!=null ? r.planets : Math.max(0,Math.min(5,Math.round(match/20))),
-    days: r.posting_age!=null ? r.posting_age : 0,
+    days: r.posting_age!=null ? r.posting_age : null,
+    postedAt: (r.timestamp && !isNaN(Date.parse(r.timestamp))) ? Date.parse(r.timestamp) : null,
     location: r.location || r.location_hub || '', type: isIntern?'Internship':(r.type||'Full-time'),
     logo:(r.company||'?').replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase()||'JB', logoBg:r.logo_bg||'#2a4d7a',
     tech:(r.tech||'').toString().split(',').map(s=>s.trim()).filter(Boolean),
@@ -5269,7 +5284,7 @@ function jobListPanel(jobs, title, opts={}){
     return `<div class="jrow ${hot?'hotjob':''}" data-job="${j.id}">
       <div class="jlogo" style="background:${j.logoBg};${j.logoFg?'color:'+j.logoFg:''}">${esc(j.logo)}</div>
       <div class="jmain">
-        <div class="jtitle">${esc(j.title)} ${settings.hotBadges?tempBadge(j):''}<span class="postedage">${daysOnMarket(j)}d listed</span></div>
+        <div class="jtitle">${esc(j.title)} ${settings.hotBadges?tempBadge(j):''}<span class="postedage">${daysLabel(j)}</span></div>
         <div class="jco"><b class="colink" data-company="${esc(j.company)}" title="Company profile — every role, pay band, hiring pattern and alumni lead">${esc(j.company)}</b> · ${esc(j.location)}</div>
         <div class="jmeta">${internChip}${internMeta}${relocChip}<span class="chip mchip" style="color:${matchColor(j.match)};border-color:${matchColor(j.match)}55">${matchIcon(j.match)} ${j.match}% match</span>${(j.matchFlags&&j.matchFlags.length)?`<span class="chip" style="color:var(--a4);border-color:var(--a4-soft);background:var(--a4-soft)" title="${esc(j.matchFlags.join(', '))}">⚠ ${j.matchFlags.length} flag${j.matchFlags.length>1?'s':''}</span>`:''}${sourceBadge(j)}${roleTagChips(j)}</div>
       </div>
@@ -5328,10 +5343,10 @@ function applyListFilters(jobs){
     return true;
   });
   const s=listFilters.sort;
-  a.sort((x,y)=> s==='hot'?(hotScore(y)-hotScore(x) || daysOnMarket(x)-daysOnMarket(y))
+  a.sort((x,y)=> s==='hot'?(hotScore(y)-hotScore(x) || domSort(x)-domSort(y))
     : s==='deadline'?effectiveDeadline(x)-effectiveDeadline(y)
     : s==='startdate'?effectiveStartDate(x)-effectiveStartDate(y)
-    : s==='fresh'?daysOnMarket(x)-daysOnMarket(y)
+    : s==='fresh'?domSort(x)-domSort(y)
     : s==='payhi'?salaryValue(y)-salaryValue(x)
     : s==='paylo'?((salaryValue(x)||1e9)-(salaryValue(y)||1e9))
     // Company sort groups every role from one employer together, best match first
@@ -5588,7 +5603,7 @@ function hotScore(j){
 }
 function hotWhy(j){
   const d=daysOnMarket(j), sv=salaryValue(j), out=[];
-  out.push(d===0?'posted today':d===1?'posted yesterday':'posted '+d+'d ago');
+  out.push(isNaN(d)?'posting date unknown':d===0?'posted today':d===1?'posted yesterday':'posted '+d+'d ago');
   out.push((j.match||0)+'% fit');
   out.push(sv ? (sv>=targetSalary()?'clears your salary floor':salaryLabel(j)) : 'no salary posted — scored neutral');
   if(j.matchFlags && j.matchFlags.length) out.push('\u26a0 '+j.matchFlags[0].toLowerCase());
@@ -5606,9 +5621,9 @@ function priorityWhy(j){
 function sortJobs(list){
   const l=[...list];
   if(sortMode==='salary') return l.sort((a,b)=>salaryValue(b)-salaryValue(a));
-  if(sortMode==='newest') return l.sort((a,b)=>daysOnMarket(a)-daysOnMarket(b));
+  if(sortMode==='newest') return l.sort((a,b)=>domSort(a)-domSort(b));
   if(sortMode==='erau') return l.sort((a,b)=>(b.erauFit||0)-(a.erauFit||0) || (b.match||0)-(a.match||0));
-  if(sortMode==='hot') return l.sort((a,b)=>hotScore(b)-hotScore(a) || daysOnMarket(a)-daysOnMarket(b));
+  if(sortMode==='hot') return l.sort((a,b)=>hotScore(b)-hotScore(a) || domSort(a)-domSort(b));
   if(sortMode==='priority') return l.sort((a,b)=>priorityScore(b)-priorityScore(a));
   return l.sort((a,b)=>(b.match||0)-(a.match||0));
 }
@@ -5867,7 +5882,7 @@ function jobTable(jobs){
   return `<div style="overflow-x:auto"><table class="dtable"><thead><tr>
     <th>Role</th><th>Company</th><th>Location</th><th class="r">Salary</th><th class="r">Match</th><th class="r">Reloc</th><th class="r">Save</th>
     </tr></thead><tbody>${jobs.map(j=>`<tr data-job="${j.id}">
-    <td><div class="ti"><b>${esc(j.title)} ${settings.hotBadges?tempBadge(j,'var(--fs-md)'):''}</b><span>${esc(j.type)} · ${daysOnMarket(j)}d listed</span></div></td>
+    <td><div class="ti"><b>${esc(j.title)} ${settings.hotBadges?tempBadge(j,'var(--fs-md)'):''}</b><span>${esc(j.type)} · ${daysLabel(j)}</span></div></td>
     <td><div class="co"><div class="lg" style="background:${j.logoBg};${j.logoFg?'color:'+j.logoFg:''}">${esc(j.logo)}</div>${esc(j.company)}</div></td>
     <td style="color:var(--muted)">${esc(j.location)}</td>
     <td class="r salcell">${salaryLabel(j)}</td>
@@ -5943,7 +5958,7 @@ function deadlineFor(j){
   if(j.applyBy){ const d=new Date(j.applyBy); if(!isNaN(d)) return {date:d, est:false}; }
   const sig=internshipSignals(j);
   if(sig.deadline && sig.deadline.date) return {date:sig.deadline.date, est:false};
-  const posted=Date.now()-daysOnMarket(j)*864e5;
+  const posted=Date.now()-(dateKnown(j)?daysOnMarket(j):0)*864e5;
   const win=(j.type==='Internship')?270:45;   // internships accept applications ~9 months ahead of program start
   return {date:new Date(posted+win*864e5), est:true};
 }
@@ -6645,7 +6660,7 @@ function companyView(){
             <div class="jlogo" style="background:${j.logoBg}">${esc(j.logo)}</div>
             <div class="jmain">
               <div class="jtitle">${esc(j.title)}</div>
-              <div class="jco">${esc(j.location||'')} · ${esc(j.type)} · ${daysOnMarket(j)}d on market</div>
+              <div class="jco">${esc(j.location||'')} · ${esc(j.type)} · ${daysLabel(j,'d on market')}</div>
             </div>
             <div class="jright">
               <div class="jsalary">${salaryLabel(j)}</div>
@@ -7341,7 +7356,7 @@ function earlyCareerWidget(){
   let pool=[]; try{ const cf=companyFilter, tk=track; companyFilter=''; track='fulltime'; pool=jobsForRegion(); track='intern'; pool=pool.concat(jobsForRegion()); companyFilter=cf; track=tk; }catch(e){ pool=[]; }
   const seen={}, EC=/\b(intern|co-?op|fellow|new ?grad|early ?career|associate|entry|junior|jr\.?|university|graduate|rotational|apprentice|\bi\b)\b/i;
   const items=pool.filter(j=>{ if(seen[j.id])return false; seen[j.id]=1; return j.type==='Internship' || EC.test(j.title||''); })
-    .sort((a,b)=>(daysOnMarket(a)-daysOnMarket(b))).slice(0,4);
+    .sort((a,b)=>(domSort(a)-domSort(b))).slice(0,4);
   if(!items.length) return '';
   const card=items.map(j=>{
     const dl=deadlineFor(j);
@@ -7351,7 +7366,7 @@ function earlyCareerWidget(){
     const tag=j.type==='Internship'?'Internship':'Early-career';
     return `<button class="ecitem" data-dossier="${j.id}">
       <span style="flex:none;font-size:var(--fs-micro);font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:${j.type==='Internship'?'#8ad6ff':'#9be6c0'};white-space:nowrap;writing-mode:horizontal-tb">${tag}</span>
-      <span style="flex:1;min-width:0"><span style="display:block;font-weight:600;font-size:var(--fs-rg);color:#e8eef7;line-height:1.35">${esc(j.title)}</span><span style="font-size:var(--fs-sm);color:var(--dim)">${esc(j.company)} · ${esc((REGIONS[j.region]||REGIONS[region]).short)} · ${daysOnMarket(j)}d listed</span></span>
+      <span style="flex:1;min-width:0"><span style="display:block;font-weight:600;font-size:var(--fs-rg);color:#e8eef7;line-height:1.35">${esc(j.title)}</span><span style="font-size:var(--fs-sm);color:var(--dim)">${esc(j.company)} · ${esc((REGIONS[j.region]||REGIONS[region]).short)} · ${daysLabel(j)}</span></span>
       <span style="flex:none;text-align:right;white-space:nowrap"><span style="display:block;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:var(--fs-md);color:var(--good)">${salaryLabel(j)}</span><span style="font-size:var(--fs-2xs);color:${matchColor(j.match)};font-weight:700">${j.match}% match</span></span>
       <span style="flex:none;text-align:right;white-space:nowrap;padding-left:14px;border-left:1px solid var(--line)"><span style="display:block;font-size:var(--fs-xs);color:${urgent?'var(--a4)':'var(--a3)'};font-weight:700">${left===0?'Closing':'~'+left+'d left'}</span><span style="font-size:var(--fs-2xs);color:var(--dim)">${dl.est?'est. ':''}by ${close}</span></span>
     </button>`;
@@ -8471,7 +8486,7 @@ ${ats.missing.length?`<h3>Missing &mdash; weave these in</h3><div class="chips">
   ${row('Posted range', esc(salaryLabel(j)))}
   ${row('Against your floor', esc(fit.txt||''))}
   ${row('Relocation', esc(rel.offered||'Nothing listed — confirm with recruiting'))}
-  ${row('Days on market', daysOnMarket(j)+' days')}
+  ${row('Days on market', daysLabel(j,' days since first posted'))}
   ${row('Sourced via', esc(jobSource(j)))}
   ${row('Posting', j.url&&j.url!=='#'?`<a href="${esc(j.url)}">${esc(j.url)}</a>`:'No direct link on this row')}
 </table>
@@ -9072,7 +9087,7 @@ function dossierHTML(j){
       <button class="colg" data-company="${esc(j.company)}" title="Open ${esc(j.company)}'s company profile" style="background:${companyLogoBg(j.company)};border:0;cursor:pointer">${esc(companyInitials(j.company))}</button>
       <h2 style="margin:0">${esc(j.title)} ${tempBadge(j,'var(--fs-d3)')}</h2>
     </div>
-    <div class="dco"><b class="colink" data-company="${esc(j.company)}" title="Open ${esc(j.company)}'s company profile">${esc(j.company)}</b> · ${esc(j.location)} · ${esc(R.short)} · <span class="subtle">${daysOnMarket(j)} days on market</span></div>
+    <div class="dco"><b class="colink" data-company="${esc(j.company)}" title="Open ${esc(j.company)}'s company profile">${esc(j.company)}</b> · ${esc(j.location)} · ${esc(R.short)} · <span class="subtle">${daysLabel(j,' days on market')}</span></div>
     <div class="dtagrow"><span class="dsal">${salaryLabel(j)}</span>${settings.planetRanks?planetRow(j.planets):''}<span class="chip">${esc(j.type)}</span><span class="chip reloc">🧳 ${esc(j.reloc)}</span><span class="chip" style="color:${matchColor(j.match)}">Match ${j.match}%</span></div>
     <div class="dtagrow" style="margin-top:8px">${roleTagChips(j)}</div>
   </div>
@@ -9170,7 +9185,7 @@ function sharedRoleView(j){
       <div class="dossier-top">
         <div class="dt-flag">🔗 Shared role · read-only snapshot</div>
         <h2>${esc(j.title)} ${tempBadge(j,'var(--fs-d3)')}</h2>
-        <div class="dco"><b>${esc(j.company)}</b> · ${esc(j.location)} · ${esc(R.short)} · <span class="subtle">${daysOnMarket(j)} days on market</span></div>
+        <div class="dco"><b>${esc(j.company)}</b> · ${esc(j.location)} · ${esc(R.short)} · <span class="subtle">${daysLabel(j,' days on market')}</span></div>
         <div class="dtagrow"><span class="dsal">${salaryLabel(j)}</span><span class="chip">${esc(j.type)}</span><span class="chip reloc">🧳 ${esc(j.reloc)}</span><span class="chip" style="color:${matchColor(j.match)}">Match ${j.match}%</span></div>
       </div>
       <div class="dbody">
@@ -9651,6 +9666,18 @@ function fpExtractInternPay(title,desc,isIntern){
   if(weeks==null){ m=text.match(/(\d{1,2})\s*week/i); if(m) weeks=parseInt(m[1]); }
   return {rate,weeks};
 }
+function fpPostedDate(item){
+  const raw = item.first_published ?? item.publishedAt ?? item.published_at ?? item.published_on ?? item.createdAt ?? item.created_at ?? item.posted_date ?? item.releasedDate ?? item.postedOn ?? null;
+  if(raw==null || raw==='') return null;
+  if(typeof raw==='number'){ const d=new Date(raw>1e12?raw:raw*1000); return isNaN(d)?null:d.toISOString(); }
+  const t=String(raw).trim();
+  // Workday: "Posted Today", "Posted Yesterday", "Posted 3 Days Ago", "Posted 30+ Days Ago"
+  if(/today/i.test(t)) return new Date().toISOString();
+  if(/yesterday/i.test(t)) return new Date(Date.now()-864e5).toISOString();
+  const m=t.match(/(\d+)\+?\s*days?\s*ago/i); if(m) return new Date(Date.now()-(+m[1])*864e5).toISOString();
+  const d=new Date(t.replace(/ UTC$/,'Z').replace(/^(\d{4}-\d\d-\d\d) /,'$1T'));
+  return isNaN(d)?null:d.toISOString();
+}
 function fpNormalize(item,type,company,slug){
   let jid=item.id; let title,desc,loc,url;
   if(type==='greenhouse'){ title=(item.title||'').trim(); desc=item.content||''; loc=(item.location||{}).name||''; url=item.absolute_url||`https://job-boards.greenhouse.io/${slug}/jobs/${jid}`; }
@@ -9669,8 +9696,10 @@ function fpNormalize(item,type,company,slug){
   const sc=fpAlign(title,desc); const intern=/\b(intern|interns?hip|co-?op|fellow(?:ship)?|summer analyst|student\s+(?:program|worker|employee)|trainee|apprentice|practicum)\b/i.test(title);
   if(!fpQualifies(title,sc,intern,hub)) return null;
   const [smin,smax]=fpEst(title,hub);
-  let posted=item.updated_at||item.createdAt||Date.now(); if(typeof posted==='number') posted=new Date(posted).toISOString();
-  let age=0; try{ age=Math.max(0,Math.round((Date.now()-new Date(posted))/86400000)); }catch(e){}
+  // Original posting date only. updated_at / updatedAt change whenever a recruiter edits the
+  // posting, so they are never used; and there is no fall back to "now".
+  const posted=fpPostedDate(item);
+  const age=posted ? Math.max(0,Math.floor((Date.now()-Date.parse(posted))/86400000)) : null;
   const terms=['Python','MATLAB','Simulink','AWS','Azure','Kubernetes','SQL','Salesforce','Tableau','Jira','Confluence','Terraform']; const bl=(title+' '+desc).toLowerCase();
   const pay=fpExtractInternPay(title,desc,intern);
   return { id:`${fpSlug(company)}-${jid}`, company, title, location_hub:hub, location:loc||hub.replace(/_/g,' '),

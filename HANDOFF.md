@@ -82,6 +82,20 @@ Source: `uploads/Kong_JobKit/` (master.json, orbital-resume-generator.js, build-
 - Removed hardcoded market numbers: top companies, role demand, in-demand skills, the skill-rank demand index, and a fixed 12-month postings trend. Charts are now tallied from live roles (`liveSkillDemand()`, `liveCompanyTally()`, `liveRoleDemand()`) and show No Data when empty.
 - Stays static by design, because these are his real facts, not market data: the master résumé seed, credential dates, profile, and the essay draft templates. His edits sync across devices through `user_state` (`orbital.masterResume` and the others in `SYNC_LS_KEYS`), and that sync only works once the table exists.
 
+## 2026-09-28 — Hot = originally posted within 7 days
+
+- `HOT_DAYS` changed from 5 to 7. Temperature bands are now Hot 0-7 · Warm 8-10 · Lukewarm 11-30 · Cold 31-60.
+- Age is measured from the job board's ORIGINAL posting date only:
+  - The dashboard recomputes it from `jobs.timestamp` on every load. It used to read the stored `posting_age`, which froze whenever a board wasn't re-scraped.
+  - Scraper bugs that made old roles look new:
+    - A missing or unreadable date fell back to now(). That hit every Workday row (its dates are text like "Posted 3 Days Ago") and every Amazon row (dates like "September 3, 2026").
+    - Greenhouse used `updated_at`, which changes on every edit.
+    - Ashby fell back to `updatedAt`, which also changes on edits.
+  - The new `parse_posted_date()` reads all of these formats. Undated roles are stored with a NULL date, show "posting date unknown", and are never hot.
+  - When the same role appears on two boards, the merged row keeps the earlier posting date.
+  - The browser's "Fetch real jobs" button follows the same rules (`fpPostedDate`).
+- Removed the leftover sample-data day overrides (`DAY_OVERRIDE`).
+
 ## Where the details live
 
 - `README.txt`: changelog, build by build. The top section is build 17.

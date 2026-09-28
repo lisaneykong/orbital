@@ -40,7 +40,7 @@ import random
 import hashlib
 import threading
 import urllib.parse
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
@@ -834,6 +834,47 @@ def extract_intern_pay(title, description, is_intern):
     return rate, weeks
 
 
+_MONTH_FMTS = ("%B %d, %Y", "%b %d, %Y", "%d %B %Y", "%d %b %Y", "%m/%d/%Y", "%Y-%m-%d")
+
+
+def parse_posted_date(raw):
+    """Original posting date -> naive UTC datetime, or None when it can't be read.
+    Handles epoch seconds/ms, ISO 8601, "2026-09-01 12:00:00 UTC", "September 3, 2026",
+    and Workday's relative "Posted Today" / "Posted Yesterday" / "Posted 3 Days Ago" /
+    "Posted 30+ Days Ago"."""
+    if raw is None or raw == "":
+        return None
+    try:
+        if isinstance(raw, (int, float)):
+            ts = raw / 1000 if raw > 10**12 else raw
+            return datetime.utcfromtimestamp(ts)
+        t = str(raw).strip()
+        if re.search(r"\btoday\b|\bjust posted\b", t, re.I):
+            return datetime.utcnow()
+        if re.search(r"\byesterday\b", t, re.I):
+            return datetime.utcnow() - timedelta(days=1)
+        m = re.search(r"(\d+)\+?\s*days?\s*ago", t, re.I)
+        if m:
+            return datetime.utcnow() - timedelta(days=int(m.group(1)))
+        iso = re.sub(r" UTC$", "+00:00", t).replace("Z", "+00:00")
+        iso = re.sub(r"^(\d{4}-\d\d-\d\d) ", r"\1T", iso)
+        try:
+            dt = datetime.fromisoformat(iso)
+            if dt.tzinfo:
+                dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+            return dt
+        except ValueError:
+            pass
+        for fmt in _MONTH_FMTS:
+            try:
+                return datetime.strptime(t, fmt)
+            except ValueError:
+                continue
+    except Exception:
+        return None
+    return None
+
+
 def build_row(company, ats_id, title, location, url, source, description="", posted=None):
     title = (title or "").strip()
     if not title or not url:
@@ -847,25 +888,14 @@ def build_row(company, ats_id, title, location, url, source, description="", pos
         return None
     intern_rate, intern_weeks = extract_intern_pay(title, description, is_intern)
 
-    # Use the ATS's REAL posted/updated date when it provides one — this drives the
-    # scatterplot's "days on market" and the archive cutoff. Falls back to now() only
-    # when the source genuinely has no date field (e.g. some custom HTML sites).
-    posted_iso = None
-    posting_age = 0
-    if posted:
-        try:
-            ts = posted
-            if isinstance(ts, (int, float)):
-                ts = ts / 1000 if ts > 10**12 else ts
-                dt = datetime.utcfromtimestamp(ts)
-            else:
-                dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00")).replace(tzinfo=None)
-            posted_iso = dt.isoformat()
-            posting_age = max(0, (datetime.utcnow() - dt).days)
-        except Exception:
-            posted_iso = None
-    if not posted_iso:
-        posted_iso = datetime.utcnow().isoformat()
+    # The ORIGINAL posting date from the job board — never the scrape date. It drives Hot
+    # (posted within 7 days), days on market and the archive cutoff. When a board gives no
+    # posting date, timestamp and posting_age are stored as NULL and the dashboard shows
+    # "posting date unknown" — it used to fall back to now(), which made every undated
+    # role look brand new and hot.
+    dt = parse_posted_date(posted)
+    posted_iso = dt.isoformat() if dt else None
+    posting_age = max(0, (datetime.utcnow() - dt).days) if dt else None
 
     sal_min, sal_max = estimate_salary(title, hub)
     tech_terms = ["Python", "MATLAB", "Simulink", "AWS", "Azure", "Kubernetes",
@@ -933,7 +963,7 @@ def scrape_greenhouse(token, company):
         loc = (j.get("location") or {}).get("name", "")
         url = j.get("absolute_url") or f"https://boards.greenhouse.io/{real}/jobs/{jid}"
         row = build_row(company, jid, j.get("title"), loc, url, "greenhouse",
-                        j.get("content", ""), posted=j.get("updated_at") or j.get("first_published"))
+                        j.get("content", ""), posted=j.get("first_published"))   # updated_at changes on edits — not the posting date
         if row:
             rows.append(row)
     return rows
@@ -1133,7 +1163,7 @@ def scrape_ashby(cfg):
                                  or f"https://jobs.ashbyhq.com/{token}/{jid}")
                     row = build_row(company, jid, p.get("title"), loc, apply_url, "ashby",
                                     p.get("descriptionPlain") or p.get("descriptionHtml") or "",
-                                    posted=p.get("publishedAt") or p.get("updatedAt"))
+                                    posted=p.get("publishedAt"))
                     if row:
                         rows.append(row)
                 return rows
@@ -1633,7 +1663,12 @@ def execute_scrub():
         else:
             # keep whichever has a longer description (more complete) / more recent timestamp
             keep_new = len(row.get("description") or "") > len(prev.get("description") or "")
-            by_fp[fp] = row if keep_new else prev
+            kept, other = (row, prev) if keep_new else (prev, row)
+            # The same role on two boards: its original posting date is the EARLIER one.
+            if other.get("timestamp") and (not kept.get("timestamp") or other["timestamp"] < kept["timestamp"]):
+                kept["timestamp"] = other["timestamp"]
+                kept["posting_age"] = other.get("posting_age")
+            by_fp[fp] = kept
     merged_count = len(payload) - len(by_fp)
     payload = list(by_fp.values())
     if merged_count:
