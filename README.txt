@@ -2,7 +2,7 @@
 ║                ORBITAL // COMMAND  —  READ ME                ║
 ╚════════════════════════════════════════════════════════════╝
 
-👉  START HERE:  open  START-HERE.html  in your web browser.
+👉  START HERE:  open  CLEAN-INSTALL.html  in your web browser.
 
 That one page walks you through the whole setup in 3 simple steps
 (about 15 minutes, one time). 100% browser-based — no Python to
@@ -10,8 +10,171 @@ install, no command line, no local server. If you can copy & paste,
 you can do it.
 
 ------------------------------------------------------------
-NEW IN THIS VERSION   (build 2026-09-09.6)
+BUILD 17  —  CLEAN-INSTALL KIT   (build 2026-09-28.1)
 ------------------------------------------------------------
+2026-09-28 update: index.html changed. The résumé generator and
+cover letter now follow the job kit, essay answers are labelled as
+drafts, and the app is live-data only: no sample jobs, and no
+hardcoded chart numbers. See HANDOFF.md.
+
+Originally this package was build 16 with nothing removed and no
+app code changed. What is new is the install path: it is written to be
+laid down over a database and a repo that have been reset,
+rather than patched on top of a half-configured one.
+
+· OPEN CLEAN-INSTALL.html FIRST. Six steps, in order, with the
+  exact buttons to click. It replaces the ad-hoc "run this bit
+  of SQL, then check that table" advice.
+
+· SUPABASE-TELEMETRY-ONLY.sql IS NEW. scrape_runs and
+  scrape_progress return 404 PGRST205 today, which is why no
+  scrape has ever reported which job boards failed. On a CLEAN
+  install you do not need this file — the full schema creates
+  both tables. It is here for the other case: adding telemetry
+  to a live database WITHOUT wiping the jobs you already have.
+  The full SUPABASE-SCHEMA.sql starts with "drop table jobs".
+
+· MANIFEST.txt IS NEW. Every file this kit should contain, so
+  after uploading you can confirm nothing was missed —
+  especially the hidden .github, .htaccess and .gitignore,
+  which most upload tools skip unless told otherwise.
+
+· WHAT THIS BUILD DOES NOT FIX. 39 Workday boards produce zero
+  rows and 21 of them carry guessed tokens (unverified: true in
+  companies.json). A clean install does not repair those. It
+  makes the diagnosis possible by giving the scraper somewhere
+  to record per-board outcomes; the fix comes after the first
+  diagnose run, from real log output.
+
+Carried over from build 2026-09-21.1:
+· MATCHING RETUNED TO THE NEW MASTER RESUME. The engine scored
+  against 34 skills; the resume claims 24. The ten extras
+  included Mission Assurance, Space Mission Operations and
+  Payload Integration — three the dossier simultaneously
+  labelled "no experience", so a posting full of them was
+  awarded full credit and then disclaimed on screen. The skill
+  list is now the resume's SKILLS block verbatim, and nothing
+  else. Coursework vocabulary is not lost: it scores through
+  the ERAU coursework signal, which reports it honestly.
+
+· SKILLS ARE WEIGHTED BY EVIDENCE, NOT JUST IMPORTANCE. Paid
+  work counts at full weight, graduate coursework at 60%,
+  transferable-but-unclaimed at 45%. The dossier's score
+  breakdown now says how many of each a posting hit, so a
+  number in the 80s is traceable to paid work rather than to
+  keyword luck.
+
+· POSTINGS DON'T USE RESUME WORDING. A job ad says "integrated
+  master schedule", never "Schedule Management"; it says
+  "cross-functional", never "Cross-functional Leadership". The
+  old literal match therefore scored zero for three of the
+  strongest claims on the resume on nearly every posting that
+  actually wanted them. Each skill now carries the phrasings
+  real postings use.
+
+· PROGRAM MANAGEMENT IS ITS OWN ROLE TYPE. Every Program
+  Manager and TPM posting — the resume's single most-targeted
+  role — was being graded against Mission Integration and
+  Modeling & Simulation, both seeded as no-experience. There is
+  now a program archetype with the competencies those postings
+  actually screen for, and it is matched first.
+
+· THE THREE TARGETS THE RESUME NAMES NOW COUNT. Program
+  Management, Technical Program Management and Systems
+  Engineering get an explicit bonus. Without it, generic
+  business-operations roles outranked systems-engineering ones
+  — ranking the career being left above the one being entered.
+
+· THE CLOUD SCRAPER SCORES THE SAME WAY. scraper.py's keyword
+  list was one flat tier with the space-coursework terms sitting
+  at top weight beside the paid-work ones. It is now three
+  tiers — core 7, coursework-domain 5, supporting tooling 3 —
+  so ingest-time scores and on-screen scores agree.
+
+· PROFILE UPDATED FROM THE NEW MASTER. Summary, targeting line,
+  the 8,900 kg capstone target, both sole-authored applied
+  projects (the 20-year Earth-observation investment analysis
+  and the air-launch / 72-satellite LEO constellation concept),
+  the MCAS team project, and Siemens NX training in progress.
+  The applied projects also feed essay and cover-letter
+  drafting, labelled as academic work.
+
+· MASTER RESUME SYNCED. The in-app master — the source the
+  tailored resume and cover letter are generated from — carried
+  employer titles and metrics that are not on your master
+  document (Solutions Architect, Lifecycle Manager, 166%, 300%,
+  75%). It is now the master verbatim: SoftwareOne Mid-Market
+  Digital Account Manager, Achievers Account Executive, Vault.co
+  Senior Manager, ServiceSource Associate Technical Specialist,
+  Cornelius Ballroom President & Owner, with each role's own
+  bullets. Education is split per degree with the coursework
+  lines, both applied projects and the MCAS team project;
+  certifications carry Siemens NX training in progress.
+
+· NEW DIAGNOSTIC: pipeline-probe.html. Answers one question —
+  has the daily Action ever written to Supabase, and if not,
+  how far did it get. Reads scrape_runs and scrape_progress
+  live, tells a missing table apart from an empty one, and
+  names the job-board families that produced no rows at all.
+
+Carried over from build 2026-09-11.7:
+· YOUR OWN QUESTION BANK. A field in every dossier — and at
+  the top of the Essay Bank page — takes a question you were
+  actually asked and keeps it. Added questions appear on every
+  role from then on, including roles whose real prompts you
+  pasted: pasting replaces the seeded ten, never your own. Any
+  answer can be marked reusable, which makes it the starting
+  point on every role you have not answered yet. Questions,
+  answers and reusable drafts sync across your devices with
+  the rest of your tracking.
+
+· MOBILE WAS BUILT TOO BIG. The phone breakpoint raised every
+  type step by 15-21% and held every button, including dense
+  inline rows inside a dossier, to a 44px minimum — so panels
+  read as stacked slabs. The type step is ~7% now, radii come
+  down, panel and card padding tightens, and only standalone
+  controls keep the 44px floor; inline rows sit at 36-38px.
+  The stat tiles were also pinned to one column by an
+  !important rule that outranked the two-up grid; they are
+  two-up again.
+
+· "I APPLIED" NOW ACTUALLY RECORDS. The button lives in the
+  dossier, which is injected into the page after the click
+  handlers are attached — so it had no handler at all and a
+  click did nothing, silently. It is on the delegated handler
+  now and repaints in place the moment you tap it. Existing
+  applications you thought you had marked were never saved;
+  they need marking again.
+
+· THE PIPELINE'S LAST TWO COLUMNS WERE HARDCODED EMPTY.
+  Interviewing and Offer ignored the status you set in the
+  cadence panel. They read it now, roles marked rejected are
+  counted below the board instead of sitting in Applied, and a
+  role you have applied to no longer also shows in column ①.
+
+· DOWNLOADS REPORT THEMSELVES. The résumé, cover letter and
+  match report each took several seconds in total silence —
+  the first sign of life was the save dialog. All three now
+  drive a progress readout with a real stage name and a
+  percentage. The match report was fully synchronous, which is
+  why the screen froze; it yields between stages so the bar
+  can actually move.
+
+· A FINISHED RUN NOW REPORTS ITSELF RELIABLY. The scraper's
+  progress telemetry is deliberately disposable — any failure
+  switches it off so a logging problem can never kill a scrape.
+  But the final "this run finished" row is the one the catch-up
+  gate reads to decide whether today is already done, so losing
+  it to a single dropped packet meant three redundant full
+  scrapes that evening. That one write now ignores the switch
+  and retries. A genuinely missing table still fails fast.
+
+· CAPSTONE COPY NO LONGER OFFERS A RECORDING. The profile, the
+  résumé education bullet and three essays said the capstone
+  defense was recorded and available on request. There is no
+  shareable copy, so the claim is gone. The defense itself is
+  still described.
+
 · THE MATCH REPORT IS NOW THE WHOLE DOSSIER. The download on
   every role carries what the screen shows: role summary, day in
   the life, culture, score build-up, requirement-by-requirement
@@ -100,7 +263,15 @@ ALSO IN THIS PACKAGE
 ------------------------------------------------------------
 WHAT'S IN THIS FOLDER
 ------------------------------------------------------------
-START-HERE.html ....... ⭐ the simple setup guide — open this first
+CLEAN-INSTALL.html .... ⭐ BUILD 17 — the six-step clean install, with
+                        the exact buttons to click. Open this first.
+MANIFEST.txt .......... every file this kit should contain, so you can
+                        confirm an upload missed nothing
+SUPABASE-TELEMETRY-ONLY.sql
+                        adds scrape_runs + scrape_progress to a database
+                        you do NOT want to wipe. Not needed on a clean
+                        install — SUPABASE-SCHEMA.sql already makes them
+START-HERE.html ....... the longer setup guide
 index.html ............ your job console (the actual app)
 setup.html ............ connect screen: paste keys + "Fetch real jobs"
 SUPABASE-SCHEMA.sql ... the database setup SQL as a plain file
@@ -109,7 +280,7 @@ SUPABASE-SCHEMA.sql ... the database setup SQL as a plain file
 companies.json ........ every company + which job board it lives on.
                         THE source of truth. scraper.py reads it, and
                         index.html's company list is generated from it.
-tools.html ............ the four live diagnostic pages, explained
+tools.html ............ the five live diagnostic pages, explained
 orbital-config.js ..... your Supabase URL + anon read key, so the site
                         works on every device without re-running setup
 config.example.json ... only needed to run scraper.py on your own
@@ -128,9 +299,17 @@ ORBITAL-AUDIT.md ...... the full running feature list — every ask,
 ------------------------------------------------------------
 INSTALL ORDER (full details inside START-HERE.html)
 ------------------------------------------------------------
-1. SUPABASE — make the free database. Open SQL Editor → New query,
-   paste ALL of SUPABASE-SCHEMA.sql, press Run. Expect
-   "Success. No rows returned."
+0. READ CLEAN-INSTALL.html. It is the clickable version of this
+   list and it is the one to follow. The steps below are the
+   summary.
+
+1. SUPABASE — Open SQL Editor → New query, paste ALL of
+   SUPABASE-SCHEMA.sql, press Run. Expect "Success. No rows
+   returned." On a clean install this is correct and wanted: it
+   drops the jobs table, rebuilds it, and creates user_state,
+   scrape_runs and scrape_progress in the same pass. Keep the
+   same Supabase project — orbital-config.js already points at
+   it, so a new project would mean editing that file too.
 
 2. GITHUB — turn on the daily job-feeder. Repo → Settings →
    Secrets and variables → Actions. Add exactly two:
@@ -138,12 +317,19 @@ INSTALL ORDER (full details inside START-HERE.html)
      SUPABASE_SERVICE_ROLE_KEY  = the service_role / sb_secret_ key
    Then: Actions tab → "Orbital daily scrape" → Run workflow.
 
-3. CHECK THE scrape_runs TABLE EXISTS. Step 1 creates it, but an
-   older database that was set up before it existed will not have
-   it, and the self-healing retry silently stays off. In Supabase:
-   Table Editor → look for "scrape_runs" in the list. If it isn't
-   there, run the scrape_runs section at the bottom of
-   SUPABASE-SCHEMA.sql on its own.
+3. CONFIRM FOUR TABLES EXIST. Supabase → Table Editor. You want
+   jobs, user_state, scrape_runs and scrape_progress. If
+   scrape_runs is missing, the self-healing retry stays off
+   silently and no run can report which boards failed. On a
+   database you did NOT wipe, run SUPABASE-TELEMETRY-ONLY.sql
+   instead — it adds the two tables and touches nothing else.
+
+3b. DELETE resolved_tokens.json FROM THE REPO if GitHub shows one
+   at the top level. An early package shipped it by mistake. The
+   scraper trusts that cache and skips re-probing, so a stale copy
+   pins companies to dead tokens and returns zero roles forever.
+   It is gitignored now, but gitignore does not remove a file that
+   is already committed.
 
 4. IONOS — upload the files so the site is live at
    jobs.lisaney.com. Upload the CONTENTS of this folder, not the

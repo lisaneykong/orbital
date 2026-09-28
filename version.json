@@ -1,3 +1,5 @@
 {
-  "build": "2026-09-09.6"
+  "build": "2026-09-28.1",
+  "kit": "ORBITAL-v17",
+  "kind": "clean-install"
 }

@@ -1,0 +1,63 @@
+ORBITAL // COMMAND — build 17 (2026-09-28.1)
+FILE MANIFEST — 48 files
+
+After uploading to IONOS or pushing to GitHub, compare against this list.
+The 4 entries marked [HIDDEN] start with a dot. Most FTP clients and
+some upload dialogs skip those unless you switch on "show hidden files".
+Missing .htaccess means the site serves cached stale HTML. Missing
+.github/ means the daily scraper never runs.
+
+[HIDDEN] .github/workflows/deploy.yml
+[HIDDEN] .github/workflows/scrape.yml
+[HIDDEN] .gitignore
+[HIDDEN] .htaccess
+         CLEAN-INSTALL.html
+         HANDOFF.md
+         MANIFEST.txt
+         ORBITAL-ADD-COMPANY.md
+         ORBITAL-AUDIT.md
+         ORBITAL-CHALLENGES.md
+         ORBITAL-DESIGN-PASS.md
+         ORBITAL-GUIDE.md
+         ORBITAL-INTERNSHIP-GUIDE.pdf
+         ORBITAL-OPERATIONS.md
+         README.txt
+         START-HERE.html
+         SUPABASE-SCHEMA.sql
+         SUPABASE-TELEMETRY-ONLY.sql
+         assets/apple-touch-icon.png
+         assets/favicon-32.png
+         assets/headshot.png
+         assets/hero-global.jpg
+         assets/hero-la.jpg
+         assets/hero-nz.jpg
+         assets/hero-seattle.jpg
+         assets/icon-192.png
+         assets/icon-512.png
+         assets/icon-maskable-512.png
+         assets/launch-hero.png
+         assets/resume.pdf
+         companies.json
+         config.example.json
+         coverage-seattle-la.html
+         heal-probe.html
+         index.html
+         install-guide.html
+         manifest.json
+         orbital-config.js
+         orbital-logo.png
+         pipeline-probe.html
+         requirements.txt
+         score-proof.html
+         scraper.py
+         setup.html
+         supabase/functions/trigger-scrape/index.ts
+         token-probe.html
+         tools.html
+         version.json
+
+NOT in this kit, and correctly so:
+  resolved_tokens.json     written by the scraper at runtime; a stale
+                           copy pins companies to dead ATS tokens
+  failed_scrapes_log.csv   written by the scraper at runtime
+  config.json              your real keys; never commit it

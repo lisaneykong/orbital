@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<meta name="orbital-build" content="2026-09-28.1" />
+<title>ORBITAL // CLEAN INSTALL — build 17</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#05070d; --panel:#0c1320; --panel2:#0f1828; --line:#1d2a3f;
+    --ink:#e8eef7; --dim:#8aa0bf; --faint:#5d728f;
+    --a:#37d6e6; --a2:#5b8cff; --good:#39e6a0; --warn:#ffb454; --gold:#ffd76a; --bad:#ff6b6b;
+  }
+  body{
+    background:var(--bg); color:var(--ink); min-height:100vh;
+    font:15px/1.65 ui-sans-serif,-apple-system,"Segoe UI",system-ui,sans-serif;
+    padding:48px 24px 96px;
+  }
+  .wrap{max-width:820px;margin:0 auto}
+  a{color:var(--a)} a:hover{color:var(--gold)}
+  code,kbd{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  code{background:#0a1020;border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:.88em;color:var(--gold);word-break:break-all}
+  kbd{background:var(--panel2);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:2px 7px;font-size:.82em;color:var(--ink)}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:12px}
+  .eyebrow{font:600 11px/1 ui-monospace,monospace;letter-spacing:.22em;color:var(--a);text-transform:uppercase}
+  h1{font-size:clamp(28px,4.4vw,40px);font-weight:700;letter-spacing:-.02em;margin:14px 0 10px;text-wrap:balance}
+  .sub{color:var(--dim);max-width:60ch;text-wrap:pretty}
+  .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+  .tag{font:600 11px/1 ui-monospace,monospace;letter-spacing:.08em;color:var(--faint);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 12px}
+
+  .note{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+    background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+    border-radius:10px;padding:16px 18px;margin:24px 0}
+  .note.bad{border-left-color:var(--bad)}
+  .note.good{border-left-color:var(--good)}
+  .note .ico{font:700 13px/1.5 ui-monospace,monospace;color:var(--warn)}
+  .note.bad .ico{color:var(--bad)} .note.good .ico{color:var(--good)}
+  .note p{color:var(--dim);font-size:14px;text-wrap:pretty}
+  .note strong{color:var(--ink);font-weight:600}
+
+  ol.steps{list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:18px;margin-top:32px}
+  li.step{counter-increment:s;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  li.step > .head{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:18px 20px;background:var(--panel2);border-bottom:1px solid var(--line)}
+  li.step > .head::before{content:counter(s);display:grid;place-items:center;width:34px;height:34px;border-radius:9px;
+    background:#0a1424;border:1px solid var(--line);color:var(--a);font:700 15px/1 ui-monospace,monospace}
+  h2{font-size:17px;font-weight:650;letter-spacing:-.01em}
+  h2 .where{display:block;font:600 11px/1.5 ui-monospace,monospace;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;margin-top:3px}
+  .body{padding:20px}
+  .body p{color:var(--dim);text-wrap:pretty}
+  .body p + p{margin-top:12px}
+
+  ul.clicks{list-style:none;display:flex;flex-direction:column;gap:9px;margin:0 0 4px}
+  ul.clicks li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;color:var(--ink);font-size:14.5px}
+  ul.clicks li::before{content:"→";color:var(--a2);font-family:ui-monospace,monospace;font-size:13px}
+  ul.clicks b{color:var(--ink);font-weight:650;background:#0a1424;border:1px solid var(--line);border-radius:5px;padding:2px 8px;white-space:nowrap;display:inline-block}
+
+  .expect{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;margin-top:18px;padding-top:16px;border-top:1px dashed var(--line)}
+  .expect .lbl{font:600 10px/1.7 ui-monospace,monospace;letter-spacing:.16em;color:var(--good);text-transform:uppercase}
+  .expect p{color:var(--ink);font-size:14px;margin:0}
+
+  .done{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;
+    font:600 12px/1 ui-monospace,monospace;letter-spacing:.1em;color:var(--faint);text-transform:uppercase}
+  .done input{appearance:none;width:20px;height:20px;border:1px solid var(--line);border-radius:6px;background:#0a1424;cursor:pointer;display:grid;place-items:center;flex:none}
+  .done input:checked{background:var(--good);border-color:var(--good)}
+  .done input:checked::after{content:"✓";color:#05070d;font:700 13px/1 ui-monospace,monospace}
+  li.step:has(input:checked){opacity:.55}
+  li.step:has(input:checked) .done{color:var(--good)}
+
+  .after{margin-top:40px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px}
+  .after h3{font-size:16px;font-weight:650;margin-bottom:6px}
+  .after p{color:var(--dim);font-size:14px;text-wrap:pretty}
+  .after ul{margin:14px 0 0;padding-left:20px;color:var(--dim);font-size:14px;display:flex;flex-direction:column;gap:8px}
+  .after li strong{color:var(--ink);font-weight:600}
+  footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--faint);font-size:13px;text-wrap:pretty}
+  @media (max-width:620px){
+    body{padding:32px 16px 72px}
+    li.step > .head{grid-template-columns:auto 1fr;gap:12px;padding:16px}
+    .done{grid-column:1/-1;margin-top:4px}
+    .body{padding:16px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Orbital // Command</div>
+  <h1>Clean install — build 17</h1>
+  <p class="sub">Six steps, in order. Everything is a browser click; nothing here needs a command line. Budget about twenty minutes. Tick each step as you go — the ticks are saved in this browser, so you can close the page and come back.</p>
+  <div class="meta">
+    <span class="tag">BUILD 2026-09-28.1</span>
+    <span class="tag">47 FILES</span>
+    <span class="tag">OWNER PIN 1725</span>
+  </div>
+</header>
+
+<div class="note bad">
+  <div class="ico">STOP</div>
+  <p><strong>Step 1 deletes every job currently in your database.</strong> That is the point of a clean install and the jobs are all re-scrapable, but it is irreversible. If you want to keep the current rows, open Supabase → Table Editor → jobs → Export → CSV before you start. Your saved roles, notes and applications live in a different table (<code>user_state</code>) and survive.</p>
+</div>
+
+<ol class="steps">
+
+  <li class="step" data-k="s1">
+    <div class="head">
+      <h2>Reset the database<span class="where">supabase.com</span></h2>
+      <label class="done"><input type="checkbox" /> Done</label>
+    </div>
+    <div class="body">
+      <p>One paste builds all four tables: <code>jobs</code>, <code>user_state</code>, <code>scrape_runs</code>, <code>scrape_progress</code>. The last two are the ones currently returning 404, which is why no scrape has ever been able to tell you which job boards failed.</p>
+      <ul class="clicks">
+        <li>Open <code>SUPABASE-SCHEMA.sql</code> from this kit in any text editor, select all, copy</li>
+        <li>Go to <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">supabase.com/dashboard</a> and open your Orbital project</li>
+        <li>Left sidebar → <b>SQL Editor</b></li>
+        <li>Click <b>+ New query</b></li>
+        <li>Paste, then click <b>Run</b> <span style="color:var(--faint)">(or <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd>)</span></li>
+      </ul>
+      <p style="margin-top:14px">Stay on the same Supabase project. <code>orbital-config.js</code> already points at it, so a brand-new project would mean editing that file and re-deploying.</p>
+      <div class="expect"><span class="lbl">Expect</span><p>Success. No rows returned.</p></div>
+    </div>
+  </li>
+
+  <li class="step" data-k="s2">
+    <div class="head">
+      <h2>Confirm the four tables<span class="where">supabase.com</span></h2>
+      <label class="done"><input type="checkbox" /> Done</label>
+    </div>
+    <div class="body">
+      <p>Thirty seconds, and it is worth it. If <code>scrape_runs</code> is missing, the scraper's self-healing retry stays switched off without saying so, and the diagnose run in step 6 has nowhere to write its findings.</p>
+      <ul class="clicks">
+        <li>Left sidebar → <b>Table Editor</b></li>
+        <li>Open the table dropdown at the top of the list</li>
+        <li>Check all four names are there: <code>jobs</code> · <code>user_state</code> · <code>scrape_runs</code> · <code>scrape_progress</code></li>
+      </ul>
+      <p style="margin-top:14px">If any are missing, step 1 did not finish — scroll up in the SQL Editor and read the red error. <code>jobs</code> should exist and be empty.</p>
+      <div class="expect"><span class="lbl">Expect</span><p>Four tables. <code>jobs</code> shows 0 rows.</p></div>
+    </div>
+  </li>
+
+  <li class="step" data-k="s3">
+    <div class="head">
+      <h2>Push build 17 to GitHub<span class="where">github.com/lisaneykong/orbital</span></h2>
+      <label class="done"><input type="checkbox" /> Done</label>
+    </div>
+    <div class="body">
+      <p>Upload the <em>contents</em> of the <code>ORBITAL-v17</code> folder to the top level of the repo, not the folder itself. Same-named files are replaced; your commit history is kept.</p>
+      <ul class="clicks">
+        <li>Repo home → <b>Add file</b> → <b>Upload files</b></li>
+        <li>Drag in everything inside <code>ORBITAL-v17</code></li>
+        <li>Commit message: <code>build 17 — clean install</code> → <b>Commit changes</b></li>
+      </ul>
+      <p style="margin-top:14px">Then two checks that matter more than they look:</p>
+      <ul class="clicks" style="margin-top:12px">
+        <li>Is there a <code>resolved_tokens.json</code> at the repo top level? If yes, open it → <b>trash icon</b> → <b>Commit changes</b>. The scraper trusts that cache and skips re-probing, so a stale copy pins companies to dead job-board tokens and returns zero roles forever. It is ignored by <code>.gitignore</code> now, but that does not remove a file already committed.</li>
+        <li>Open <code>.github/workflows/</code>. There should be exactly two files: <code>scrape.yml</code> and <code>deploy.yml</code>. Delete any others — an old workflow left behind keeps running on its own schedule and fights this one.</li>
+      </ul>
+      <div class="expect"><span class="lbl">Expect</span><p>A new commit listing ~48 changed files, and exactly two workflow files.</p></div>
+    </div>
+  </li>
+
+  <li class="step" data-k="s4">
+    <div class="head">
+      <h2>Check the secrets<span class="where">github.com → Settings</span></h2>
+      <label class="done"><input type="checkbox" /> Done</label>
+    </div>
+    <div class="body">
+      <p>These carry over from before, so this is a verification pass, not a re-entry. You cannot read a saved secret back — if you are unsure about one, overwrite it.</p>
+      <ul class="clicks">
+        <li>Repo → <b>Settings</b> → <b>Secrets and variables</b> → <b>Actions</b></li>
+        <li>Required: <code>SUPABASE_URL</code> and <code>SUPABASE_SERVICE_ROLE_KEY</code></li>
+        <li>For auto-publishing to IONOS: <code>IONOS_FTP_SERVER</code> · <code>IONOS_FTP_USERNAME</code> · <code>IONOS_FTP_PASSWORD</code></li>
+      </ul>
+      <div class="note bad" style="margin:18px 0 0">
+        <div class="ico">!</div>
+        <p><strong>The single most common failure.</strong> <code>SUPABASE_SERVICE_ROLE_KEY</code> must be the <em>service_role</em> / <code>sb_secret_</code> key, not the anon / publishable one. The anon key can only read, so the scraper finds jobs and then silently has nothing to write them with. Supabase → Settings → API Keys → reveal <b>service_role</b>. The workflow checks this before it runs and says so in plain English.</p>
+      </div>
+      <div class="expect"><span class="lbl">Expect</span><p>Two secrets minimum, five if IONOS publishes itself.</p></div>
+    </div>
+  </li>
+
+  <li class="step" data-k="s5">
+    <div class="head">
+      <h2>Upload to IONOS<span class="where">jobs.lisaney.com</span></h2>
+      <label class="done"><input type="checkbox" /> Done</label>
+    </div>
+    <div class="body">
+      <p>Skip this entirely if the three IONOS secrets are set — the deploy workflow publishes on every push, and step 3 already triggered it. Do it by hand only if you would rather not rely on that.</p>
+      <ul class="clicks">
+        <li>Turn on <b>show hidden files</b> in your FTP client first</li>
+        <li>Upload the <em>contents</em> of <code>ORBITAL-v17</code> into the web root — not the folder itself</li>
+        <li>Confirm <code>.htaccess</code> arrived. Without it the site serves stale cached HTML and you will think the upload failed</li>
+        <li>Overwrite when prompted. Leaving old extra files behind is harmless; they just become dead URLs</li>
+      </ul>
+      <p style="margin-top:14px">Open <code>MANIFEST.txt</code> to check nothing was dropped. It flags the four hidden files most upload tools skip.</p>
+      <div class="expect"><span class="lbl">Expect</span><p><a href="https://jobs.lisaney.com" target="_blank" rel="noopener">jobs.lisaney.com</a> → Settings shows build <code>2026-09-28.1</code>.</p></div>
+    </div>
+  </li>
+
+  <li class="step" data-k="s6">
+    <div class="head">
+      <h2>Run diagnose, then read the log<span class="where">github.com → Actions</span></h2>
+      <label class="done"><input type="checkbox" /> Done</label>
+    </div>
+    <div class="body">
+      <p>Diagnose before full. It probes one endpoint per job-board family plus a Supabase read <em>and</em> write, in under a minute, and it is the run that will finally say what the 39 Workday boards are doing.</p>
+      <ul class="clicks">
+        <li>Repo → <b>Actions</b> tab</li>
+        <li>Left sidebar → <b>Orbital daily scrape</b></li>
+        <li>Right side → <b>Run workflow</b></li>
+        <li>Change <b>mode</b> from <code>full</code> to <code>diagnose</code></li>
+        <li>Green <b>Run workflow</b> → wait ~15s → refresh → click the new run at the top</li>
+        <li>Click the <b>scrape</b> job → expand <b>Run scraper</b></li>
+      </ul>
+      <p style="margin-top:14px">Scroll that log to the <code>workday</code> lines. You are looking for one of three things: <em>no data-center subdomain answered</em>, <em>host answers but no board variant matched</em>, or an HTTP <code>401 / 403 / 404</code>. Each points at a different one of the three tokens.</p>
+      <p>At the bottom of the run summary, if an <b>Artifacts</b> box shows <code>failed-scrapes-log</code>, download it — that CSV is the per-company failure list.</p>
+      <p>When diagnose looks healthy, run it again with mode <code>full</code> to fill the board.</p>
+      <div class="expect"><span class="lbl">Expect</span><p>Green run, per-family results printed, and a first row in <code>scrape_runs</code>.</p></div>
+    </div>
+  </li>
+
+</ol>
+
+<div class="after">
+  <h3>Send me the log</h3>
+  <p>Paste the Workday lines from step 6, or attach <code>failed_scrapes_log.csv</code>. That turns "39 boards, zero rows" into named causes, and I can correct the tokens from it.</p>
+  <ul>
+    <li><strong>A clean install does not fix the Workday tokens.</strong> 21 of the 39 boards carry guesses marked <code>unverified</code> in <code>companies.json</code>. This install gives the scraper somewhere to record what happens to them; the repair comes from the log.</li>
+    <li><strong>If the 18 verified boards return rows and the 21 do not</strong>, it is purely bad tokens and I fix them by hand.</li>
+    <li><strong>If all 39 stay at zero</strong>, the cause is upstream of routing — the family failing before its loop, or rows being rejected on write — and I would look at the location filter next, since a role only survives if it maps to Seattle, Greater LA, New Zealand or US Other.</li>
+  </ul>
+</div>
+
+<div class="note good" style="margin-top:28px">
+  <div class="ico">API</div>
+  <p><strong>Optional, any time after the above.</strong> The AI features (tailored résumé, cover letter, essays) need a Claude key: live site → Settings → 🔑 Claude API Key → paste → Save → Test → wait for the green ✓ Working. It is stored in that one browser and goes nowhere else. Give it a monthly spend cap in the Anthropic console — a key sitting in a browser is readable by anyone using that device.</p>
+</div>
+
+<footer>
+  Other pages in this kit: <a href="START-HERE.html">START-HERE.html</a> (the long-form setup guide) · <a href="tools.html">tools.html</a> (five live diagnostics) · <a href="pipeline-probe.html">pipeline-probe.html</a> (has the scraper ever written to Supabase) · <a href="index.html">index.html</a> (the console itself). Full file list in <code>MANIFEST.txt</code>; what changed in build 17 is at the top of <code>README.txt</code>.
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var KEY = 'orbital.cleaninstall.v17';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  document.querySelectorAll('li.step').forEach(function(step){
+    var k = step.dataset.k, box = step.querySelector('input');
+    if (saved[k]) box.checked = true;
+    box.addEventListener('change', function(){
+      saved[k] = box.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+    });
+  });
+})();
+</script>
+</body>
+</html>

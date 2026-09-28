@@ -167,32 +167,40 @@ CUSTOM_HTML = _COMPANIES.get("custom", [])
 # --------------------------------------------------------------------
 # Resume profile + scoring + gates
 # --------------------------------------------------------------------
-RESUME_KEYWORDS = [
-    # Mirrors OWNER.skills in index.html, which is generated from the two current resume
-    # versions (master + General Dynamics tailored). Keep the two in sync: this list is
-    # what calculate_resume_alignment() scores against at ingest time.
-    "systems engineering",
-    "requirements development",
-    "requirements management",
-    "verification and validation",
-    "trade study",
-    "trade studies",
+# Tier 1 (weight 7) — the functions the master résumé both CLAIMS and TARGETS: Program
+# Management, Technical Program Management, Systems Engineering. These are what a posting
+# has to be about for it to be worth an application.
+RESUME_CORE = [
     "program management",
     "technical program",
     "technical project management",
     "project management",
-    "mission integration",
-    "mission operations",
-    "mission assurance",
-    "space operations",
-    "spacecraft operations",
-    "payload integration",
+    "systems engineering",
+    "requirements development",
+    "requirements management",
     "schedule management",
     "integrated master schedule",
     "critical path",
     "risk management",
-    "risk mitigation",
     "lifecycle management",
+    "trade study",
+    "trade studies",
+    "stakeholder management",
+    "cross-functional",
+]
+
+# Tier 2 (weight 5) — space and systems-engineering vocabulary that ERAU coursework genuinely
+# produces but no employer has paid for. It used to sit in RESUME_CORE at weight 7 alongside
+# the paid-work terms, which is what made mission-assurance and payload-integration postings
+# read as strong matches against a résumé that never claims either. Real signal, lower weight.
+RESUME_DOMAIN = [
+    "mission operations",
+    "space operations",
+    "spacecraft operations",
+    "mission integration",
+    "mission assurance",
+    "payload integration",
+    "verification and validation",
     "configuration management",
     "interface control",
     "concept of operations",
@@ -200,16 +208,33 @@ RESUME_KEYWORDS = [
     "design review",
     "integration and test",
     "work breakdown",
+    "earth observation",
+    "remote sensing",
+    "satellite communications",
+    "launch vehicle",
+    "space transportation",
+    "human spaceflight",
+    "space law",
+    "space policy",
+    "orbital debris",
+    "technology readiness",
+    "lifecycle cost",
+    "constellation",
+]
+
+# Tier 3 (weight 3) — supporting tooling and general operations terms from the résumé's
+# SKILLS block. Real paid experience, but a posting mentioning "budget" is not thereby a
+# program-management job, so these confirm fit rather than establish it.
+RESUME_SUPPORT = [
+    "risk mitigation",
     "budget",
     "resource planning",
     "capacity planning",
-    "stakeholder management",
-    "cross-functional",
     "process automation",
     "root cause analysis",
     "supplier negotiation",
-    "regulatory compliance",
-    "operational excellence",
+    "data analysis",
+    "earned value",
     "agile",
     "ms project",
     "jira",
@@ -222,6 +247,51 @@ RESUME_KEYWORDS = [
     "startup",
 ]
 
+# Later tiers must not overwrite earlier ones, so build the weight map weakest-first.
+_KW_WEIGHT = {}
+for _kw in RESUME_SUPPORT:
+    _KW_WEIGHT[_kw] = 3
+for _kw in RESUME_DOMAIN:
+    _KW_WEIGHT[_kw] = 5
+for _kw in RESUME_CORE:
+    _KW_WEIGHT[_kw] = 7
+RESUME_KEYWORDS = list(_KW_WEIGHT.keys())
+
+
+def load_uploaded_resume_skills():
+    """Add skills from every résumé uploaded in the app. The browser syncs its résumé
+    library into user_state (row 'tracking', key 'orbital.resumeLibrary'). Skills already
+    in the tiers above keep their weight; new ones join at the supporting weight (3), or 5
+    when they appear in at least half of the uploaded résumés. Any failure leaves the
+    built-in lists unchanged, so a missing or empty row never stops a scrape."""
+    try:
+        res = supabase.table("user_state").select("v").eq("k", "tracking").limit(1).execute()
+        row = (res.data or [None])[0]
+        raw = ((row or {}).get("v") or {}).get("orbital.resumeLibrary")
+        lib = json.loads(raw) if isinstance(raw, str) else (raw or [])
+        lib = [r for r in lib if isinstance(r, dict) and isinstance(r.get("skills"), list)]
+        if not lib:
+            print("   résumé library: none uploaded — using the built-in résumé keywords")
+            return
+        counts = {}
+        for r in lib:
+            for s in {str(x).strip().lower() for x in r["skills"] if str(x).strip()}:
+                counts[s] = counts.get(s, 0) + 1
+        added = 0
+        for s, n in sorted(counts.items(), key=lambda kv: -kv[1]):
+            if s in _KW_WEIGHT or len(s) < 3 or added >= 60:
+                continue
+            _KW_WEIGHT[s] = 5 if n * 2 >= len(lib) else 3
+            added += 1
+        RESUME_KEYWORDS[:] = list(_KW_WEIGHT.keys())
+        print(f"   résumé library: {len(lib)} uploaded résumé(s) → +{added} keywords "
+              f"({len(RESUME_KEYWORDS)} total)")
+    except Exception as exc:
+        print(f"   résumé library: not read ({str(exc)[:90]}) — using built-in keywords")
+
+
+load_uploaded_resume_skills()
+
 TITLE_EXCLUDE = re.compile(
     r"\b(propulsion|gnc|guidance|navigation|thermal|structural|stress|rf engineer|"
     r"avionics|aerodynamics|flight dynamics|embedded|flight software|c\+\+|fpga|firmware|"
@@ -233,10 +303,16 @@ TITLE_INCLUDE = re.compile(
     r"\b(program manager|tpm|technical program|mission integration|mission manager|"
     r"operations manager|business operations|s&op|systems integration|systems engineer|systems engineering|requirements engineer|verification and validation|mbse|incose|solutions architect|"
     r"lifecycle|launch operations|supply chain|sourcing|procurement|program operations|"
-    r"business development|strategy manager|operations lead|senior manager|sr\.? manager|"
+    r"strategy manager|project coordinator|program coordinator|mission operations|mission planner|"
+    r"proposal manager|capture manager|integration and test|strategic operations|operations lead|senior manager|sr\.? manager|"
     r"portfolio manager|production manager|project manager)\b",
     re.I,
 )
+
+# "Propulsion Program Manager" is a program role, not a propulsion engineering role.
+MANAGER_OVERRIDE = re.compile(
+    r"\b(program manager|project manager|technical program|tpm|program coordinator|"
+    r"project coordinator|mission manager)\b", re.I)
 
 HUB_KEYWORDS = {
     # SEATTLE and GREATER_LA moved to the regexes below. "washington" used to live in the
@@ -370,18 +446,10 @@ def determine_location_hub(loc_str):
     return None
 
 
-# Tiered weighting mirrors OWNER.coreSkills in index.html: the credentials and functions
-# Lisaney is actually targeting count for more than the supporting tooling. A flat +5 per
-# term made the 70% firewall need 8 hits, so genuinely-matching roles stalled in the 40s.
-RESUME_CORE = [
-    "systems engineering", "requirements development", "requirements management",
-    "verification and validation", "trade study", "trade studies",
-    "technical program", "technical project management", "program management",
-    "mission integration", "mission operations", "mission assurance",
-    "space operations", "spacecraft operations", "payload integration",
-    "schedule management", "integrated master schedule", "critical path",
-    "concept of operations", "conops", "interface control",
-]
+# Weights are assigned by tier in _KW_WEIGHT above (core 7 / domain 5 / support 3). A flat
+# +5 per term made the 70% firewall need 8 hits, so genuinely-matching roles stalled in the
+# 40s; tiering fixed the level, and splitting paid-work terms from coursework terms fixed
+# WHICH roles rise.
 
 
 def calculate_resume_alignment(title, description):
@@ -393,7 +461,7 @@ def calculate_resume_alignment(title, description):
     for kw in RESUME_KEYWORDS:
         if kw not in body_l:
             continue
-        weight = 7 if kw in RESUME_CORE else 3
+        weight = _KW_WEIGHT.get(kw, 3)
         if kw in title_l:
             weight *= 2
         score += weight
@@ -408,7 +476,7 @@ def space_qualifies(title, score, is_intern, hub=None):
         # NZ has few space employers — keep any non-excluded role rather than
         # applying the stricter US-market alignment threshold.
         return True if not TITLE_EXCLUDE.search(t) else score >= 55
-    if TITLE_EXCLUDE.search(t):
+    if TITLE_EXCLUDE.search(t) and not MANAGER_OVERRIDE.search(t):
         return False
     if TITLE_INCLUDE.search(t):
         return True
@@ -912,26 +980,88 @@ def _workday_description(base, tenant, board, ext):
         return ""
 
 
+_WD_CACHE = {}
+
+
+def _wd_server_variants(server):
+    return _dedupe([server, "wd1", "wd5", "wd3", "wd103", "wd12", "wd2", "wd101"])
+
+
+def _wd_board_variants(company, tenant, board):
+    """Board tokens Workday tenants actually use, derived from the company name."""
+    camel = re.sub(r"[^A-Za-z0-9]", "", (company or "").title())
+    return _dedupe([b for b in [
+        board, camel, f"{camel}Careers", f"{camel}_Careers", f"{camel}External",
+        "Careers", "careers", "External", "External_Career_Site", "ExternalCareerSite",
+        tenant, (tenant or "").capitalize(),
+    ] if b])
+
+
+def resolve_workday(company, tenant, server, board):
+    """Workday has THREE error-prone tokens — data-center subdomain, tenant and board —
+    and the old probe varied only the subdomain. A wrong BOARD token therefore returned
+    404 on every subdomain candidate, and the company died permanently behind an error
+    that blamed the tenant. Greenhouse (resolve_gh) and Lever (resolve_lever) have always
+    resolved their tokens this way; Workday, the one family sitting at zero rows in the
+    database, was the one that did not.
+
+    Two passes so a wrong board costs ~18 requests, not ~80: find the subdomain that
+    answers at all (a bad host errors at the socket; a bad board answers 404), then try
+    board variants against that host only."""
+    key = (tenant, server, board)
+    if key in _WD_CACHE:
+        hit = _WD_CACHE[key]
+        if hit is None:
+            raise RetryableHTTP(f"workday: no live board for {company} ({tenant}) [cached]")
+        return hit
+
+    headers = {"Accept": "application/json", "Content-Type": "application/json"}
+    body = json.dumps({"limit": 1, "offset": 0, "appliedFacets": {}})
+
+    def probe(host, bd):
+        try:
+            return SESSION.post(f"{host}/wday/cxs/{tenant}/{bd}/jobs",
+                                headers=headers, data=body, timeout=12)
+        except Exception:
+            return None
+
+    live_host = None
+    for srv in _wd_server_variants(server):
+        host = f"https://{tenant}.{srv}.myworkdayjobs.com"
+        rr = probe(host, board)
+        if rr is None:
+            continue
+        if rr.status_code == 200 and "jobPostings" in rr.text:
+            _WD_CACHE[key] = (host, board)
+            return host, board
+        if rr.status_code == 429:
+            time.sleep(2)
+        # It answered, so the tenant is hosted here — the board name is what is wrong.
+        if live_host is None:
+            live_host = host
+
+    if live_host:
+        for bd in _wd_board_variants(company, tenant, board):
+            if bd == board:
+                continue
+            rr = probe(live_host, bd)
+            if rr is not None and rr.status_code == 200 and "jobPostings" in rr.text:
+                print(f"   ~~ workday {company}: board '{board}' is wrong -> using '{bd}' "
+                      f"(fix companies.json)")
+                _WD_CACHE[key] = (live_host, bd)
+                return live_host, bd
+
+    _WD_CACHE[key] = None
+    detail = (f"host {live_host} answers but no board variant matched"
+              if live_host else "no data-center subdomain answered")
+    raise RetryableHTTP(f"workday: no live board for {company} ({tenant}) — {detail}")
+
+
 def scrape_workday(cfg):
     company, tenant = cfg["company"], cfg["tenant"]
     server, board = cfg["server"], cfg["board"]
     headers = {"Accept": "application/json", "Content-Type": "application/json"}
-    # Workday's data-center subdomain (wd1/wd5/...) is the most error-prone token —
-    # probe candidates and use whichever tenant/server actually responds.
-    base = None
-    for srv in _dedupe([server, "wd1", "wd5", "wd3", "wd103", "wd12", "wd2"]):
-        cand = f"https://{tenant}.{srv}.myworkdayjobs.com"
-        try:
-            rr = SESSION.post(f"{cand}/wday/cxs/{tenant}/{board}/jobs", headers=headers,
-                              data=json.dumps({"limit": 1, "offset": 0, "appliedFacets": {}}),
-                              timeout=12)
-            if rr.status_code == 200 and "jobPostings" in rr.text:
-                base = cand
-                break
-        except Exception:
-            continue
-    if not base:
-        raise RetryableHTTP(f"workday: no live tenant/server for {company} ({tenant})")
+    base, board = resolve_workday(company, tenant, server, board)
     cxs = f"{base}/wday/cxs/{tenant}/{board}/jobs"
     rows, offset, total = [], 0, None
     while True:
@@ -1561,16 +1691,33 @@ _PROGRESS = {}               # source -> {"boards_total":n,"boards_done":n,"rows
 _LAST_FLUSH = 0.0
 
 
-def _progress_write(table, rows):
+def _missing_table(msg):
+    """Tell 'the table isn't there' apart from 'the network hiccupped'. Retrying the
+    first is pointless; retrying the second is the whole point."""
+    m = msg.lower()
+    return "pgrst205" in m or "pgrst204" in m or "does not exist" in m or "could not find the table" in m
+
+
+def _progress_write(table, rows, force=False, attempts=1):
+    """force=True writes even after telemetry has been switched off, and does not
+    switch it off on failure. Used for the one row the catch-up gate reads."""
     global _PROGRESS_OK
-    if not _PROGRESS_OK or not rows:
+    if (not _PROGRESS_OK and not force) or not rows:
         return
-    try:
-        supabase.table(table).upsert(rows).execute()
-    except Exception as exc:
+    last = ""
+    for i in range(attempts):
+        try:
+            supabase.table(table).upsert(rows).execute()
+            return
+        except Exception as exc:
+            last = str(exc)
+            if _missing_table(last) or i + 1 >= attempts:
+                break
+            time.sleep(2 * (i + 1))
+    if not force:
         _PROGRESS_OK = False
-        print(f"   .. progress telemetry off ({table}: {str(exc)[:80]}) — "
-              f"run the scrape_runs/scrape_progress SQL from SUPABASE-SCHEMA.sql to enable it")
+    print(f"   .. progress telemetry off ({table}: {last[:80]}) — "
+          f"run the scrape_runs/scrape_progress SQL from SUPABASE-SCHEMA.sql to enable it")
 
 
 def progress_start(tasks):
@@ -1615,10 +1762,14 @@ def progress_flush(force=False):
 
 def progress_finish(status, rows_upserted, note=""):
     progress_flush(force=True)
+    # The catch-up gate decides whether to scrape again today by looking for this exact
+    # row. Losing it to one dropped packet costs three redundant full scrapes, so this
+    # write ignores the telemetry-off switch and retries — unlike every other write here,
+    # it is not just telemetry.
     _progress_write("scrape_runs", [{
         "run_id": RUN_ID, "status": status, "rows_upserted": rows_upserted,
         "finished_at": datetime.now(timezone.utc).isoformat(), "note": note[:400],
-    }])
+    }], force=True, attempts=3)
 
 
 def _upsert_with_autoheal(chunk):

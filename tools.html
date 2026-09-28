@@ -45,9 +45,13 @@ a.home:hover{text-decoration:underline}
 <div class="wrap">
   <div class="kicker">Orbital // Command</div>
   <h1>Live diagnostics</h1>
-  <p class="lede">Four pages that answer four different questions about the job pipeline. Every one of them fetches from the real job-board APIs when you open it — none of them read a cache or a saved snapshot, so what you see is the state right now.</p>
+  <p class="lede">Five pages that answer five different questions about the job pipeline. Every one of them fetches from the real job-board APIs when you open it — none of them read a cache or a saved snapshot, so what you see is the state right now.</p>
 
   <div class="grid">
+    <a class="card" href="pipeline-probe.html">
+      <span class="name">Cloud scraper probe <span class="file">pipeline-probe.html</span></span>
+      <p class="q">Answers: <b>has the daily GitHub Action ever written to Supabase, and if not, how far did it get?</b> Reads scrape_runs and scrape_progress live, then compares the jobs table against every board in companies.json to name the ATS families that were never fetched at all. Run this when the board looks stale or a whole set of companies is missing.</p>
+    </a>
     <a class="card" href="coverage-seattle-la.html">
       <span class="name">Seattle / LA coverage audit <span class="file">coverage-seattle-la.html</span></span>
       <p class="q">Answers: <b>which companies are actually hiring in my two hubs, and how many roles each has.</b> Also lists every location string the app could not place — that list is where coverage gaps show up first.</p>
