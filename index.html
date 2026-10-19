@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<meta name="orbital-build" content="2026-09-28.1" />
+<meta name="orbital-build" content="2026-10-19.1" />
 <script>
 (function(){
   try{
@@ -1764,7 +1764,7 @@ let SB_URL = localStorage.getItem(LS.url) || (window.ORBITAL_CONFIG&&window.ORBI
 let SB_KEY = localStorage.getItem(LS.key) || (window.ORBITAL_CONFIG&&window.ORBITAL_CONFIG.anonKey) || '';
 let region = localStorage.getItem(LS.region) || 'global';
 let track = 'fulltime';     // fulltime | intern
-const ORBITAL_BUILD = '2026-09-28.1';   // shown in Settings so you can tell what the server is actually serving
+const ORBITAL_BUILD = '2026-10-19.1';   // shown in Settings so you can tell what the server is actually serving
 let query = '';
 let companyFilter = '';     // click a bar → filter to this company
 let favOnly = false;        // Favorites filter
@@ -1788,11 +1788,6 @@ const PHOTOS = {
   la:'assets/hero-la.jpg',
   nz:'assets/hero-nz.jpg',
 };
-const HOUSE = {
-  a:'https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=200&q=70',
-  b:'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=200&q=70',
-  c:'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=200&q=70',
-};
 const REGIONS = {
   global:{
     id:'global', label:'All Regions', short:'Global', flag:'🌐',
@@ -1815,7 +1810,6 @@ const REGIONS = {
       lifestyle:'Capitol Hill is the historic heart of Seattle’s LGBTQ+ community — walkable, vibrant, and welcoming. Huge off-leash dog culture (Magnuson, Marymoor) and dog-friendly everything for the pack.',
       col:'1.44x – 1.57x', tax:'0.0% (No state income tax)', rent:'$2,195 / mo', home:'$870,000',
       considerations:['Kent aerospace cluster within a <20-min drive','Blue Origin HQ & Starlink production nearby','SFH detached rentals in Covington / South Auburn','6ft-fenced yards clear 4-canine housing constraints'],
-      housing:[{img:HOUSE.a,t:'Covington SFH',d:'4 bd · 2.5 ba · 0.28 ac fenced lot',pr:'$789,000',fit:'✓ 4-dog ready · 6ft-fenced yard'},{img:HOUSE.b,t:'South Auburn Rambler',d:'3 bd · 2 ba · flat 0.3 ac',pr:'$685,000',fit:'✓ 4-dog ready · room to run'},{img:HOUSE.c,t:'Ballard Townhome',d:'2 bd · 2.5 ba · 1,240 sqft',pr:'$799,000',fit:'△ almost — shared yard, add fencing'}],
     },
   },
   la:{
@@ -1833,7 +1827,6 @@ const REGIONS = {
       lifestyle:'West Hollywood (WeHo) is one of the most iconic LGBTQ+ cities in the world; Silver Lake & Long Beach are also welcoming and dog-loving. Year-round outdoor weather is ideal for four active dogs.',
       col:'1.50x – 1.52x', tax:'Up to 9.3% – 10.3% over $150k', rent:'$2,300 / mo', home:'$960,000',
       considerations:['15-min surface-street perimeter of SpaceX HQ (Hawthorne)','Detached homes in W/S Torrance or N Long Beach','6ft brick boundary perimeters for pets','Avoid freeway commute degradation'],
-      housing:[{img:HOUSE.a,t:'West Torrance Detached',d:'3 bd · 2 ba · brick-walled yard',pr:'$3,150/mo',fit:'✓ 4-dog ready · solid perimeter'},{img:HOUSE.b,t:'North Long Beach SFH',d:'3 bd · 2 ba · 1,560 sqft',pr:'$2,950/mo',fit:'✓ 4-dog ready · fenced'},{img:HOUSE.c,t:'Culver City Bungalow',d:'2 bd · 1 ba · 700 sqft',pr:'$2,200/mo',fit:'△ almost — small yard'}],
     },
   },
   nz:{
@@ -1851,7 +1844,6 @@ const REGIONS = {
       lifestyle:'Auckland is open and inclusive (Ponsonby is the LGBTQ+ hub; nationwide marriage equality since 2013). Lifestyle blocks on the city fringe give the dogs real room — and solve the 2-dog urban cap.',
       col:'1.10x – 1.16x', tax:'Progressive + 15% GST', rent:'$1,850 – $2,400 / mo', home:'NZ$1.0M',
       considerations:['Work visa typically required (Skilled Migrant points)','Relocation assistance commonly offered','High demand in tech, healthcare & engineering','Māhia LC-1 requires private 4WD transit'],
-      housing:[{img:HOUSE.a,t:'Ōrākei Fenced Section',d:'4 bd · 2 ba · 600 m² section',pr:'NZ$1.15M',fit:'✓ 4-dog ready · fully fenced'},{img:HOUSE.b,t:'Remuera Villa',d:'3 bd · 2 ba · 1,500 sqft',pr:'NZ$1.4M',fit:'✓ 4-dog ready · large grounds'},{img:HOUSE.c,t:'Auckland CBD Apt',d:'2 bd · 1 ba · 880 sqft',pr:'NZ$895,000',fit:'△ almost — body-corp pet limits'}],
     },
   },
   intl:{
@@ -2109,7 +2101,7 @@ function statsForRegion(){
   // Internships stays counted across the whole pool — otherwise it reads 0 whenever
   // Full-time is selected, which is its own kind of confusing.
   const jobs = pool.filter(j=> track==='intern' ? j.type==='Internship' : track==='fulltime' ? j.type!=='Internship' : true);
-  const ft = jobs.filter(j=>j.type!=='Internship' && j.salMax);
+  const ft = jobs.filter(j=>j.type!=='Internship' && j.salMax && !j.estimated);
   const interns = pool.filter(j=>j.type==='Internship');
   const cos = new Set(jobs.map(j=>j.company)).size;
   const hot = jobs.filter(isHot).length;
@@ -2118,38 +2110,19 @@ function statsForRegion(){
   const medLabel = med ? cur+Math.round(med/1000)+'K' : '—';
   const savedHere = jobs.filter(j=>savedJobs.has(j.id)).length;
   return [
-    {ic:'jobs',  v:String(jobs.length),    l:'Matched Roles', c:'#5b8cff', note:'≥70% fit · space-only'},
+    {ic:'jobs',  v:String(jobs.length),    l:'Matched Roles', c:'#5b8cff', note:'≥'+settings.matchFloor+'% fit · space-only'},
     {ic:'fire',  v:String(hot),            l:'Hot Roles',     c:'#ff5a4d', note:`≤${HOT_DAYS} days old`},
     {ic:'cand',  v:String(interns.length), l:'Internships',   c:'#37d6e6', note:'open · no 70% floor'},
     {ic:'grad',  v:String(pool.filter(isEarlyCareer).length), l:'Early-Career', c:'#c17bff', note:'new-grad friendly'},
-    {ic:'sal',   v:medLabel,               l:'Median Base',   c:'#37e0a0', note:cos+' companies hiring'},
+    {ic:'sal',   v:medLabel,               l:'Median Base',   c:'#37e0a0', note:(ft.length?ft.length+' posted salaries':'no posted salaries')+' · '+cos+' companies'},
     {ic:'place', v:String(savedHere),      l:'Shortlisted',   c:'#f5c560', note:savedHere?'in your favorites':'star roles to track'},
   ];
 }
-// global region cards (NA/EU/APAC)
+// Skills are the master résumé's. Nothing here may claim more than that document does.
 const CANDIDATE = {
-  name:'Lisaney Kong', title:'Program Management · Technical Program Management · Systems Engineering', loc:'Nashville, TN',
-  email:'one@lisaney.com', phone:'+1 (704) 975-6925',
+  name:'Lisaney Kong', title:'Program Management · Technical Program Management · Systems Engineering',
   photo:'assets/headshot.png',
-  match:'98%', apps:'24', interviews:'6', offers:'2',
   skills:['Program Management','Technical Project Management','Schedule Management','Risk Management','Stakeholder Management','Cross-functional Leadership','Systems Engineering','P&L Ownership','+16'],
-  // Employers, titles, dates and bullets are the master résumé's. Nothing here may claim
-  // more than that document does.
-  experience:[
-    {co:'SoftwareOne',role:'Mid-Market Digital Account Manager | Cloud & Licensing Operations',time:'2024',pts:['Led cross-functional initiatives to set enterprise system integration standards','Liaison between technical product teams and enterprise stakeholders']},
-    {co:'Vault.co',role:'Senior Manager',time:'2021 – 2022',pts:["Co-architected the company's first enterprise information system (Salesforce)",'Largest customer deployment — onboarded 1,000 users']},
-  ],
-  activity:[
-    {ic:'cal',t:'Interview with Rocket Lab',s:'Today, 10:00 AM'},
-    {ic:'app',t:'Applied to Mission Integration Lead at Impulse Space',s:'Yesterday, 4:22 PM'},
-    {ic:'eye',t:'Profile viewed by Blue Origin',s:'Jun 20, 2026'},
-  ],
-};
-const COMMS = {
-  seattle:['SEA :: Eastside aerospace corridor seeing talent poaching from Project Kuiper.','SEA :: Blue Origin scaling New Glenn production floor in Kent.'],
-  la:['LAX :: Long Beach space-cluster real estate up 8%; tech hub density rising.','LAX :: SpaceX Starship cadence driving Hawthorne hiring surge.'],
-  nz:['AKL :: Rocket Lab increasing launch cadence at LC-1; Auckland floor expanding.','AKL :: Skilled Migrant visa pathways broadened for engineering roles.'],
-  global:['GLOBAL :: AI-engineering demand up 22% QoQ across all hubs.','GLOBAL :: Aerospace primes winning SDA tranche awards — scaling fast.'],
 };
 
 /* ---------------- city culture & happenings (4 boxes/region, positive only) ---------------- */
@@ -2609,18 +2582,6 @@ function ensureWeatherLoaded(region){
   if(!WX_LIVE.home) fetchLiveWeather('home');
   if(!WX_LIVE[key]) fetchLiveWeather(key);
 }
-
-/* ---------------- next launch missions (live countdown) ---------------- */
-const MISSIONS = {
-  global:{name:'Starlink Group 12-9', vehicle:'Falcon 9 Block 5', pad:'SLC-40 · Cape Canaveral', payload:'23 × Starlink V2 Mini', img:PHOTOS.global, offsetH:54,
-    highlights:['Booster targeting a 19th flight + droneship recovery','Expands the laser-mesh broadband constellation','Part of a record multi-pad launch cadence']},
-  seattle:{name:'New Glenn · NG-2', vehicle:'Blue Origin New Glenn', pad:'LC-36 · Cape Canaveral', payload:'Blue Ring Pathfinder', img:PHOTOS.seattle, offsetH:120,
-    highlights:['First stage built up the road in Kent, WA','7-meter fairing — widest in service','Reusable booster, sea-landing attempt']},
-  la:{name:'Transporter-14', vehicle:'Falcon 9 Block 5', pad:'SLC-4E · Vandenberg', payload:'Smallsat rideshare · 114 payloads', img:PHOTOS.la, offsetH:36,
-    highlights:['SoCal-integrated rideshare stack','Sun-synchronous orbit insertion','Dozens of LA-built smallsats aboard']},
-  nz:{name:"Electron · 'The Sea God Sees'", vehicle:'Rocket Lab Electron', pad:'LC-1A · Māhia Peninsula', payload:'Synspective StriX SAR', img:PHOTOS.nz, offsetH:18,
-    highlights:['Only private orbital range in the Southern Hemisphere','~1 hour south of Auckland engineering HQ','Carbon-composite stage, helicopter-catch heritage']},
-};
 
 /* ---------------- auth + router state ---------------- */
 let role = localStorage.getItem('orbital.role') || '';      // owner | guest | ''
@@ -4527,9 +4488,12 @@ function mapLiveJob(r){
   const region=hubToRegion(r);
   const match = r.match ?? r.match_score ?? 75;
   const isIntern = !!r.is_intern || r.type==='Internship';
+  // The scraper fills salary_min/max with its own estimate and says so only in salary_range.
+  let estimated=/\(est\.?\)/i.test(String(r.salary_range||''));
+  // That estimate is a full-time band; an internship's pay is its hourly rate or unknown.
+  if(isIntern && estimated){ salMin=0; salMax=0; }
   // Salary estimate fallback — many live board rows omit pay, which would drop them from
   // the salary scatter. Derive a credible band from seniority + region so charts populate.
-  let estimated=false;
   if(!isIntern && !salMax){
     const t=(r.title||'').toLowerCase();
     const regBase={seattle:140000, la:150000, nz:115000}[region]||140000;
@@ -4548,7 +4512,8 @@ function mapLiveJob(r){
     logo:(r.company||'?').replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase()||'JB', logoBg:r.logo_bg||'#2a4d7a',
     tech:(r.tech||'').toString().split(',').map(s=>s.trim()).filter(Boolean),
     demand:r.demand ?? match, clearance:r.clearance||'NONE', estimated,
-    reloc:r.relocation_note || (r.relocation_flag?'Relocation offered':'—'),
+    // Older scraper rows carry "-" as a placeholder, which read as a real relocation offer.
+    reloc:(r.relocation_note && !/^[\s\-—]*$/.test(r.relocation_note)) ? r.relocation_note : (r.relocation_flag?'Relocation offered':'—'),
     url:r.url || r.apply_url, description:r.description,
     verticals: (r.verticals!==undefined && r.verticals!==null) ? String(r.verticals) : null,
     live:!!r.source   // ANY scraper-sourced row is server-gated (greenhouse/lever/workday/ashby/amazon/custom). Don't re-filter through the client space gate or match floor.
@@ -4917,11 +4882,12 @@ function locBar(){
 function missionPanel(){
   ensureLaunchLoaded(region);
   const live = MISSIONS_LIVE[region];
-  const fallback = MISSIONS[region]||MISSIONS.global;
   const loading = !live;
   const failed = live && live.error;
-  const m = (!loading && !failed) ? live : fallback;
-  const bgImg = (!loading && !failed) ? m.img : fallback.img;
+  // Without live data there is no mission to name and no T-0 to count down to.
+  const m = (!loading && !failed) ? live
+    : {name: loading ? 'Loading…' : 'No launch data right now', vehicle:'—', pad:'—', payload:'—', highlights:[]};
+  const bgImg = (!loading && !failed && m.img) ? m.img : (PHOTOS[region]||PHOTOS.global);
   return `<div class="panel mission" id="missionPanel">
     <div class="mbg" style="background-image:url('${bgImg}')"></div><div class="mov"></div>
     <div class="orbit-art"></div>
@@ -5000,10 +4966,11 @@ function zillowFeaturePanel(){
   const q = encodeURIComponent(city);
   return `<div class="panel"><div class="ph"><h3>${cic("home")} Housing Search</h3><span class="subtle" style="font-size:var(--fs-2xs)">real listings · opens in a new tab</span></div><div class="pb">
     <p class="subtle" style="margin:0 0 12px">There's no live listing data wired in yet, so rather than show a fake sample property, here are direct links to real, current listings in ${esc(city)}:</p>
-    <div style="display:flex;flex-wrap:wrap;gap:9px">
-      <a class="dbtn" target="_blank" rel="noreferrer" href="https://www.zillow.com/homes/${q}_rb/">Zillow — ${esc(city)} ↗</a>
+    <div style="display:flex;flex-wrap:wrap;gap:9px">${region==='nz'
+      ? `<a class="dbtn" target="_blank" rel="noreferrer" href="https://www.realestate.co.nz">realestate.co.nz ↗</a>`
+      : `<a class="dbtn" target="_blank" rel="noreferrer" href="https://www.zillow.com/homes/${q}_rb/">Zillow — ${esc(city)} ↗</a>
       <a class="dbtn" target="_blank" rel="noreferrer" href="https://www.redfin.com/city/search?q=${q}">Redfin — ${esc(city)} ↗</a>
-      <a class="dbtn" target="_blank" rel="noreferrer" href="https://www.apartments.com/${q.toLowerCase().replace(/%20/g,'-')}/">Apartments.com — ${esc(city)} ↗</a>
+      <a class="dbtn" target="_blank" rel="noreferrer" href="https://www.apartments.com/${q.toLowerCase().replace(/%20/g,'-')}/">Apartments.com — ${esc(city)} ↗</a>`}
     </div></div></div>`;
 }
 
@@ -5447,6 +5414,7 @@ function relocPanel(){
     <div class="relsec"><h4>📋 Relocation Notes</h4><p>${esc(r.notes)}</p></div>
     ${r.fromNash?`<div class="relsec"><h4>📐 Relative to Nashville</h4><p>${esc(r.fromNash)}</p></div>`:''}
     <div class="relsec"><h4>💰 Ongoing Cost vs Nashville</h4>
+      <p style="margin:0 0 8px;font-size:var(--fs-sm);color:var(--dim)">Reference figures typed into Orbital, not live market data. Check current numbers before you decide.</p>
       <div class="relrow"><span class="k">Avg. Rent (1BR)</span><span class="v">${r.rent}<span class="vsnash"> · Nash ~$1,600</span></span></div>
       <div class="relrow"><span class="k">Median Home Price</span><span class="v">${r.home}<span class="vsnash"> · Nash ~$430K</span></span></div>
       <div class="relrow"><span class="k">Cost of Living</span><span class="v bad">${r.col}</span></div>
@@ -5462,10 +5430,6 @@ function relocPanel(){
     </div>
     ${r.lifestyle?`<div class="relsec"><h4>🏳️‍🌈 Lifestyle Fit</h4><p>${esc(r.lifestyle)}</p></div>`:''}
     <div class="relsec"><h4>📍 Considerations</h4><ul class="bullets">${r.considerations.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div>
-    <div class="relsec"><h4>🏡 3 Best-Fit Homes · fenced yard for 4 dogs <span class="zillow">Zillow ↗</span></h4>
-      ${r.housing.map(h=>`<div class="housing"><img src="${h.img}" onerror="this.style.opacity=.2"/><div class="hi"><b>${esc(h.t)}</b><span>${esc(h.d)}</span><span class="pr">${h.pr}</span>${h.fit?`<span style="display:block;font-size:var(--fs-xs);margin-top:3px;color:${h.fit.startsWith('✓')?'var(--good)':'var(--gold)'}">${esc(h.fit)}</span>`:''}</div></div>`).join('')}
-      <div class="linkbtns"><a href="https://www.zillow.com" target="_blank">Zillow ↗</a><a href="https://www.realestate.co.nz" target="_blank">Realestate ↗</a></div>
-    </div>
   </div>`;
 }
 
@@ -5484,16 +5448,6 @@ function budgetPanel(){
   </div></div>`;
 }
 
-/* comms radar */
-function commsPanel(){
-  const items=COMMS[region];
-  if(!items || !items.length) return '';   // no region-specific comms copy — show nothing rather than Global's under a US tab
-  return `<div class="panel"><div class="ph"><h3>${cic("radar")} Comms Radar</h3><span class="va">live</span></div><div class="pb">
-    <ul class="bullets" style="gap:11px">${items.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div></div>`;
-}
-
-/* market momentum = trend chart + short narrative blurb */
-
 /* city culture & happenings — 4 background-image boxes, positive only */
 function culturePanel(){
   const items=CULTURE[region];
@@ -5507,34 +5461,20 @@ function culturePanel(){
     <div class="pb"><div class="culture">${boxes}</div></div></div>`;
 }
 
-/* global: candidate dossier */
-function candidatePanel(compact){
-  const c=CANDIDATE;
-  if(compact){
-    return `<div class="panel cand">
+/* global: candidate card — the four counts are your own tracking, never fixed numbers */
+function candidatePanel(){
+  const c=CANDIDATE, st=appStatusMap(), applied=[...appliedJobs];
+  const inStatus=s=>applied.filter(id=>st[id]===s).length;
+  return `<div class="panel cand">
       <div class="ph"><h3>My Profile</h3><span class="va" data-nav="candidates" style="cursor:pointer">Open ↗</span></div>
       <div class="ch"><div class="ring"><img src="${c.photo}" onerror="this.style.visibility='hidden'"/></div>
         <div class="cn">${esc(c.name)} <span class="vf">✔</span></div><div class="ct">${esc(c.title)}</div>
         <div class="open">● Open to Opportunities</div></div>
       <div class="quad">
-        <div><b>${c.match}</b><span>Profile Match</span></div><div><b>${c.apps}</b><span>Applications</span></div>
-        <div><b>${c.interviews}</b><span>Interviews</span></div><div><b>${c.offers}</b><span>Offers</span></div></div>
+        <div><b>${savedJobs.size}</b><span>Saved</span></div><div><b>${applied.length}</b><span>Applications</span></div>
+        <div><b>${inStatus('interview')}</b><span>Interviews</span></div><div><b>${inStatus('offer')}</b><span>Offers</span></div></div>
       <div class="cs" style="border-bottom:0"><h4>Top Skills <span class="va" data-nav="candidates" style="cursor:pointer">View all</span></h4><div class="chips">${c.skills.map(s=>`<span class="skchip">${esc(s)}</span>`).join('')}</div></div>
     </div>`;
-  }
-  return `<div class="panel cand">
-    <div class="ph"><h3>Candidate Dossier</h3><span class="va" data-nav-go="candidates" style="cursor:pointer">Open profile →</span></div>
-    <div class="ch"><div class="ring"><img src="${c.photo}" onerror="this.style.visibility='hidden'"/></div>
-      <div class="cn">${esc(c.name)} <span class="vf">✔</span></div><div class="ct">${esc(c.title)}</div>
-      <div class="cmeta"><span>📍 ${esc(c.loc)}</span><span>✉ ${esc(c.email)}</span><span>📞 ${esc(c.phone)}</span></div>
-      <div class="open">● Open to Opportunities</div></div>
-    <div class="quad">
-      <div><b>${c.match}</b><span>Profile Match</span></div><div><b>${c.apps}</b><span>Applications</span></div>
-      <div><b>${c.interviews}</b><span>Interviews</span></div><div><b>${c.offers}</b><span>Offers</span></div></div>
-    <div class="cs"><h4>Top Skills <span class="va" data-nav-go="candidates" style="cursor:pointer">✎ Edit</span></h4><div class="chips">${c.skills.map(s=>`<span class="skchip">${esc(s)}</span>`).join('')}</div></div>
-    <div class="cs"><h4>Experience <span class="va" data-nav-go="candidates" style="cursor:pointer">View all</span></h4><div class="acts">${c.experience.map(e=>`<div class="act"><div class="ai">🏢</div><div class="at"><b>${esc(e.role)}</b><span>${esc(e.co)} · ${esc(e.time)}</span>${e.pts.map(p=>`<span>• ${esc(p)}</span>`).join('')}</div></div>`).join('')}</div></div>
-    <div class="cs" style="border-bottom:0"><h4>Recent Activity <span class="va" data-nav-go="candidates" style="cursor:pointer">View all</span></h4><div class="acts">${c.activity.map(a=>`<div class="act"><div class="ai">${a.ic==='cal'?'📅':a.ic==='app'?'📨':'👁'}</div><div class="at"><b>${esc(a.t)}</b><span>${esc(a.s)}</span></div></div>`).join('')}</div></div>
-  </div>`;
 }
 
 /* =========================================================================
@@ -5764,12 +5704,12 @@ function queueView(){
     .filter(x=>{ const d=Math.ceil((x.dl.date-now)/864e5); return d>=0 && d<=21; })
     .sort((a,b)=>a.dl.date-b.dl.date).slice(0,4);
 
-  let dates={}, appliedMeta={};
-  try{ dates=JSON.parse(localStorage.getItem('orbital.appliedDates')||'{}'); }catch(e){}
+  let appliedMeta={};
   try{ appliedMeta=JSON.parse(localStorage.getItem('orbital.appliedMeta')||'{}'); }catch(e){}
-  const followUp=[...appliedJobs].map(id=>({id, j:live.find(x=>x.id===id), m:appliedMeta[id]||{}, d:dates[id]}))
-    .filter(x=>x.d && (now-x.d)/864e5>=7)
-    .sort((a,b)=>a.d-b.d).slice(0,4);
+  // Same rules as the My Applications cadence panel: D+7, D+14, silent at 21+.
+  const followUp=[...appliedJobs].map(id=>({id, j:live.find(x=>x.id===id), m:appliedMeta[id]||{}, c:cadenceState(id)}))
+    .filter(x=>x.c && x.c.due)
+    .sort((a,b)=>b.c.days-a.c.days).slice(0,4);
 
   const degree=ranked.filter(j=>(j.erauFit||0)>=34 && !applyNow.includes(j)).slice(0,4);
   // New-grad on-ramps: real entry-level / associate / new-grad FULL-TIME roles — the
@@ -5795,8 +5735,8 @@ function queueView(){
     : qempty('No apply-by dates inside three weeks', 'Normal outside the Aug\u2013Oct internship window. Dates marked <i>estimated</i> come from the posting age, never from a made-up deadline.');
 
   const followBody = followUp.length
-    ? followUp.map(({id,j,m,d})=>{
-        const age=Math.floor((now-d)/864e5);
+    ? followUp.map(({id,j,m,c})=>{
+        const age=c.days;
         const why=`applied ${age} days ago \u00b7 ${age>=21?'gone silent \u2014 close it out or escalate':'time for a follow-up note'}`;
         return j ? qrow(j, why, age>=21?'var(--bad)':'var(--gold)', 'Open posting')
           : `<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px 2px;border-top:1px solid var(--line)">
@@ -5850,9 +5790,8 @@ function dashboardView(){
           ${culturePanel()}
         </div>
         <div class="col-rail">
-          ${candidatePanel(true)}
+          ${candidatePanel()}
           ${newsPanel(3)}
-          ${commsPanel()}
         </div>
       </div>
       <div class="fullwidth">${jobListPanel(jobs,'Hot Jobs · All Regions',{paginate:true,va:'Open Jobs'})}</div>`;
@@ -5869,10 +5808,9 @@ function dashboardView(){
         ${culturePanel()}
       </div>
       <div class="col-rail">
-        ${candidatePanel(true)}
+        ${candidatePanel()}
         ${skillsPanel()}
         ${newsPanel(3)}
-        ${commsPanel()}
       </div>
     </div>
     <div class="fullwidth" id="rolesAnchor">${jobListPanel(jobs,`Open Roles in ${REGIONS[region].short}`,{paginate:true,va:'Open Jobs'})}</div>`;
@@ -6970,7 +6908,7 @@ function strategyView(){
     {ic:'🎯',t:'Lead with leverage, not apology',d:'You are not "career-changing from zero" — you bring 10 yrs of ops + an ERAU Master of Space Operations and Graduate Certificate in Systems Engineering. Frame every story as transferable mission value.'},
     {ic:'🔑',t:'Beat the bot first',d:'Open each dossier → ATS Keyword Delta. Add every missing keyword verbatim before you submit. 100% parse or don\'t send it.'},
     {ic:'⚡',t:'Strike while HOT',d:`Roles ≤${HOT_DAYS} days old convert best. Apply within 48 hours and send a same-day LinkedIn note to someone on the team.`},
-    {ic:'🤝',t:'Referrals > applications',d:'A warm intro is worth 10 cold applies. Use the company alumni count + outreach templates to find the shortest path in.'},
+    {ic:'🤝',t:'Referrals > applications',d:'A warm intro beats a cold application. Use the alumni searches in each dossier + the outreach templates to find the shortest path in.'},
     {ic:'💬',t:'Quantify everything',d:'Every bullet gets a number your résumé can back: 1,000 users onboarded, 500+ employee deployments, three platforms merged into one, four locations over eight years. Numbers survive the skim; adjectives don\'t.'},
     {ic:'🧭',t:'Qualify the fit, ruthlessly',d:'This move is life-changing — protect it. Check comp vs lifestyle floor, relocation, and 4-dog housing BEFORE investing in a long loop.'},
   ];
@@ -7624,7 +7562,7 @@ function drawCharts(){
       return out.length ? out : ((region==='global'? JOBS : jobs)||[]);
     })();
     const pts = src.map(j=>({
-      x: daysOnMarket(j), y: salaryValue(j), label:j.title, sal:salaryLabel(j), reg:j.region, co:j.company, jid:j.id, hot:isHot(j)
+      x: daysOnMarket(j), y: salaryValue(j), label:j.title, sal:salaryLabel(j), reg:j.region, co:j.company, jid:j.id, hot:isHot(j), est:!!j.estimated
     })).filter(p=>p.y>0 && p.x<=ROLE_WINDOW_DAYS);
     // Hot roles are plotted as a flame rather than a dot.
     const flameIcon=(()=>{
@@ -7654,7 +7592,7 @@ function drawCharts(){
     const rm=settings.readableMode;
     charts.scatter=new Chart(sc,{type:'scatter',
       data:{datasets:[{data:pts,
-        backgroundColor:pts.map(p=>colorFor(p.reg)+(rm?'ee':'cc')),borderColor:rm?'#0b1019':pts.map(p=>colorFor(p.reg)),
+        backgroundColor:pts.map(p=>p.est?'rgba(0,0,0,0)':colorFor(p.reg)+(rm?'ee':'cc')),borderColor:pts.map(p=>(rm&&!p.est)?'#0b1019':colorFor(p.reg)),
         pointStyle:pts.map(p=>(p.hot&&flameIcon)?flameIcon:'circle'),
         pointRadius:pts.map(p=>p.hot?(rm?13:10):(rm?11:7)),
         pointHoverRadius:pts.map(p=>p.hot?(rm?17:14):(rm?15:11)),borderWidth:rm?2.5:1.5}]},
@@ -7666,7 +7604,7 @@ function drawCharts(){
           afterLabel:c=>`${c.raw.sal}  ·  ${c.raw.x} day(s) on market${c.raw.hot?' · 🔥 hot':''} · click to open`}}},
         scales:{
           x:{title:{display:true,text:`Days on market (last ${maxDays} days) · 🔥 = hot`,color:tickc,font:{size:rm?15:12,weight:rm?'700':'400'}},grid:{color:rm?'rgba(120,160,235,.35)':gridc,lineWidth:rm?1.5:1},ticks:{color:tickc,precision:0,stepSize:10,font:{size:rm?13:11}},min:0,max:maxDays},
-          y:{title:{display:true,text:'Salary (USD)',color:tickc,font:{size:rm?15:12,weight:rm?'700':'400'}},grid:{color:rm?'rgba(120,160,235,.35)':gridc,lineWidth:rm?1.5:1},ticks:{color:tickc,font:{size:rm?13:11}},
+          y:{title:{display:true,text:'Salary (USD) · hollow = estimate',color:tickc,font:{size:rm?15:12,weight:rm?'700':'400'}},grid:{color:rm?'rgba(120,160,235,.35)':gridc,lineWidth:rm?1.5:1},ticks:{color:tickc,font:{size:rm?13:11}},
              ticks:{color:tickc,callback:v=>'$'+(v/1000)+'K'},min:0,max:250000}
         }},
       plugins:[hashline]});
@@ -7720,7 +7658,7 @@ function startClock(){
 /* =========================================================================
    MISSION COUNTDOWN (live T-minus to next launch)
    ========================================================================= */
-let cdTimer, launchTargets={};
+let cdTimer;
 // Live "Next Launch" via Launch Library 2 (thespacedevs.com) — free, keyless, real upcoming
 // launch data. Cached per-region like the weather panel; no fabricated countdown target.
 const LAUNCH_QUERY = { seattle:'Blue Origin', la:'Vandenberg', nz:'Rocket Lab', global:'Falcon 9' };
@@ -7738,7 +7676,8 @@ async function fetchLiveLaunch(r){
       vehicle: (l.rocket && l.rocket.configuration && l.rocket.configuration.full_name) || '—',
       pad: [(l.pad||{}).name, (l.pad && l.pad.location && l.pad.location.name)].filter(Boolean).join(' · ') || '—',
       payload: (l.mission && l.mission.name) || (l.mission && l.mission.description ? l.mission.description.slice(0,60)+'…' : '—'),
-      img: l.image || (PHOTOS[r]||PHOTOS.global),
+      // Launch Library 2.3 returns image as an object; older versions returned a URL string.
+      img: (l.image && (l.image.image_url || l.image.thumbnail_url)) || (typeof l.image==='string' ? l.image : '') || (PHOTOS[r]||PHOTOS.global),
       net: l.net,   // real T-0 ISO timestamp
       highlights: [
         l.mission && l.mission.type ? 'Mission type: '+l.mission.type : null,
@@ -7752,15 +7691,16 @@ async function fetchLiveLaunch(r){
 function ensureLaunchLoaded(r){ if(!MISSIONS_LIVE[r]) fetchLiveLaunch(r); }
 function launchTargetFor(r){
   const live = MISSIONS_LIVE[r];
-  if(live && live.net) return new Date(live.net).getTime();
-  if(!launchTargets[r]){ const m=MISSIONS[r]||MISSIONS.global; launchTargets[r]=Date.now()+m.offsetH*3600*1000; }
-  return launchTargets[r];
+  const t = live && live.net ? new Date(live.net).getTime() : NaN;
+  return isNaN(t) ? null : t;
 }
 function startCountdown(){
   clearInterval(cdTimer);
   const tick=()=>{
     const dEl=document.getElementById('cdD'); if(!dEl){ clearInterval(cdTimer); return; }
-    let diff=Math.max(0, launchTargetFor(region)-Date.now());
+    const target=launchTargetFor(region);
+    if(target==null){ ['cdD','cdH','cdM','cdS'].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent='--'; }); return; }
+    let diff=Math.max(0, target-Date.now());
     const d=Math.floor(diff/86400000); diff-=d*86400000;
     const h=Math.floor(diff/3600000); diff-=h*3600000;
     const m=Math.floor(diff/60000); diff-=m*60000;
@@ -7970,7 +7910,7 @@ function alumniBlock(j){
   const af=alumniFacts(j);
   const co=j.company||'';
   return `<div class="dblock"><h4>🤝 ERAU Alumni at ${esc(co)} · referral leads</h4>
-    <p style="margin:0 0 10px;font-size:var(--fs-rg);color:#cfdcec;line-height:1.55"><b style="color:var(--a3);font-family:'JetBrains Mono'">~${af.count}</b> Embry-Riddle alumni are estimated on staff. A referral here beats a cold apply roughly 10×, so open these LinkedIn searches, find a friendly face, and ask for a 15-minute intro before you apply.</p>
+    <p style="margin:0 0 10px;font-size:var(--fs-rg);color:#cfdcec;line-height:1.55">Orbital can't count Embry-Riddle alumni at ${esc(j.company)}. These LinkedIn searches show who is there. Find a friendly face and ask for a 15-minute intro before you apply.</p>
     <div class="alumlist">${af.leads.map(l=>`<a class="alumrow" href="${l.url}" target="_blank" rel="noreferrer">
       <span class="ali">in</span>
       <span class="alm"><b>${esc(l.label)}</b><span>Search ERAU alumni · ${esc(l.role)}-level at ${esc(co)}</span></span>
@@ -8380,7 +8320,6 @@ function eligibilityFacts(j){
   return {note, steps, modules};
 }
 function alumniFacts(j){
-  let h=0; for(const c of (j.company||'')) h=(h*31+c.charCodeAt(0))%9973;
   const co=j.company||'', coQ=encodeURIComponent(co);
   const liBase='https://www.linkedin.com/search/results/people/?keywords=';
   const leadDefs=[
@@ -8391,7 +8330,6 @@ function alumniFacts(j){
   ];
   const roleSeeds=['Sr. Program Manager','Mission Integration Lead','Director of Operations','Systems Engineer'];
   return {
-    count:6+(h%26),
     leads:leadDefs.map((d,i)=>({label:d[0], role:roleSeeds[i], url: liBase+encodeURIComponent(d[1])+'&origin=GLOBAL_SEARCH_HEADER'})),
     dirUrl:'https://www.linkedin.com/school/embry-riddle-aeronautical-university/people/?keyword='+coQ,
     coUrl:'https://www.linkedin.com/company/'+coQ+'/people/',
@@ -8590,7 +8528,7 @@ ${(function(){ const t=[
     <ul>
       <li><b>${esc(j.type)}</b> level${j.clearance&&j.clearance!=='NONE'?` · <b>${esc(j.clearance)}</b> clearance`:''}</li>
       <li>Core stack: ${esc((j.tech||[]).slice(0,4).join(', ')||'—')}</li>
-      <li>On-site in ${esc(j.location||'')}</li>
+      <li>Location: ${esc(j.location||'')} (check the posting for on-site, hybrid or remote)</li>
     </ul>
   </div>
   <div>
@@ -8712,7 +8650,7 @@ ${draft&&draft.text?`<h2>Tailoring copilot draft</h2>
 <pre class="draft">${esc(out.referral)}</pre>
 
 <h2>Alumni and referral leads</h2>
-<p>~${alum.count} Embry-Riddle alumni are estimated on staff at ${esc(j.company)}. A referral beats a cold apply by roughly 10&times;, so work these searches before you submit.</p>
+<p>These LinkedIn searches show Embry-Riddle alumni at ${esc(j.company)}. Work them before you submit.</p>
 ${alum.logged.length
   ? `<h3>Logged contacts</h3><ul>${alum.logged.map(c=>`<li><b>${esc(c.name||'—')}</b>${c.role?' — '+esc(c.role):''}${c.status?` (${esc(c.status)})`:''}</li>`).join('')}</ul>`
   : `<p class="note">No alumni logged yet at ${esc(j.company)} in the CRM.</p>`}
@@ -9287,7 +9225,7 @@ function dossierHTML(j){
       <div class="dblock"><h4>📋 Requirements</h4><ul>
         <li><b>${esc(j.type)}</b> level${j.clearance&&j.clearance!=='NONE'?` · <b style="color:var(--gold)">${esc(j.clearance)}</b> clearance`:''}</li>
         <li>Core stack: ${esc((j.tech||[]).slice(0,4).join(', ')||'—')}</li>
-        <li>On-site in ${esc(j.location)}</li></ul></div>
+        <li>Location: ${esc(j.location)} (check the posting for on-site, hybrid or remote)</li></ul></div>
       <div class="dblock"><h4>☀️ A Day in the Life</h4><ul>${det.day.map(d=>`<li>${esc(d)}</li>`).join('')}</ul></div>
     </div>
     <div class="dblock"><h4>🏛️ Company Culture · ${esc(j.company)}</h4><p style="margin:0;font-size:var(--fs-rg);color:#cfdcec;line-height:1.55">${esc(det.culture)}</p></div>
@@ -9364,7 +9302,7 @@ function sharedRoleView(j){
       <div class="dbody">
         <div class="dblock"><h4>🛰️ Role Summary</h4><p style="margin:0;font-size:var(--fs-lg);color:#cfdcec;line-height:1.6">${esc(det.summary)}</p></div>
         <div class="dgrid2">
-          <div class="dblock"><h4>📋 Requirements</h4><ul><li><b>${esc(j.type)}</b> level${j.clearance&&j.clearance!=='NONE'?` · <b style="color:var(--gold)">${esc(j.clearance)}</b> clearance`:''}</li><li>Core stack: ${esc((j.tech||[]).slice(0,4).join(', ')||'—')}</li><li>On-site in ${esc(j.location)}</li></ul></div>
+          <div class="dblock"><h4>📋 Requirements</h4><ul><li><b>${esc(j.type)}</b> level${j.clearance&&j.clearance!=='NONE'?` · <b style="color:var(--gold)">${esc(j.clearance)}</b> clearance`:''}</li><li>Core stack: ${esc((j.tech||[]).slice(0,4).join(', ')||'—')}</li><li>Location: ${esc(j.location)} (check the posting for on-site, hybrid or remote)</li></ul></div>
           <div class="dblock"><h4>☀️ A Day in the Life</h4><ul>${det.day.map(d=>`<li>${esc(d)}</li>`).join('')}</ul></div>
         </div>
         <div class="dblock"><h4>🏛️ Company Culture · ${esc(j.company)}</h4><p style="margin:0;font-size:var(--fs-rg);color:#cfdcec;line-height:1.55">${esc(det.culture)}</p></div>
@@ -9665,35 +9603,59 @@ const FP_KW=['program management','program manager','systems engineering','missi
 const FP_EXCLUDE=/\b(propulsion|gnc|guidance|navigation|thermal|structural|stress|rf engineer|avionics|aerodynamics|flight dynamics|embedded|flight software|c\+\+|fpga|firmware|software engineer|design engineer|mechanical engineer|electrical engineer|technician|machinist|inspector|assembler|a&p|administrative|data scientist|ux designer)\b/i;
 const FP_INCLUDE=/\b(program manager|tpm|technical program|mission integration|mission manager|operations manager|business operations|s&op|systems integration|systems engineer|systems engineering|requirements engineer|verification and validation|model-based systems|mbse|incose|solutions architect|lifecycle|launch operations|supply chain|sourcing|procurement|program operations|business development|strategy manager|operations lead|senior manager|sr\.? manager|portfolio manager|production manager|project manager)\b/i;
 /* ==ORBITAL_HUB_START== */
+// Mirror of determine_location_hub() in scraper.py: same lists, same order, same tests.
+// Whole-word matching via [^a-z] rather than \b, which breaks on letters like ø and ü.
+const FP_B=a=>'(?:^|[^a-z])(?:'+a+')(?![a-z])';
+// Every state except Washington and California, whose cities are the hubs themselves.
+const FP_US_STATES="alabama|alaska|arizona|arkansas|colorado|connecticut|delaware|florida|georgia|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|new york|north carolina|north dakota|ohio|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|texas|utah|vermont|virginia|west virginia|wisconsin|wyoming";
+const FP_US_ABBR="al|ak|az|ar|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wv|wi|wy";
+// "Kent, OH", and Workday's "US-OH-Kent".
+const FP_OTHER_STATE=new RegExp(FP_B(FP_US_STATES)+"|(?:,\\s*|\\bus-)(?:"+FP_US_ABBR+")(?![a-z])");
 // Everything else in the US. Any state name/abbreviation, a US-remote posting, or a bare
 // "United States" location now maps to the US_OTHER hub instead of being discarded — this is
-// what lets the primes (Boeing, Northrop, Leidos, RTX) actually produce rows.
-const FP_US_OTHER=/united states|\bu\.?s\.?a?\b|remote,? us|remote \(us|alabama|alaska|arizona|arkansas|colorado|connecticut|delaware|florida|georgia|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|new york|north carolina|north dakota|ohio|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|texas|utah|vermont|virginia|west virginia|wisconsin|wyoming|district of columbia|washington,? d\.?c\.?|\b(al|ak|az|ar|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wv|wi|wy|dc)\b/;
-const FP_INTL=/canada|united kingdom|\bu\.?k\.?\b|england|scotland|wales|northern ireland|ireland|france|germany|deutschland|italy|italia|spain|españa|portugal|netherlands|holland|belgium|luxembourg|switzerland|austria|denmark|sweden|norway|finland|iceland|poland|czech|slovakia|hungary|romania|bulgaria|greece|croatia|slovenia|turkey|türkiye|estonia|latvia|lithuania|ukraine|israel|united arab emirates|\buae\b|saudi|qatar|oman|bahrain|kuwait|jordan|egypt|morocco|south africa|kenya|ghana|nigeria|india|japan|south korea|\brok\b|singapore|malaysia|indonesia|thailand|vietnam|philippines|taiwan|hong kong|australia|brazil|brasil|argentina|chile|mexico|méxico|colombia|peru|uruguay|international|emea|\bapac\b|toulouse|kourou|bordeaux|nantes|grenoble|montpellier|sophia antipolis|bengaluru|bangalore|hyderabad|chennai|mumbai|ahmedabad|new delhi|tokyo|osaka|fukuoka|tsukuba|hokkaido|seoul|daejeon|shenzhen|taipei|tel aviv|herzliya|haifa|beersheba|harwell|guildford|farnborough|stevenage|didcot|oxfordshire|münchen|munich|bremen|augsburg|stuttgart|darmstadt|köln|oberpfaffenhofen|noordwijk|delft|eindhoven|leuven|liège|lausanne|zürich|zurich|gothenburg|göteborg|kiruna|trondheim|tromsø|espoo|tampere|tartu|tallinn|vilnius|kaunas|wrocław|warszawa|brno|thessaloniki|ankara|istanbul|dubai|abu dhabi|riyadh|jeddah|torino|milano|bologna|napoli|catania|barcelona|sevilla|elche|lisboa|coimbra|brisbane|adelaide|canberra|mount stromlo|koonibba|whyalla|montréal|longueuil|st-hubert|mississauga|brampton|winnipeg|são paulo|santiago|buenos aires|querétaro|stellenbosch|johannesburg|pretoria|nairobi/;
+// what lets the primes (Boeing, Northrop, Leidos, RTX) actually produce rows. A bare state code
+// only counts after a comma or at the end of a place: anywhere else "or" and "in" read as
+// Oregon and Indiana, which filed "Remote or Hybrid" under US Other.
+const FP_US_OTHER=new RegExp("united states|\\bu\\.?s\\.?a?\\b|remote,? us|remote \\(us|"+FP_US_STATES+"|district of columbia|washington,? d\\.?c\\.?|(?:,\\s*|\\s)(?:"+FP_US_ABBR+"|dc)(?=\\s*(?:$|[,;/()|-]|\\d))");
+// "holland" is left out on purpose: Holland, MI is a US city.
+const FP_INTL_PLACES="canada|united kingdom|u\\.?k\\.?|england|scotland|wales|northern ireland|ireland|france|germany|deutschland|italy|italia|spain|españa|portugal|netherlands|belgium|luxembourg|switzerland|austria|denmark|sweden|norway|finland|iceland|poland|czech|slovakia|hungary|romania|bulgaria|greece|croatia|slovenia|turkey|türkiye|estonia|latvia|lithuania|ukraine|israel|united arab emirates|uae|saudi|qatar|oman|bahrain|kuwait|jordan|egypt|morocco|south africa|kenya|ghana|nigeria|india|japan|south korea|rok|singapore|malaysia|indonesia|thailand|vietnam|philippines|taiwan|hong kong|australia|brazil|brasil|argentina|chile|mexico|méxico|colombia|peru|uruguay|toulouse|kourou|bordeaux|nantes|grenoble|montpellier|sophia antipolis|bengaluru|bangalore|hyderabad|chennai|mumbai|ahmedabad|new delhi|tokyo|osaka|fukuoka|tsukuba|hokkaido|seoul|daejeon|shenzhen|taipei|tel aviv|herzliya|haifa|beersheba|harwell|guildford|farnborough|stevenage|didcot|oxfordshire|münchen|munich|bremen|augsburg|stuttgart|darmstadt|köln|oberpfaffenhofen|noordwijk|delft|eindhoven|leuven|liège|lausanne|zürich|zurich|gothenburg|göteborg|kiruna|trondheim|tromsø|espoo|tampere|tartu|tallinn|vilnius|kaunas|wrocław|warszawa|brno|thessaloniki|ankara|istanbul|dubai|abu dhabi|riyadh|jeddah|torino|milano|bologna|napoli|catania|barcelona|sevilla|elche|lisboa|coimbra|brisbane|adelaide|canberra|mount stromlo|koonibba|whyalla|montréal|longueuil|st-hubert|mississauga|brampton|winnipeg|são paulo|santiago|buenos aires|querétaro|stellenbosch|johannesburg|pretoria|nairobi";
+const FP_INTL=new RegExp(FP_B(FP_INTL_PLACES+"|international|emea|apac"));
+// Places only: "Los Angeles International Airport" is not a foreign location.
+const FP_INTL_PLACE=new RegExp(FP_B(FP_INTL_PLACES));
 // Only consulted after US_OTHER has already declined — these all have US namesakes.
-const FP_INTL_AMBIG=/melbourne|sydney|perth|vienna|berlin|paris|milan|rome|athens|naples|bristol|oxford|cambridge|glasgow|edinburgh|birmingham|london|toronto|ottawa|vancouver|calgary|madrid|lisbon|prague|warsaw|sofia|bucharest|copenhagen|stockholm|oslo|helsinki|amsterdam|brussels|luxembourg city|cape town|mexico city|delhi/;
-function fpHubOf(loc){ const s=(loc||'').toLowerCase();
+const FP_INTL_AMBIG=new RegExp(FP_B("melbourne|sydney|perth|vienna|berlin|paris|milan|rome|athens|naples|bristol|oxford|cambridge|glasgow|edinburgh|birmingham|london|toronto|ottawa|vancouver|calgary|madrid|lisbon|prague|warsaw|sofia|bucharest|copenhagen|stockholm|oslo|helsinki|amsterdam|brussels|luxembourg city|cape town|mexico city|delhi"));
+const FP_WA=/\bwa\b|washington state|,\s*washington\b/, FP_CA=/\bca\b|,\s*california\b|\bcalifornia,/;
+const FP_PNW=new RegExp(FP_B("seattle|seatle|redmond|kent|renton|bellevue|tukwila|auburn|everett|kirkland|bothell|lynnwood|mukilteo|woodinville|issaquah|sammamish|federal way|sea-?tac|tacoma|olympia|puyallup|marysville|snohomish|dupont|lacey|edmonds|shoreline|burien|kenmore|mill creek|bremerton"));
+const FP_LA=new RegExp(FP_B("los angeles|hawthorne|el segundo|long beach|torrance|irvine|pasadena|van nuys|culver city|santa monica|redondo beach|manhattan beach|inglewood|burbank|glendale|anaheim|orange county|santa clarita|palmdale|huntington beach|mojave|lancaster|downey|carson|gardena|compton|chatsworth|northridge|woodland hills|sylmar|valencia|canoga park|santa ana|costa mesa|tustin|fullerton|brea|cerritos|signal hill|seal beach|garden grove|simi valley|thousand oaks|camarillo|oxnard|ventura|goleta|san pedro|sun valley|el monte|whittier|norwalk|la mirada|city of industry|santa fe springs|monrovia|azusa|covina|pomona|rancho cucamonga|san bernardino|riverside|westminster,? ca|ontario,? ca|corona,? ca"));
+const FP_NORCAL=new RegExp(FP_B("san francisco|bay area|oakland|san jose|palo alto|mountain view|sunnyvale|berkeley|redwood city|menlo park|santa clara|silicon valley|sacramento|burlingame|san mateo|san carlos|foster city|south san francisco|fremont|hayward|emeryville|alameda|milpitas|cupertino|los altos|campbell|san leandro|livermore|pleasanton|san ramon|walnut creek|novato|san rafael|petaluma|santa rosa|vacaville|morgan hill|gilroy|watsonville|santa cruz|monterey|salinas|napa|vallejo|stockton|modesto|dublin,? ca|concord,? ca|richmond,? ca|davis,? ca|fairfield,? ca"));
+const FP_NZ=new RegExp("new zealand|aotearoa|"+FP_B("nz")), FP_NZ_CITY=new RegExp(FP_B("mahia|māhia|auckland|christchurch|wellington|warkworth|waikato"));
+// New Mexico and New England are not Mexico and England.
+const fpDropUsLookalikes=s=>s.replace(/new mexico|new england/g,' ');
+// True when this one place names another US state or another country, so a city name it
+// shares with a hub ("Kent, OH", "Glendale, AZ", "Valencia, Spain") must not file it there.
+function fpElsewhere(p,home,rivals){
+  if(home && home.test(p)) return false;
+  const i=fpDropUsLookalikes(p);
+  return FP_OTHER_STATE.test(p) || rivals.some(r=>r.test(p)) || FP_INTL_PLACE.test(i) || FP_INTL_AMBIG.test(i);
+}
+// Multi-location strings ("Seattle, WA; Denver, CO") are judged one place at a time.
+function fpHubCity(s,cityRe,home,rivals){ return s.split(/[;|\/\n•]/).some(p=>cityRe.test(p) && !fpElsewhere(' '+p,home,rivals)); }
+function fpHubOf(loc){ const s=' '+(loc||'').toLowerCase();
   // Washington, D.C. has to be settled BEFORE any Washington test, or every DC posting
   // lands in the Seattle hub.
   const IS_DC=/washington,?\s*d\.?c\.?|district of columbia/.test(s);
-  // Greenhouse and Ashby boards often spell the state out ("Bothell, Washington, United
-  // States"). The old \bwa\b-only test missed those, so real Seattle roles were being
-  // filed under US_OTHER by the "united states" fallback.
-  const WA_STATE=!IS_DC && /\bwa\b|washington state|,\s*washington\b/.test(s);
-  const PNW_CITY=/seattle|seatle|redmond|kent|renton|bellevue|tukwila|auburn|everett|kirkland|bothell|lynnwood|mukilteo|woodinville|issaquah|sammamish|federal way|sea-?tac|tacoma|olympia|puyallup|marysville|snohomish|dupont|lacey|edmonds|shoreline|burien|kenmore|mill creek|bremerton/;
-  if(WA_STATE || PNW_CITY.test(s)) return 'SEATTLE';
-  const LA_METRO=/los angeles|hawthorne|el segundo|long beach|torrance|irvine|pasadena|van nuys|culver city|santa monica|redondo beach|manhattan beach|inglewood|burbank|glendale|anaheim|orange county|santa clarita|palmdale|huntington beach|mojave|lancaster|downey|carson|gardena|compton|chatsworth|northridge|woodland hills|sylmar|valencia|canoga park|santa ana|costa mesa|tustin|fullerton|brea|cerritos|signal hill|seal beach|garden grove|simi valley|thousand oaks|camarillo|oxnard|ventura|goleta|san pedro|sun valley|el monte|whittier|norwalk|la mirada|city of industry|santa fe springs|monrovia|azusa|covina|pomona|rancho cucamonga|san bernardino|riverside|westminster,? ca|ontario,? ca|corona,? ca/;
-  const NORCAL=/san francisco|bay area|oakland|san jose|palo alto|mountain view|sunnyvale|berkeley|redwood city|menlo park|santa clara|silicon valley|sacramento|burlingame|san mateo|san carlos|foster city|south san francisco|fremont|hayward|emeryville|alameda|milpitas|cupertino|los altos|campbell|san leandro|livermore|pleasanton|san ramon|walnut creek|novato|san rafael|petaluma|santa rosa|vacaville|morgan hill|gilroy|watsonville|santa cruz|monterey|salinas|napa|vallejo|stockton|modesto|dublin,? ca|concord,? ca|richmond,? ca|davis,? ca|fairfield,? ca/;
+  const intl=fpDropUsLookalikes(s);
+  // "WA" is also Western Australia ("Perth, WA, Australia").
+  if(!IS_DC && ((FP_WA.test(s) && !s.includes('australia')) || fpHubCity(s,FP_PNW,FP_WA,[FP_CA]))) return 'SEATTLE';
+  if(FP_NZ.test(s) || fpHubCity(s,FP_NZ_CITY,null,[FP_WA,FP_CA])) return 'NEW_ZEALAND';
+  if(fpHubCity(s,FP_LA,FP_CA,[FP_WA])) return 'GREATER_LA';
+  if(fpHubCity(s,FP_NORCAL,FP_CA,[FP_WA])) return 'US_OTHER';
   // "Burlingame, California" matched neither list and no state name in FP_US_OTHER, so it
   // returned null and the row was silently discarded. Spelled-out California now counts.
-  const CA_STATE=/\bca\b|,\s*california\b|\bcalifornia,/.test(s);
-  if(LA_METRO.test(s)) return 'GREATER_LA';
-  if(NORCAL.test(s)) return 'US_OTHER';
-  if(CA_STATE) return 'GREATER_LA';
-  if(/new zealand|mahia|māhia|auckland|\bnz\b|christchurch|wellington/.test(s)) return 'NEW_ZEALAND';
-  if(FP_INTL.test(s)) return 'INTERNATIONAL';
+  if(FP_CA.test(s)) return 'GREATER_LA';
+  if(FP_INTL.test(intl)) return 'INTERNATIONAL';
   if(FP_US_OTHER.test(s)) return 'US_OTHER';
-  if(FP_INTL_AMBIG.test(s)) return 'INTERNATIONAL';
+  if(FP_INTL_AMBIG.test(intl)) return 'INTERNATIONAL';
   // Bare metro names with no state or country attached. These were being discarded, which
   // quietly threw away real US postings; the coverage audit surfaced them.
   if(/\baustin\b|\bboulder\b|\bdenver\b|wichita|huntsville|albuquerque|pittsburgh|\bhouston\b|\bdallas\b|\bphoenix\b|\btucson\b|salt lake|colorado springs|cape canaveral|titusville|\bmidland\b|\bchicago\b|\bboston\b|\batlanta\b|\bportland\b|san diego|folsom|d\.?c\.? office/.test(s)) return 'US_OTHER';
@@ -10419,7 +10381,7 @@ function nextScrapeLabel(){
   return hrs<24 ? `in ${hrs}h` : 'tomorrow 6:00 AM';
 }
 function copyrightHTML(){
-  return `<div class="copyright">© ${new Date().getFullYear()} Orbital CRM · Built for Lisaney Kong. All rights reserved.<span class="sep">·</span>Job &amp; market data are illustrative until connected to live Supabase.<br><a href="START-HERE.html">Setup guide</a> · <a href="install-guide.html">What am I setting up?</a> · <a href="setup.html">Connect database</a></div>`;
+  return `<div class="copyright">© ${new Date().getFullYear()} Orbital CRM · Built for Lisaney Kong. All rights reserved.<span class="sep">·</span>Job data comes live from Supabase; with no connection the board shows No Data.<br><a href="START-HERE.html">Setup guide</a> · <a href="install-guide.html">What am I setting up?</a> · <a href="setup.html">Connect database</a></div>`;
 }
 /* Sidebar is an icon-only rail, so every icon gets a hover label. The rail has
    overflow-y:auto, which would clip a CSS pseudo-element tooltip — hence a fixed-position

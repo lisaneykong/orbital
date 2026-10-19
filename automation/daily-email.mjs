@@ -31,7 +31,8 @@ const q = await sbSelect('app_queue', 'select=job_id,company,title,location,url,
 const tracking = await loadTracking();
 
 const lastRun = runs[0];
-const scrapeOk = lastRun && lastRun.status === 'done' && chicagoDate(new Date(lastRun.finished_at || lastRun.started_at)) === today;
+const scrapeOk = lastRun && lastRun.status === 'done' && (lastRun.rows_upserted || 0) > 0
+  && chicagoDate(new Date(lastRun.finished_at || lastRun.started_at)) === today;
 const ready = q.rows.filter(r => r.status === 'ready').sort((a, b) => (b.match || 0) - (a.match || 0));
 const readyNew = ready.filter(r => Date.parse(r.prepared_at) >= Date.now() - 864e5);
 const strong = fresh.filter(j => (j.match || 0) >= 75);

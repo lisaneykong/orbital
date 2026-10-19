@@ -46,7 +46,7 @@ jobs:
           for f in index.html setup.html install-guide.html START-HERE.html tools.html \
                    manifest.json orbital-logo.png orbital-config.js companies.json \
                    coverage-seattle-la.html score-proof.html token-probe.html \
-                   heal-probe.html .htaccess; do
+                   heal-probe.html pipeline-probe.html .htaccess; do
             [ -f "$f" ] && cp "$f" _publish/ && echo "  + $f"
           done
           [ -d assets ] && cp -r assets _publish/ || true

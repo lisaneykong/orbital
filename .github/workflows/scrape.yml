@@ -109,7 +109,7 @@ jobs:
               code=$(curl -sS -o /tmp/runs.json -w '%{http_code}' \
                 -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
                 -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
-                "$SUPABASE_URL/rest/v1/scrape_runs?select=run_id,finished_at&status=eq.done&finished_at=gte.$since&limit=1" \
+                "$SUPABASE_URL/rest/v1/scrape_runs?select=run_id,finished_at&status=eq.done&rows_upserted=gt.0&finished_at=gte.$since&limit=1" \
                 || echo 000)
 
               if [ "$code" = "404" ] || grep -q 'PGRST20[0-9]' /tmp/runs.json; then

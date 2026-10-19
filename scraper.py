@@ -314,24 +314,22 @@ MANAGER_OVERRIDE = re.compile(
     r"\b(program manager|project manager|technical program|tpm|program coordinator|"
     r"project coordinator|mission manager)\b", re.I)
 
-HUB_KEYWORDS = {
-    # SEATTLE and GREATER_LA moved to the regexes below. "washington" used to live in the
-    # SEATTLE list, which filed every "Washington, D.C." posting as a Seattle role — the
-    # dict is ordered, so DC never reached the US_OTHER branch. D.C. is now excluded first.
-    "NEW_ZEALAND": ["new zealand", "mahia", "māhia", "auckland", "christchurch",
-                    "wellington", " nz", "warkworth", "waikato"],
-}
-
 # ---- Hub geography. Kept deliberately in step with fpHubOf() in index.html; when the two
 # ---- disagree, the browser pass and the nightly Action file the same job in two hubs.
+def _bounded(alternation):
+    """Whole-word match: as substrings, "kent" matched Kentucky and "india" Indianapolis.
+    [^a-z] instead of \\b so the browser copy behaves identically (JS \\b breaks on ø, ü)."""
+    return r"(?:^|[^a-z])(?:" + alternation + r")(?![a-z])"
+
+
 DC_RE = re.compile(r"washington,?\s*d\.?c\.?|district of columbia")
 WA_STATE_RE = re.compile(r"\bwa\b|washington state|,\s*washington\b")
-PNW_CITY_RE = re.compile(
+PNW_CITY_RE = re.compile(_bounded(
     r"seattle|seatle|redmond|kent|renton|bellevue|tukwila|auburn|everett|kirkland|bothell|"
     r"lynnwood|mukilteo|woodinville|issaquah|sammamish|federal way|sea-?tac|tacoma|olympia|"
     r"puyallup|marysville|snohomish|dupont|lacey|edmonds|shoreline|burien|kenmore|"
-    r"mill creek|bremerton")
-LA_METRO_RE = re.compile(
+    r"mill creek|bremerton"))
+LA_METRO_RE = re.compile(_bounded(
     r"los angeles|hawthorne|el segundo|long beach|torrance|irvine|pasadena|van nuys|"
     r"culver city|santa monica|redondo beach|manhattan beach|inglewood|burbank|glendale|"
     r"anaheim|orange county|santa clarita|palmdale|huntington beach|mojave|lancaster|"
@@ -340,18 +338,32 @@ LA_METRO_RE = re.compile(
     r"seal beach|garden grove|simi valley|thousand oaks|camarillo|oxnard|ventura|goleta|"
     r"san pedro|sun valley|el monte|whittier|norwalk|la mirada|city of industry|"
     r"santa fe springs|monrovia|azusa|covina|pomona|rancho cucamonga|san bernardino|"
-    r"riverside|westminster,? ca|ontario,? ca|corona,? ca")
-NORCAL_RE = re.compile(
+    r"riverside|westminster,? ca|ontario,? ca|corona,? ca"))
+NORCAL_RE = re.compile(_bounded(
     r"san francisco|bay area|oakland|san jose|palo alto|mountain view|sunnyvale|berkeley|"
     r"redwood city|menlo park|santa clara|silicon valley|sacramento|burlingame|san mateo|"
     r"san carlos|foster city|south san francisco|fremont|hayward|emeryville|alameda|"
     r"milpitas|cupertino|los altos|campbell|san leandro|livermore|pleasanton|san ramon|"
     r"walnut creek|novato|san rafael|petaluma|santa rosa|vacaville|morgan hill|gilroy|"
     r"watsonville|santa cruz|monterey|salinas|napa|vallejo|stockton|modesto|dublin,? ca|"
-    r"concord,? ca|richmond,? ca|davis,? ca|fairfield,? ca")
+    r"concord,? ca|richmond,? ca|davis,? ca|fairfield,? ca"))
 # "Burlingame, California" matched no city list and no state name in US_OTHER_RE, so it
 # returned None and the row was thrown away. Spelled-out California now counts.
 CA_STATE_RE = re.compile(r"\bca\b|,\s*california\b|\bcalifornia,")
+NZ_RE = re.compile(r"new zealand|aotearoa|" + _bounded(r"nz"))
+NZ_CITY_RE = re.compile(_bounded(r"mahia|māhia|auckland|christchurch|wellington|warkworth|waikato"))
+# Every state except Washington and California, whose cities are the hubs themselves.
+_US_STATES = (
+    r"alabama|alaska|arizona|arkansas|colorado|connecticut|delaware|florida|georgia|"
+    r"hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|"
+    r"massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|"
+    r"new hampshire|new jersey|new mexico|new york|north carolina|north dakota|ohio|"
+    r"oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|"
+    r"texas|utah|vermont|virginia|west virginia|wisconsin|wyoming")
+_US_ABBR = (r"al|ak|az|ar|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|"
+            r"ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wv|wi|wy")
+# "Kent, OH", and Workday's "US-OH-Kent".
+OTHER_STATE_RE = re.compile(_bounded(_US_STATES) + r"|(?:,\s*|\bus-)(?:" + _US_ABBR + r")(?![a-z])")
 # Bare metro names with no state or country attached, which were being discarded.
 US_METRO_RE = re.compile(
     r"\baustin\b|\bboulder\b|\bdenver\b|wichita|huntsville|albuquerque|pittsburgh|"
@@ -367,16 +379,18 @@ INTL_EXTRA_RE = re.compile(r"kyiv|kiev|lviv|loughborough|new dehli|\beurope\b|mi
 # two-letter country codes collide with state abbreviations (DE, IN, CA, IL, CO, MA);
 # ambiguous city names with US namesakes (Melbourne FL, Vienna VA, Paris TX) are matched
 # AFTER US_OTHER so the US reading wins.
-INTL_RE = re.compile(
-    r"canada|united kingdom|\bu\.?k\.?\b|england|scotland|wales|northern ireland|ireland|"
-    r"france|germany|deutschland|italy|italia|spain|españa|portugal|netherlands|holland|"
+# "holland" is left out on purpose: Holland, MI is a US city, and Dutch postings say
+# Netherlands or name the city.
+_INTL_PLACES = (
+    r"canada|united kingdom|u\.?k\.?|england|scotland|wales|northern ireland|ireland|"
+    r"france|germany|deutschland|italy|italia|spain|españa|portugal|netherlands|"
     r"belgium|luxembourg|switzerland|austria|denmark|sweden|norway|finland|iceland|poland|"
     r"czech|slovakia|hungary|romania|bulgaria|greece|croatia|slovenia|turkey|türkiye|estonia|"
-    r"latvia|lithuania|ukraine|israel|united arab emirates|\buae\b|saudi|qatar|oman|bahrain|"
-    r"kuwait|jordan|egypt|morocco|south africa|kenya|ghana|nigeria|india|japan|south korea|"
+    r"latvia|lithuania|ukraine|israel|united arab emirates|uae|saudi|qatar|oman|bahrain|"
+    r"kuwait|jordan|egypt|morocco|south africa|kenya|ghana|nigeria|india|japan|south korea|rok|"
     r"singapore|malaysia|indonesia|thailand|vietnam|philippines|taiwan|hong kong|australia|"
-    r"brazil|brasil|argentina|chile|mexico|méxico|colombia|peru|uruguay|international|emea|"
-    r"\bapac\b|toulouse|kourou|bordeaux|nantes|grenoble|montpellier|sophia antipolis|"
+    r"brazil|brasil|argentina|chile|mexico|méxico|colombia|peru|uruguay|"
+    r"toulouse|kourou|bordeaux|nantes|grenoble|montpellier|sophia antipolis|"
     r"bengaluru|bangalore|hyderabad|chennai|mumbai|ahmedabad|new delhi|tokyo|osaka|fukuoka|"
     r"tsukuba|hokkaido|seoul|daejeon|shenzhen|taipei|tel aviv|herzliya|haifa|beersheba|"
     r"harwell|guildford|farnborough|stevenage|didcot|oxfordshire|münchen|munich|bremen|"
@@ -386,30 +400,47 @@ INTL_RE = re.compile(
     r"abu dhabi|riyadh|jeddah|torino|milano|bologna|napoli|catania|barcelona|sevilla|elche|"
     r"lisboa|coimbra|brisbane|adelaide|canberra|mount stromlo|koonibba|whyalla|montréal|"
     r"longueuil|st-hubert|mississauga|brampton|winnipeg|são paulo|santiago|buenos aires|"
-    r"querétaro|stellenbosch|johannesburg|pretoria|nairobi",
-    re.I,
-)
-INTL_AMBIGUOUS_RE = re.compile(
+    r"querétaro|stellenbosch|johannesburg|pretoria|nairobi")
+INTL_RE = re.compile(_bounded(_INTL_PLACES + r"|international|emea|apac"), re.I)
+# Places only: "Los Angeles International Airport" is not a foreign location.
+INTL_PLACE_RE = re.compile(_bounded(_INTL_PLACES), re.I)
+INTL_AMBIGUOUS_RE = re.compile(_bounded(
     r"melbourne|sydney|perth|vienna|berlin|paris|milan|rome|athens|naples|bristol|oxford|"
     r"cambridge|glasgow|edinburgh|birmingham|london|toronto|ottawa|vancouver|calgary|madrid|"
     r"lisbon|prague|warsaw|sofia|bucharest|copenhagen|stockholm|oslo|helsinki|amsterdam|"
-    r"brussels|luxembourg city|cape town|mexico city|delhi",
-    re.I,
-)
+    r"brussels|luxembourg city|cape town|mexico city|delhi"), re.I)
 
 US_OTHER_RE = re.compile(
     r"united states|\bu\.?s\.?a?\b|remote,? us|remote \(us|"
-    r"alabama|alaska|arizona|arkansas|colorado|connecticut|delaware|florida|georgia|"
-    r"hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|"
-    r"massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|"
-    r"new hampshire|new jersey|new mexico|new york|north carolina|north dakota|ohio|"
-    r"oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|"
-    r"texas|utah|vermont|virginia|west virginia|wisconsin|wyoming|district of columbia|"
-    r"washington,? d\.?c\.?|"
-    r"\b(?:al|ak|az|ar|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|"
-    r"ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wv|wi|wy|dc)\b",
+    + _US_STATES + r"|district of columbia|washington,? d\.?c\.?|"
+    # A bare state code only counts after a comma or at the end of a place ("Austin TX").
+    # Matched anywhere, "or" and "in" read as Oregon and Indiana: "Remote or Hybrid" was US.
+    r"(?:,\s*|\s)(?:" + _US_ABBR + r"|dc)(?=\s*(?:$|[,;/()|-]|\d))",
     re.I,
 )
+# Multi-location strings ("Seattle, WA; Denver, CO") are judged one place at a time.
+_PLACE_SPLIT_RE = re.compile(r"[;|/\n•]")
+
+
+def _drop_us_lookalikes(low):
+    """New Mexico and New England are not Mexico and England."""
+    return low.replace("new mexico", " ").replace("new england", " ")
+
+
+def _elsewhere(place, home, rivals=()):
+    """True when this one place names another US state or another country, so a city
+    name it shares with a hub ("Kent, OH", "Glendale, AZ", "Valencia, Spain") must not
+    file it under that hub."""
+    if home is not None and home.search(place):
+        return False
+    intl = _drop_us_lookalikes(place)
+    return bool(OTHER_STATE_RE.search(place) or any(r.search(place) for r in rivals)
+                or INTL_PLACE_RE.search(intl) or INTL_AMBIGUOUS_RE.search(intl))
+
+
+def _hub_city(low, city_re, home, rivals=()):
+    return any(city_re.search(p) and not _elsewhere(" " + p, home, rivals)
+               for p in _PLACE_SPLIT_RE.split(low))
 
 
 def determine_location_hub(loc_str):
@@ -419,22 +450,24 @@ def determine_location_hub(loc_str):
         return None
     low = " " + loc_str.lower()
     is_dc = bool(DC_RE.search(low))
-    if not is_dc and (WA_STATE_RE.search(low) or PNW_CITY_RE.search(low)):
+    intl = _drop_us_lookalikes(low)
+    # "WA" is also Western Australia ("Perth, WA, Australia").
+    if not is_dc and ((WA_STATE_RE.search(low) and "australia" not in low)
+                      or _hub_city(low, PNW_CITY_RE, WA_STATE_RE, (CA_STATE_RE,))):
         return "SEATTLE"
-    for hub, kws in HUB_KEYWORDS.items():
-        if any(k in low for k in kws):
-            return hub
-    if LA_METRO_RE.search(low):
+    if NZ_RE.search(low) or _hub_city(low, NZ_CITY_RE, None, (WA_STATE_RE, CA_STATE_RE)):
+        return "NEW_ZEALAND"
+    if _hub_city(low, LA_METRO_RE, CA_STATE_RE, (WA_STATE_RE,)):
         return "GREATER_LA"
-    if NORCAL_RE.search(low):
+    if _hub_city(low, NORCAL_RE, CA_STATE_RE, (WA_STATE_RE,)):
         return "US_OTHER"
     if CA_STATE_RE.search(low):
         return "GREATER_LA"
-    if INTL_RE.search(low):
+    if INTL_RE.search(intl):
         return "INTERNATIONAL"
     if US_OTHER_RE.search(low):
         return "US_OTHER"
-    if INTL_AMBIGUOUS_RE.search(low):
+    if INTL_AMBIGUOUS_RE.search(intl):
         return "INTERNATIONAL"
     if US_METRO_RE.search(low):
         return "US_OTHER"
@@ -924,7 +957,7 @@ def build_row(company, ats_id, title, location, url, source, description="", pos
         "tech": ",".join(t for t in tech_terms if t.lower() in body_l),
         "clearance": "NONE",
         "relocation_flag": False,
-        "relocation_note": "-",
+        "relocation_note": None,
         "source": source,
         "status": "active",
         "saved": False,
@@ -1674,15 +1707,16 @@ def execute_scrub():
     if merged_count:
         print(f"   .. merged {merged_count} cross-source duplicate posting(s)")
 
-    if payload:
-        for i in range(0, len(payload), 100):
-            chunk = payload[i:i + 100]
-            _upsert_with_autoheal(chunk)
+    written, failed_batches = 0, 0
+    for i in range(0, len(payload), 100):
+        n = _upsert_with_autoheal(payload[i:i + 100])
+        written += n
+        failed_batches += 0 if n else 1
     # ---- Diagnostic summary: readable in the Actions log itself (no artifact download) ----
     by_src = {}
     for r in payload: by_src[r["source"]] = by_src.get(r["source"], 0) + 1
-    print(f"\n>>> Complete. {len(payload)} clean row(s) from {ok_boards} board(s) "
-          f"upserted into '{TABLE}'.")
+    print(f"\n>>> Complete. {written} of {len(payload)} clean row(s) from {ok_boards} board(s) "
+          f"written to '{TABLE}'.")
     print(f">>> Rows by source: {by_src or '(none)'}")
     if _RUN_FAILURES:
         print(f">>> {len(_RUN_FAILURES)} board(s) FAILED — top errors:")
@@ -1701,8 +1735,19 @@ def execute_scrub():
         progress_finish("failed", 0, "every board failed")
         print(">>> FATAL: every board failed — exiting 1 so the run shows red.")
         raise SystemExit(1)
-    progress_finish("done", len(payload),
-                    f"{ok_boards} board(s), {len(_RUN_FAILURES)} failure(s)")
+    # "done" is what stops the catch-up runs and what the morning email trusts, so a run
+    # that scraped rows but could not write any of them must not claim it.
+    if payload and not written:
+        progress_finish("failed", 0, f"0 of {len(payload)} rows written — every upsert batch failed")
+        print(">>> FATAL: roles were scraped but none could be written to Supabase — "
+              "exiting 1 so the run shows red. The upsert error is in the log above.")
+        raise SystemExit(1)
+    if failed_batches:
+        print(f"::warning::{failed_batches} upsert batch(es) failed, so {len(payload) - written} "
+              f"row(s) were not written. The error is in the log above and in failed_scrapes_log.csv.")
+    progress_finish("done", written,
+                    f"{ok_boards} board(s), {len(_RUN_FAILURES)} failure(s)"
+                    + (f", {failed_batches} failed upsert batch(es)" if failed_batches else ""))
 
 
 _RUN_FAILURES = []   # (company, source, error) tuples for the end-of-run summary
@@ -1810,12 +1855,12 @@ def progress_finish(status, rows_upserted, note=""):
 def _upsert_with_autoheal(chunk):
     """Mirror of the dashboard's fpUpsert: if the live table is missing a column
     (e.g. an older schema that predates itar_flag/clearance_level/etc.), drop that
-    column and retry instead of failing the whole batch."""
+    column and retry instead of failing the whole batch. Returns the rows written, 0 on failure."""
     rows = [{k: v for k, v in row.items() if k not in _SKIP_COLS} for row in chunk]
     for _ in range(12):
         try:
             supabase.table(TABLE).upsert(rows).execute()
-            return
+            return len(rows)
         except Exception as exc:
             msg = str(exc)
             m = re.search(r"could not find the '([^']+)' column|column \"?([a-z0-9_]+)\"? of", msg, re.I)
@@ -1826,9 +1871,10 @@ def _upsert_with_autoheal(chunk):
                 continue
             print(f"   !! upsert batch failed: {exc}")
             log_failure("SUPABASE_UPSERT", TABLE, exc)
-            return
+            return 0
     print("   !! upsert batch failed: too many schema mismatches")
     log_failure("SUPABASE_UPSERT", TABLE, "too many schema mismatches")
+    return 0
 
 
 def diagnose():

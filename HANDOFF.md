@@ -1,17 +1,64 @@
 # ORBITAL — Handoff (read this first in every new chat)
 
-Last updated: 2026-09-28. Rebuilt from the project files after the earlier chat
+Last updated: 2026-10-19. Rebuilt from the project files after the earlier chat
 history was lost. Anything that was only in that chat and not written to a file
 is not in here. Add it below under "Notes from the user".
 
 ## Where things stand
 
-- **Working copy:** `build/ORBITAL-v17/` (build 17, clean-install kit, stamp `2026-09-23.1`, 47 files).
-  Build 17 is build 16 with no app code changed. What's new is the install path:
-  `CLEAN-INSTALL.html`, `SUPABASE-TELEMETRY-ONLY.sql`, `MANIFEST.txt`.
+- **Working copy:** `C:\Users\one\Documents\Orbital` (a local git repo; first commit is build 17 exactly as zipped).
+  Stamp `2026-10-19.1`, 55 kit files. See the 2026-10-19 entry below for what changed.
 - **Repo:** `lisaneykong/orbital` on `main`. At last read the repo was on `2026-09-09.6`. Builds .7 onward have never been pushed.
-- **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-09-28.1` once build 17 is live.
-- **Clean install:** not done yet (as of 2026-09-24).
+- **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
+- **Clean install:** not done yet (as of 2026-10-19). Note: CLEAN-INSTALL.html is right that there are
+  **three** workflow files (scrape, deploy, daily-email). The "two workflow files" line in the test steps below is out of date.
+
+## 2026-10-19 — quick-win fixes (stamp `2026-10-19.1`)
+
+- **Honest run status.** `scraper.py` counts the rows actually written. A run that scraped rows but wrote none is
+  `failed` and exits 1. A partial write warns and reports the real count. The catch-up gate (`scrape.yml`) and the
+  email's "scrape OK" check now also require `rows_upserted > 0`.
+- **Location bucketing** (`determine_location_hub` in scraper.py, `fpHubOf` in index.html, kept identical):
+  - City names match as whole words.
+  - A hub city only counts when its part of the location doesn't name another state or country.
+  - "New Mexico"/"New England" aren't Mexico/England. "holland" is dropped; "WA, Australia" isn't Washington.
+  - A bare state code only counts after a comma or at the end, so "Remote or Hybrid" is no longer US Other.
+  - Fixed: Louisville KY, Auburn AL, Everett MA, Kent OH, Redmond OR and Bellevue NE were Seattle. New Mexico and
+    Indiana were International. Lancaster PA, Norwalk CT, Glendale AZ, Pasadena TX and Valencia Spain were LA.
+    Wellington FL was NZ.
+  - Rows already in Supabase keep their old hub until a scrape rewrites them.
+- **companies.json:** K2 Space region "GREATER_LA" never mapped (rows were always dropped); now "Torrance, CA".
+  Tethers Unlimited was set to "New Zealand"; it is in Bothell, WA. **Confirm this one.**
+- **Relocation:** the scraper wrote `relocation_note: "-"` (2,675 of 2,910 live rows), which the app showed as a
+  relocation offer on every role. The scraper now writes NULL, and the app treats "-" as none.
+- **Salary:** scraped salaries are estimates. The app now reads "(est.)" from `salary_range`, labels them, draws
+  them hollow on the scatter, and leaves them out of the "Median Base" card. Internships no longer use the
+  full-time estimate. Live data has no posted salaries at all yet.
+- **Today → Chase these:** it subtracted a date string, so it was always empty. It now uses `cadenceState()`.
+- **Removed made-up content:**
+  - Profile card "98% / 24 applications / 6 interviews / 2 offers" (now counted from your tracking).
+  - The "Comms Radar" panel.
+  - The three home listings in Relocation (cost figures now say they're typed-in reference numbers).
+  - The hashed "~N alumni on staff" count and the "10× referral" claim.
+  - The fake fallback launch and countdown.
+  - "illustrative data" in the footer.
+  - "On-site in …" in the dossier, match report and shared page.
+- **Launch panel image:** Launch Library 2.3 returns `image` as an object, so the background requested `/[object Object]`.
+- **Deploy:** `pipeline-probe.html` is now published.
+- **Stamp** bumped on index, setup, START-HERE, install-guide, CLEAN-INSTALL and version.json. START-HERE and
+  install-guide were still on `2026-09-23.1`.
+- **Tested:**
+  - 67 location cases pass in both copies, including Workday's "US-OH-Kent" form. 672 generated strings give
+    identical answers in both.
+  - A stubbed scraper run covers all-written, partly-written and none-written.
+  - `loadOrbitalCore` still loads.
+  - Every inline script parses.
+  - The app was clicked through locally as a guest against live Supabase: Dashboard, Relocation, a dossier, and
+    Today with seeded test data, which was removed afterwards.
+- **Seen in live data, not fixed:**
+  - `app_queue` returns 404 (the table doesn't exist).
+  - 21 rows with "International" in the title are stored as internships. No code in this kit does that, so an
+    older version wrote them.
 
 ## Open problems
 

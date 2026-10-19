@@ -910,7 +910,7 @@
     {
       "company": "Tethers Unlimited",
       "url": "https://www.tethers.com/careers/",
-      "region": "New Zealand"
+      "region": "Bothell, WA"
     },
     {
       "company": "Kea Aerospace",
@@ -954,7 +954,7 @@
     {
       "company": "K2 Space",
       "url": "https://www.k2space.com/careers",
-      "region": "GREATER_LA",
+      "region": "Torrance, CA",
       "ats": "unknown",
       "note": "Torrance, CA. Careers page confirmed 2026-09-05; ATS token unconfirmed — run heal-probe.html to resolve."
     }
