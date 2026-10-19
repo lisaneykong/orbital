@@ -1,0 +1,126 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>ATS Token Probe</title>
+<style>
+ body{margin:0;background:#070b12;color:#dbe6f3;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:18px}
+ h1{font:700 17px/1.2 system-ui;margin:0 0 4px;letter-spacing:.02em}
+ .sub{color:#7b8ba3;font-size:12px;margin-bottom:14px;max-width:900px}
+ .tiles{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+ .t{border:1px solid #1e2a3d;border-radius:8px;padding:9px 13px;background:#0c1320;min-width:96px}
+ .t b{display:block;font:700 21px/1 ui-monospace}
+ .t span{font-size:11px;color:#7b8ba3}
+ h2{font:700 13px/1 system-ui;letter-spacing:.1em;text-transform:uppercase;color:#8fa2bd;margin:18px 0 7px;border-bottom:1px solid #1e2a3d;padding-bottom:6px}
+ .note{color:#7b8ba3;font-size:11px;margin:-2px 0 8px}
+ .row{display:grid;grid-template-columns:230px 1fr;gap:10px;padding:3px 0;border-bottom:1px solid #121a27}
+ .co{color:#dbe6f3}
+ .ok{color:#3ddc97}.heal{color:#ffc94d}.dead{color:#ff6b7f}.skip{color:#6b7a92}.srv{color:#5b8cff}
+ pre{background:#0c1320;border:1px solid #1e2a3d;border-radius:8px;padding:12px;white-space:pre-wrap;word-break:break-all;font-size:11px;color:#a9bad2}
+ a{color:#5b8cff}
+</style></head><body>
+<h1>ATS token probe &mdash; live</h1>
+<div class="sub">Reads <b>companies.json</b> as the source of truth &mdash; the same file <code>scraper.py</code> uses &mdash; and queries each configured token against its real public job-board API right now. Buckets that browsers cannot reach (CORS) and companies with no public API are listed separately, not counted as failures.</div>
+<div id="tiles" class="tiles"></div><div id="out">Loading companies.json&hellip;</div>
+<script>
+// Browser-reachable public APIs only. bamboohr / personio / welcomekit / icims /
+// eightfold / workday / custom are CORS-blocked in-browser and run server-side in
+// the daily GitHub Action — probing them from here would report false failures.
+const EP = {
+  greenhouse: t => ['https://boards-api.greenhouse.io/v1/boards/'+t+'/jobs', d => (d.jobs||[]).length],
+  lever:      t => ['https://api.lever.co/v0/postings/'+t+'?mode=json',      d => Array.isArray(d)?d.length:0],
+  ashby:      t => ['https://api.ashbyhq.com/posting-api/job-board/'+t,      d => (d.jobs||[]).length],
+  workable:   t => ['https://apply.workable.com/api/v1/widget/accounts/'+t+'?details=true', d => (d.jobs||[]).length],
+};
+const SERVER_ONLY = ['bamboohr','personio','welcomekit','icims','eightfold','workday','amazon','custom'];
+// Token forms. Hyphens MATTER: the old generator flattened them, so real tokens like
+// "starfish-space-inc", "turion-space" or "hadrian-automation" could never be found.
+function variants(company, token){
+  const words = String(company||'').toLowerCase().replace(/&/g,' and ')
+    .replace(/[^a-z0-9]+/g,' ').trim().split(/\s+/).filter(Boolean);
+  const FILLER = /^(space|aerospace|technologies|technology|industries|systems|inc|corp|corporation|labs|lab|defense|and)$/;
+  const kept = words.filter(w=>!FILLER.test(w));
+  const bases = [...new Set([words.join(''), words.join('-'), kept.join(''), kept.join('-')].filter(Boolean))];
+  const out=[token];
+  for(const b of bases) for(const s of ['','inc','-inc','-1','space','-space']) out.push(b+s);
+  return [...new Set(out.filter(Boolean))];
+}
+async function probe(kind, token){
+  const [url, count] = EP[kind](token);
+  try{
+    const r = await fetch(url, {headers:{'Accept':'application/json'}});
+    if(!r.ok) return {status:r.status};
+    return {n: count(await r.json())};
+  }catch(e){ return {err: String(e.message||e).slice(0,60)}; }
+}
+// companies.json stores greenhouse as an OBJECT keyed by token; the rest as arrays.
+function bucketList(bucket, val){
+  if(!val) return [];
+  if(Array.isArray(val)) return val.filter(e=>e && e.token).map(e=>({company:e.company, token:e.token}));
+  return Object.entries(val).map(([token,v])=>({company: typeof v==='string'?v:(v.company||token), token}));
+}
+(async ()=>{
+  const out = document.getElementById('out');
+  let CO;
+  try{
+    const r = await fetch('companies.json', {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    CO = await r.json();
+  }catch(e){
+    out.innerHTML = '<div class="dead">Could not load companies.json ('+e.message+'). Serve this page from the same folder as companies.json &mdash; open it over http://, not file://.</div>';
+    return;
+  }
+  const queue=[];
+  for(const kind of Object.keys(EP)) for(const it of bucketList(kind, CO[kind])) queue.push({kind, ...it});
+  const serverSide = SERVER_ONLY.flatMap(k => bucketList(k, CO[k]).map(it=>({bucket:k, ...it})))
+    .concat((CO.workday||[]).map(w=>({bucket:'workday', company:w.company, token:w.tenant})).filter(w=>w.token));
+  const needsRoute = CO.needs_route || [];
+
+  const results=[];
+  const run = async ({kind, company, token}) => {
+    const res = await probe(kind, token);
+    if(res.n>0) return {kind,company,token,use:token,n:res.n,state:'ok'};
+    for(const v of variants(company, token)){
+      if(v===token) continue;
+      const r2 = await probe(kind, v);
+      if(r2.n>0) return {kind,company,token,use:v,n:r2.n,state:'heal'};
+    }
+    if(res.n===0) return {kind,company,token,use:token,n:0,state:'empty'};
+    return {kind,company,token,use:null,n:0,state:'dead',why:res.status?('HTTP '+res.status):(res.err||'no response')};
+  };
+  for(let i=0;i<queue.length;i+=12){
+    results.push(...await Promise.all(queue.slice(i,i+12).map(run)));
+    out.textContent = 'Probing… '+results.length+' / '+queue.length;
+  }
+  window.__PROBE = results;
+
+  const by = s => results.filter(r=>r.state===s);
+  const jobs = by('ok').reduce((a,r)=>a+r.n,0) + by('heal').reduce((a,r)=>a+r.n,0);
+  document.getElementById('tiles').innerHTML =
+    [[by('ok').length,'verified','#3ddc97'],[by('heal').length,'healed','#ffc94d'],
+     [by('empty').length,'live, 0 open','#6b7a92'],[by('dead').length,'token broken','#ff6b7f'],
+     [serverSide.length,'server-side only','#5b8cff'],[needsRoute.length,'awaiting route','#7b8ba3'],
+     [jobs,'jobs reachable','#5b8cff']]
+    .map(([v,l,c])=>'<div class="t"><b style="color:'+c+'">'+v+'</b><span>'+l+'</span></div>').join('');
+
+  const sec = (title, note, arr, cls, fmt) => arr.length
+    ? '<h2>'+title+' ('+arr.length+')</h2>'+(note?'<div class="note">'+note+'</div>':'')+
+      arr.map(r=>'<div class="row"><span class="co">'+(r.company||'?')+'</span><span class="'+cls+'">'+fmt(r)+'</span></div>').join('')
+    : '';
+
+  out.innerHTML =
+    sec('Verified &mdash; token returns live jobs','These are the tokens the scraper actually uses.',
+        by('ok'),'ok', r=>r.kind+': '+r.token+' &mdash; '+r.n+' jobs') +
+    sec('Healed &mdash; token was wrong, this one works','Copy the arrow target into companies.json, then regenerate FP_COMPANIES in index.html.',
+        by('heal'),'heal', r=>r.kind+': '+r.token+' &rarr; <b>'+r.use+'</b> ('+r.n+' jobs)') +
+    sec('Token broken &mdash; fix or move to needs_route','Only these are real failures. Everything below this section is expected.',
+        by('dead'),'dead', r=>r.kind+': '+r.token+' &mdash; '+r.why) +
+    sec('Board live, zero open roles','Healthy token, empty board today. Nothing to fix.',
+        by('empty'),'skip', r=>r.kind+': '+r.token) +
+    sec('Server-side only &mdash; not browser-probeable','CORS blocks these APIs in a browser. They run in the daily GitHub Action; check its log, not this page.',
+        serverSide,'srv', r=>r.bucket+': '+r.token) +
+    sec('Awaiting a route &mdash; no public API','No public job-board API exists for these. Each needs a real careers URL or tenant ID added to companies.json. They are not scraped and produce no rows.',
+        needsRoute,'skip', r=>(r.tried||'no token')+(r.note?' &mdash; '+r.note.slice(0,90):'')) +
+    '<h2>Commit payload</h2><pre>'+JSON.stringify({
+      heal: by('heal').map(r=>[r.kind,r.company,r.token,r.use,r.n]),
+      dead: by('dead').map(r=>[r.kind,r.company,r.token,r.why]),
+      empty: by('empty').map(r=>[r.kind,r.company,r.token]),
+    },null,1)+'</pre>';
+})();
+</script></body></html>

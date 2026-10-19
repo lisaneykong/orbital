@@ -1,0 +1,80 @@
+name: Orbital daily email
+
+# Sends the daily brief to EMAIL_TO (default one@lisaney.com) at 8:00 AM Central: every
+# role first posted by an employer in the last 24 hours, the Apply Queue, and your
+# application progress. The 6am scrape and auto-prepare have finished by then.
+#
+# ONE-TIME SETUP (repo → Settings → Secrets and variables → Actions):
+#   RESEND_API_KEY  = API key from resend.com (free tier: 100 emails/day)
+#   EMAIL_FROM      = OPTIONAL. Defaults to "Orbital <onboarding@resend.dev>", which Resend
+#                     only delivers to the email your Resend account is registered with.
+#                     To send from your own domain, verify lisaney.com in Resend (it gives
+#                     you DNS records to add in IONOS) and set e.g. Orbital <orbital@lisaney.com>
+#   EMAIL_TO        = OPTIONAL. Defaults to one@lisaney.com
+# Plus SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, which the scraper already uses.
+#
+# Test it any time: Actions → Orbital daily email → Run workflow → mode "preview" builds the
+# email and attaches it to the run without sending; "send" sends it now.
+
+on:
+  schedule:
+    # 8am America/Chicago is 13:00 UTC in summer (CDT) and 14:00 UTC in winter (CST).
+    # Both fire; the gate lets through only the one that is really 8am in Chicago.
+    - cron: "0 13 * * *"
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "send = send now · preview = build and attach, don't send"
+        type: choice
+        default: preview
+        options: [preview, send]
+
+concurrency:
+  group: orbital-email
+  cancel-in-progress: false
+
+jobs:
+  email:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - id: gate
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          hour=$(TZ=America/Chicago date +%H)
+          echo "Chicago time: $(TZ=America/Chicago date '+%Y-%m-%d %H:%M %Z')"
+          if [ "$hour" = "08" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "Not 8am in Chicago — the other DST slot. Skipping."; echo "run=false" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: "20"
+
+      - name: Build and send the daily brief
+        if: steps.gate.outputs.run == 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: |
+          if [ "${{ inputs.mode }}" = "preview" ]; then
+            node automation/daily-email.mjs --preview
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            node automation/daily-email.mjs --force
+          else
+            node automation/daily-email.mjs
+          fi
+
+      - name: Attach the email as it was built
+        if: always() && steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: email-preview
+          path: automation/out/email-preview.html
+          if-no-files-found: ignore

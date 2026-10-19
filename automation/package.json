@@ -1,0 +1,9 @@
+{
+  "name": "orbital-automation",
+  "private": true,
+  "type": "module",
+  "description": "Auto-prepare (tailored résumé + cover letter for hot 75%+ roles) and the 8am daily email. Run by GitHub Actions.",
+  "dependencies": {
+    "docx": "9.5.1"
+  }
+}

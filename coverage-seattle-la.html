@@ -1,0 +1,147 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Seattle / LA coverage audit</title>
+<style>body{margin:0;background:#070b12;color:#dbe6f3;font:13px/1.55 ui-monospace,Menlo,monospace;padding:18px}
+h1{font:700 17px/1.2 system-ui;margin:0 0 4px}.sub{color:#7b8ba3;font-size:12px;margin-bottom:14px;max-width:960px}
+.tiles{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.t{border:1px solid #1e2a3d;border-radius:8px;padding:9px 13px;background:#0c1320;min-width:112px}
+.t b{display:block;font:700 21px/1 ui-monospace}.t span{font-size:11px;color:#7b8ba3}
+h2{font:700 13px/1 system-ui;letter-spacing:.1em;text-transform:uppercase;color:#8fa2bd;margin:20px 0 7px;border-bottom:1px solid #1e2a3d;padding-bottom:6px}
+.note{color:#7b8ba3;font-size:11px;margin:-2px 0 8px;max-width:960px}
+table{border-collapse:collapse;width:100%;max-width:960px}
+td,th{text-align:left;padding:3px 10px 3px 0;border-bottom:1px solid #121a27;font-size:12px;vertical-align:top}
+th{color:#8fa2bd;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+td.n{text-align:right;font-variant-numeric:tabular-nums;width:64px}
+.sea{color:#3ddc97}.la{color:#ffb454}.dead{color:#ff6b7f}.mut{color:#6b7a92}
+.bar{height:4px;background:#121a27;border-radius:2px;overflow:hidden;margin:6px 0 14px}
+.bar i{display:block;height:100%;background:#3ddc97;width:0;transition:width .2s}
+code{color:#a9bad2}</style></head><body>
+<h1>Seattle / LA coverage audit</h1>
+<div class="sub">Fetches every browser-reachable board in <b>index.html</b>'s own <code>FP_COMPANIES</code> list and maps each live posting's location through <b>index.html</b>'s own <code>fpHubOf</code>. Both are extracted from that file at run time rather than copied here, so this audit cannot drift from what the app actually does. Nothing on this page is cached or hardcoded &mdash; every number is the board's answer right now.</div>
+<div id="tiles" class="tiles"></div><div class="bar"><i id="bar"></i></div><div id="out">Loading index.html&hellip;</div>
+<script>
+// Pull the app's real company list and hub mapper out of index.html between the sentinels.
+async function loadFromApp(){
+  const r=await fetch('index.html',{cache:'no-store'});
+  if(!r.ok) throw new Error('index.html HTTP '+r.status);
+  const src=await r.text();
+  const cut=(a,b)=>{ const i=src.indexOf(a), j=src.indexOf(b);
+    if(i<0||j<0) throw new Error('sentinel '+a+' not found in index.html');
+    return src.slice(i+a.length, j); };
+  const companiesSrc = cut('/* ==ORBITAL_COMPANIES_START== */','/* ==ORBITAL_COMPANIES_END== */');
+  const hubSrc       = cut('/* ==ORBITAL_HUB_START== */','/* ==ORBITAL_HUB_END== */');
+  return new Function(companiesSrc+'\n'+hubSrc+'\nreturn {FP_COMPANIES, fpHubOf};')();
+}
+// Location-only readers. Deliberately not the app's fpNormalize: this audit asks a
+// narrower question — where are these jobs — and must not drop rows for role fit.
+const LOC = {
+  greenhouse: j => (j.location||{}).name||'',
+  lever:      j => (j.categories||{}).location||'',
+  ashby:      j => j.location||j.locationName||((j.address||{}).postalAddress||{}).addressLocality||'',
+  amazon:     j => j.normalized_location||j.location||'',
+  smartrecruiters: j => { const L=j.location||{}; return [L.city,L.region,L.country].filter(Boolean).join(', '); },
+  recruitee:  j => [j.city,j.state_code||j.country_code].filter(Boolean).join(', ')||j.location||'',
+  breezy:     j => { const L=j.location||{}; return L.name||[L.city,(L.state||{}).name,(L.country||{}).name].filter(Boolean).join(', '); },
+  rippling:   j => (j.workLocation||{}).label||'',
+  pinpoint:   j => { const L=j.location||{}; return L.name||[L.city,L.province].filter(Boolean).join(', '); },
+  manatal:    j => j.location_display||[j.city,j.state,j.country].filter(Boolean).join(', ')||(j.is_remote?'Remote':''),
+};
+const TITLE = {
+  greenhouse:j=>j.title, lever:j=>j.text, ashby:j=>j.title, amazon:j=>j.title,
+  smartrecruiters:j=>j.name, recruitee:j=>j.title||j.position, breezy:j=>j.name,
+  rippling:j=>j.name, pinpoint:j=>j.title, manatal:j=>j.position_name,
+};
+async function getJson(u,opt){
+  try{ const r=await fetch(u,opt||{headers:{Accept:'application/json'}});
+    if(!r.ok) return {err:'HTTP '+r.status};
+    return {data:await r.json()};
+  }catch(e){ return {err:'unreachable (CORS or network)'}; }
+}
+async function board(name,slug,type){
+  if(type==='greenhouse'){ const {data,err}=await getJson('https://boards-api.greenhouse.io/v1/boards/'+slug+'/jobs'); return err?{err}:{rows:data.jobs||[]}; }
+  if(type==='lever'){ const {data,err}=await getJson('https://api.lever.co/v0/postings/'+slug+'?mode=json'); return err?{err}:{rows:Array.isArray(data)?data:[]}; }
+  if(type==='ashby'){ const {data,err}=await getJson('https://api.ashbyhq.com/posting-api/job-board/'+slug); return err?{err}:{rows:data.jobs||[]}; }
+  if(type==='smartrecruiters'){ const {data,err}=await getJson('https://api.smartrecruiters.com/v1/companies/'+slug+'/postings?limit=100'); return err?{err}:{rows:data.content||[]}; }
+  if(type==='recruitee'){ const {data,err}=await getJson('https://'+slug+'.recruitee.com/api/offers/'); return err?{err}:{rows:data.offers||[]}; }
+  if(type==='breezy'){ const {data,err}=await getJson('https://'+slug+'.breezy.hr/json'); return err?{err}:{rows:Array.isArray(data)?data:[]}; }
+  if(type==='rippling'){ const {data,err}=await getJson('https://api.rippling.com/platform/api/ats/v1/board/'+slug+'/jobs'); return err?{err}:{rows:Array.isArray(data)?data:[]}; }
+  if(type==='pinpoint'){ const {data,err}=await getJson('https://'+slug+'.pinpointhq.com/postings.json'); return err?{err}:{rows:(data&&data.data)||[]}; }
+  if(type==='manatal'){
+    let u='https://api.manatal.com/open/v3/career-page/'+slug+'/jobs/', rows=[], g=0;
+    while(u && g++<40){ const {data,err}=await getJson(u); if(err) return rows.length?{rows}:{err}; rows=rows.concat(data.results||[]); u=data.next||null; }
+    return {rows};
+  }
+  if(type==='amazon'){ const {data,err}=await getJson('https://www.amazon.jobs/en/search.json?base_query='+encodeURIComponent(slug)+'&offset=0&result_limit=100'); return err?{err}:{rows:data.jobs||[]}; }
+  return {err:'no browser route for '+type+' — daily Action only'};
+}
+async function pool(items,size,fn,tick){
+  const out=[]; let i=0;
+  await Promise.all(Array.from({length:size},async()=>{ while(i<items.length){ const k=i++; out[k]=await fn(items[k]); tick(); } }));
+  return out;
+}
+const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+(async()=>{
+  const out=document.getElementById('out'), bar=document.getElementById('bar');
+  let APP;
+  try{ APP=await loadFromApp(); }
+  catch(e){ out.innerHTML='<div class="dead">'+esc(e.message)+'</div><div class="note">Serve this folder over http:// (not file://) so the page can read index.html.</div>'; return; }
+  const { FP_COMPANIES, fpHubOf } = APP;
+  const LIVE = FP_COMPANIES.filter(([n,s,t])=>t!=='workday');   // workday is Action-only
+  let done=0;
+  const tick=()=>{ done++; bar.style.width=(done/LIVE.length*100)+'%'; out.textContent='Fetching '+done+' / '+LIVE.length+' live boards…'; };
+
+  const res = await pool(LIVE, 6, async ([name,slug,type])=>{
+    const b = await board(name,slug,type);
+    if(b.err) return {name,slug,type,err:b.err};
+    const hubs={SEATTLE:0,GREATER_LA:0,other:0,unmapped:0};
+    const seaLocs=new Set(), laLocs=new Set(), badLocs=new Set(), sample={SEATTLE:[],GREATER_LA:[]};
+    for(const j of b.rows){
+      const loc=(LOC[type]||(()=>''))(j)||'';
+      const hub=fpHubOf(loc);
+      if(hub==='SEATTLE'){ hubs.SEATTLE++; seaLocs.add(loc); if(sample.SEATTLE.length<3) sample.SEATTLE.push((TITLE[type](j)||'')+' — '+loc); }
+      else if(hub==='GREATER_LA'){ hubs.GREATER_LA++; laLocs.add(loc); if(sample.GREATER_LA.length<3) sample.GREATER_LA.push((TITLE[type](j)||'')+' — '+loc); }
+      else if(hub){ hubs.other++; }
+      else { hubs.unmapped++; if(loc.trim()) badLocs.add(loc); }
+    }
+    return {name,slug,type,total:b.rows.length,...hubs,seaLocs:[...seaLocs],laLocs:[...laLocs],badLocs:[...badLocs],sample};
+  }, tick);
+
+  const ok=res.filter(r=>!r.err), bad=res.filter(r=>r.err);
+  const sum=k=>ok.reduce((a,r)=>a+(r[k]||0),0);
+  const sea=ok.filter(r=>r.SEATTLE>0).sort((a,b)=>b.SEATTLE-a.SEATTLE);
+  const la =ok.filter(r=>r.GREATER_LA>0).sort((a,b)=>b.GREATER_LA-a.GREATER_LA);
+  const unmapped=ok.filter(r=>r.unmapped>0).sort((a,b)=>b.unmapped-a.unmapped);
+  window.__COVERAGE={sea:sea.map(r=>[r.name,r.SEATTLE]),la:la.map(r=>[r.name,r.GREATER_LA]),
+    totals:{boards:ok.length,failed:bad.length,postings:sum('total'),SEATTLE:sum('SEATTLE'),GREATER_LA:sum('GREATER_LA'),unmapped:sum('unmapped')},
+    unmappedLocs:[...new Set(unmapped.flatMap(r=>r.badLocs))].slice(0,120), failed:bad.map(r=>[r.name,r.err])};
+
+  document.getElementById('tiles').innerHTML=[
+    [ok.length,'boards answering','#dbe6f3'],
+    [sum('total'),'live postings','#dbe6f3'],
+    [sum('SEATTLE'),'map to SEATTLE','#3ddc97'],
+    [sea.length,'companies hiring there','#3ddc97'],
+    [sum('GREATER_LA'),'map to GREATER_LA','#ffb454'],
+    [la.length,'companies hiring there','#ffb454'],
+    [sum('unmapped'),'location unmapped','#ff6b7f'],
+    [bad.length,'boards unreachable','#6b7a92'],
+  ].map(([v,l,c])=>'<div class="t"><b style="color:'+c+'">'+v+'</b><span>'+l+'</span></div>').join('');
+
+  const tbl=(rows,key,cls)=>'<table><tr><th>Company</th><th>Platform</th><th class="n">'+key.replace('GREATER_','')+'</th><th class="n">Board</th><th>Where</th></tr>'+
+    rows.map(r=>'<tr><td>'+esc(r.name)+'</td><td class="mut">'+r.type+':'+esc(r.slug)+'</td><td class="n '+cls+'">'+r[key]+'</td><td class="n mut">'+r.total+'</td><td class="mut">'+
+      esc((key==='SEATTLE'?r.seaLocs:r.laLocs).slice(0,4).join(' · '))+'</td></tr>').join('')+'</table>';
+
+  out.innerHTML=
+   '<h2>Seattle hub &mdash; '+sum('SEATTLE')+' live postings across '+sea.length+' companies</h2>'+
+   (sea.length?tbl(sea,'SEATTLE','sea'):'<div class="note">No board currently has a posting that maps to SEATTLE.</div>')+
+   '<h2>Greater LA hub &mdash; '+sum('GREATER_LA')+' live postings across '+la.length+' companies</h2>'+
+   (la.length?tbl(la,'GREATER_LA','la'):'<div class="note">No board currently has a posting that maps to GREATER_LA.</div>')+
+   '<h2>Locations the mapper could not place ('+sum('unmapped')+')</h2>'+
+   '<div class="note">Each of these is a real posting the app discards because <code>fpHubOf</code> returns null. Any US or Californian city listed here is a coverage gap worth adding to the regex; the rest are genuinely out of scope.</div>'+
+   (sum('unmapped')
+     ? '<table><tr><th>Location string</th></tr>'+[...new Set(unmapped.flatMap(r=>r.badLocs))].slice(0,80)
+         .map(l=>'<tr><td class="mut">'+esc(l)+'</td></tr>').join('')+'</table>'
+     : '<div class="note">None — every posting on every reachable board resolved to a hub.</div>')+
+   '<h2>Boards that did not answer ('+bad.length+')</h2>'+
+   '<div class="note">Expected for the CORS-blocked platforms, which the daily GitHub Action fetches server-side instead. A greenhouse/lever/ashby entry here is a real regression.</div>'+
+   (bad.length?'<table><tr><th>Company</th><th>Platform</th><th>Reason</th></tr>'+bad.map(r=>'<tr><td>'+esc(r.name)+'</td><td class="mut">'+r.type+':'+esc(r.slug)+'</td><td class="dead">'+esc(r.err)+'</td></tr>').join('')+'</table>'
+    :'<div class="note">Every board answered.</div>');
+})();
+</script></body></html>

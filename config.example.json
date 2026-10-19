@@ -1,0 +1,7 @@
+{
+  "_comment": "Local-run alternative to environment variables. scraper.py looks for SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY first, then falls back to this file. Copy to config.json and fill in. config.json is gitignored — never commit it. GitHub Actions does NOT use this file; it uses repository secrets.",
+  "supabase_url": "https://YOUR-PROJECT-REF.supabase.co",
+  "supabase_service_role_key": "YOUR-SERVICE-ROLE-KEY",
+  "table": "jobs",
+  "alignment_threshold": 70
+}

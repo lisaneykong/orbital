@@ -1,0 +1,259 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cross-ATS route finder</title>
+<style>body{margin:0;background:#070b12;color:#dbe6f3;font:13px/1.55 ui-monospace,Menlo,monospace;padding:18px}
+h1{font:700 17px/1.2 system-ui;margin:0 0 4px}.sub{color:#7b8ba3;font-size:12px;margin-bottom:14px;max-width:940px}
+.tiles{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.t{border:1px solid #1e2a3d;border-radius:8px;padding:9px 13px;background:#0c1320;min-width:104px}
+.t b{display:block;font:700 21px/1 ui-monospace}.t span{font-size:11px;color:#7b8ba3}
+h2{font:700 13px/1 system-ui;letter-spacing:.1em;text-transform:uppercase;color:#8fa2bd;margin:18px 0 7px;border-bottom:1px solid #1e2a3d;padding-bottom:6px}
+.note{color:#7b8ba3;font-size:11px;margin:-2px 0 8px}
+.row{display:grid;grid-template-columns:230px 1fr;gap:10px;padding:3px 0;border-bottom:1px solid #121a27}
+.found{color:#3ddc97}.none{color:#6b7a92}.dead{color:#ff6b7f}.known{color:#5b8cff}
+.bar{height:4px;background:#121a27;border-radius:2px;overflow:hidden;margin:6px 0 14px}
+.bar i{display:block;height:100%;background:#3ddc97;width:0;transition:width .2s}
+pre{background:#0c1320;border:1px solid #1e2a3d;border-radius:8px;padding:12px;white-space:pre-wrap;word-break:break-all;font-size:11px;color:#a9bad2}</style></head><body>
+<h1>Cross-ATS route finder</h1>
+<div class="sub">Takes the <b>needs_route</b> list out of <b>companies.json</b> and hunts for each company's real job board across <b>twenty-three</b> public ATS APIs, trying hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names. Job counts are read shape-agnostically, so a platform whose response format we have not seen before still registers. Stops on the first hit per company.</div>
+<div id="tiles" class="tiles"></div><div class="bar"><i id="bar"></i></div><div id="out">Loading companies.json&hellip;</div>
+<script>
+// Routes already confirmed by hand — tried first, and reported even when the company's
+// board has no public JSON API (ClearCompany, in-house portals).
+const KNOWN = {
+  'Firefly Aerospace':      {ats:'custom', url:'https://firefly.hrmdirect.com/employment/job-openings.php?search=true', why:'ClearCompany portal — no public JSON API'},
+  'Sierra Nevada Corporation':{ats:'custom', url:'https://www.sncorp.com/careers/', why:'in-house talent portal'},
+  'K2 Space':               {ats:'custom', url:'https://www.k2space.com/careers', why:'careers page — token unconfirmed'},
+};
+// Companies that now trade under another name — their board very often lives under the
+// acquirer's token, so those name forms get generated too.
+const ALIAS = {
+  'Astrobotic Technology':['Voyager Lunar Systems','Voyager Technologies'],
+  'Voyager Space':['Voyager Technologies'],
+  'Capella Space':['IonQ'],
+  'SpinLaunch':['Meridian Space','Meridian'],
+  'ABL Space Systems':['Long Wall'],
+};
+// Hand-curated token guesses, tried before the generated forms.
+const HINTS = {
+  'Starfish Space':['starfish-space-inc','starfish-space'],
+  'Astrobotic Technology':['astrobotic','astrobotictechnology','voyager-lunar-systems','voyagertechnologies'],
+  'Karman Space & Defense':['karman-space-defense','karmanspace'],
+  'Orbit Fab':['orbit-fab','orbitfab'],
+  'Venturi Astrolab':['astrolab','venturi-astrolab'],
+  'Space Perspective':['space-perspective'],
+  'Capella Space':['capella-space','ionq'],
+  'Umbra Space':['umbra-lab','umbralab','umbra'],
+  'X-Bow Systems':['x-bow','xbow'],
+  'Astro Digital':['astro-digital'],
+  'Rogue Space Systems':['rogue-space-systems'],
+  'Phase Four':['phase-four'],
+  'Zeno Power':['zeno-power','zenopowersystems'],
+  'Xona Space Systems':['xona-space-systems','xonaspace'],
+  'Starpath Robotics':['starpath-robotics'],
+  'Vaya Space':['vaya-space'],
+  'Atomos Space':['atomos-space'],
+  'Chandra Industries':['chandra-industries'],
+  'Castelion':['castelion-corporation','Castelion','castelion'],
+  'Voyager Space':['VoyagerSpace','voyager-space','voyagertechnologies','voyager-technologies'],
+  'SpinLaunch':['SpinLaunch','spin-launch','meridian-space'],
+  'Satellogic':['Satellogic','satellogic'],
+  'Pixxel':['Pixxel','pixxel-space','pixxel'],
+  'ABL Space Systems':['ABLSpaceSystems','abl-space-systems','ablspace','long-wall','longwall','abl'],
+  'HEO':['heo-robotics','heo'],
+  'Aalyria':['aalyria','aalyria-technologies'],
+  'Antaris':['antaris','antaris-inc'],
+  'Wyvern':['wyvern','wyvern-space'],
+  'Umbra Space':['umbra','umbraspace','umbra-lab'],
+  'Space Perspective':['spaceperspective','space-perspective'],
+  'Xona Space Systems':['xona','xona-space','xonaspace'],
+  'Karman Space & Defense':['karman','karmanspacedefense','karman-space-and-defense'],
+  'X-Bow Systems':['xbowsystems','x-bow-systems','xbow'],
+  'Atomos Space':['atomos','atomos-space'],
+  'Phase Four':['phasefour','phase-four'],
+  'Venturi Astrolab':['astrolab','venturiastrolab'],
+  'Astro Digital':['astrodigital','astro-digital'],
+  'Chandra Industries':['chandra','chandra-industries'],
+  'Rogue Space Systems':['rogue','roguespace','rogue-space'],
+  'Starpath Robotics':['starpath','starpath-robotics'],
+  'Vaya Space':['vayaspace','vaya-space'],
+  'Satellogic':['satellogic','Satellogic'],
+};
+// Twenty-two public job-board APIs. Each entry returns just a URL — counting is
+// shape-agnostic (see countJobs), so an unfamiliar response body still registers.
+const EP = {
+  greenhouse:     t => 'https://boards-api.greenhouse.io/v1/boards/'+t+'/jobs',
+  lever:          t => 'https://api.lever.co/v0/postings/'+t+'?mode=json',
+  ashby:          t => 'https://api.ashbyhq.com/posting-api/job-board/'+t,
+  workable:       t => 'https://apply.workable.com/api/v1/widget/accounts/'+t+'?details=true',
+  smartrecruiters:t => 'https://api.smartrecruiters.com/v1/companies/'+t+'/postings',
+  recruitee:      t => 'https://'+t+'.recruitee.com/api/offers/',
+  rippling:       t => 'https://api.rippling.com/platform/api/ats/v1/board/'+t+'/jobs',
+  breezy:         t => 'https://'+t+'.breezy.hr/json',
+  personio:       t => 'https://'+t+'.jobs.personio.de/search.json',
+  teamtailor:     t => 'https://'+t+'.teamtailor.com/jobs.json',
+  keka:           t => 'https://'+t+'.keka.com/careers/api/embedjobs',
+  jobvite:        t => 'https://jobs.jobvite.com/api/v1/company/'+t+'/jobs',
+  jobscore:       t => 'https://api.jobscore.com/jobs/list?o='+t+'&f=json',
+  hirehive:       t => 'https://'+t+'.hirehive.com/api/v1/positions',
+  pinpoint:       t => 'https://'+t+'.pinpointhq.com/postings.json',
+  homerun:        t => 'https://'+t+'.homerun.co/api/v1/jobs',
+  jazzhr:         t => 'https://'+t+'.applytojob.com/apply/jobs.json',
+  manatal:        t => 'https://api.manatal.com/open/v3/career-page/'+t+'/jobs/',
+  trakstar:       t => 'https://api.recruiterbox.com/v1/openings?client_name='+t,
+  workablehosted: t => 'https://'+t+'.workable.com/api/v1/widget/accounts/'+t,
+  ashbyembed:     t => 'https://jobs.ashbyhq.com/api/non-user-graphql?operationName=ApiJobBoardWithTeams&variables=%7B%22organizationHostedJobsPageName%22%3A%22'+t+'%22%7D',
+};
+// A posting looks like an object with a human-readable title. Find the biggest
+// array of those anywhere in the payload — that is the job list, whatever the vendor calls it.
+// The key list has to be generous: Manatal calls it position_name, and a narrow list
+// silently reported "no board" for a board that was answering perfectly well.
+const TITLE_KEYS = ['title','name','jobtitle','job_title','position','text','headline',
+  'position_name','position_title','job_name','jobname','role','role_name',
+  'vacancy_name','opening_title','postingtitle','posting_title','label'];
+// Vendors that paginate (Manatal serves 10 per page) report the real total alongside the
+// page, so an explicit count beats the length of the slice we happened to fetch.
+const COUNT_KEYS = ['count','total','totalcount','total_count','totalresults','total_results','numfound'];
+function looksLikeJob(x){
+  return x && typeof x === 'object' &&
+    Object.keys(x).some(k => TITLE_KEYS.includes(k.toLowerCase()));
+}
+function countJobs(d, depth){
+  depth = depth || 0;
+  if(!d || typeof d !== 'object' || depth > 5) return 0;
+  let best = 0;
+  if(Array.isArray(d)){
+    const looks = d.filter(looksLikeJob).length;
+    // Majority rather than unanimity — one malformed row should not void the whole board.
+    if(d.length > 0 && looks >= Math.ceil(d.length * 0.6)) best = d.length;
+    for(const x of d.slice(0, 30)) best = Math.max(best, countJobs(x, depth+1));
+    return best;
+  }
+  for(const [k, v] of Object.entries(d)){
+    if(Array.isArray(v) && v.length && v.filter(looksLikeJob).length >= Math.ceil(v.length*0.6)){
+      const declared = Object.entries(d)
+        .find(([ck, cv]) => COUNT_KEYS.includes(ck.toLowerCase()) && Number.isFinite(cv) && cv >= v.length);
+      best = Math.max(best, declared ? declared[1] : v.length);
+      continue;
+    }
+    best = Math.max(best, countJobs(v, depth+1));
+  }
+  return best;
+}
+// Token forms. Hyphens matter — the old probe stripped them, so tokens like
+// "starfish-space-inc" or "turion-space" could never be found.
+function formsFor(company){
+  const words = String(company||'').toLowerCase().replace(/&/g,' and ')
+    .replace(/[^a-z0-9]+/g,' ').trim().split(/\s+/).filter(Boolean);
+  const FILLER = /^(space|aerospace|technologies|technology|industries|systems|inc|corp|corporation|labs|lab|defense|and)$/;
+  const kept = words.filter(w=>!FILLER.test(w));
+  const cap = a => a.map(w=>w[0].toUpperCase()+w.slice(1)).join('');
+  const bases = [...new Set([words.join(''), words.join('-'), kept.join(''), kept.join('-')].filter(Boolean))];
+  // SmartRecruiters identifiers are PascalCase and case-sensitive (e.g. "AstroscaleUS"),
+  // so lowercase-only candidates can never match them.
+  const pascal = [...new Set([cap(words), cap(kept)].filter(Boolean))];
+  const out = [];
+  for(const b of bases)  for(const s of ['','inc','-inc','-1','-corporation','-careers','technologiesinc'])   out.push(b+s);
+  // Dot-TLD identifiers (starpath.space) and legal-entity slugs are real token shapes.
+  // Stripping dots made a whole class of board permanently unreachable.
+  for(const b of bases) for(const tld of ['.space','.io','.com','.ai']) out.push(b+tld);
+  for(const p of pascal) for(const s of ['','US','Inc','Space','Aerospace']) out.push(p+s);
+  return out;
+}
+// Capped at TOKEN_CAP: the previous pass already exhausted the plain generated forms on the
+// six original platforms, so the new information lives in curated tokens x new platforms.
+// Leaving the cross product uncapped costs ~9,000 requests and stalls the page.
+const TOKEN_CAP = 26;
+function cands(company, token){
+  const names = [company, ...(ALIAS[company]||[])];
+  const generated = names.flatMap(formsFor);
+  return [...new Set([token, ...(HINTS[company]||[]), ...generated].filter(Boolean))].slice(0, TOKEN_CAP);
+}
+async function probe(kind, t){
+  try{
+    const r = await fetch(EP[kind](t),{headers:{Accept:'application/json'}});
+    if(!r.ok) return 0;
+    const body = await r.text();
+    if(!body.trim().startsWith('{') && !body.trim().startsWith('[')) return 0;
+    return countJobs(JSON.parse(body));
+  }catch(e){ return -1; }
+}
+// Per-company hunt. The (token x platform) pairs run in parallel batches rather than one
+// at a time — serially this is ~150 round trips per company, which is minutes of dead wait.
+async function hunt(co){
+  const pairs = [];
+  for(const t of cands(co.company, co.token))
+    for(const kind of Object.keys(EP)) pairs.push([kind, t]);
+  const BATCH = 23;
+  for(let i=0; i<pairs.length; i+=BATCH){
+    const slice = pairs.slice(i, i+BATCH);
+    const hits = await Promise.all(slice.map(async ([kind,t]) => {
+      const n = await probe(kind, t);
+      return n > 0 ? {...co, kind, t, n, url: EP[kind](t)} : null;
+    }));
+    const hit = hits.find(Boolean);
+    if(hit) return {...hit, attempts: i + slice.length};
+  }
+  return null;
+}
+async function pool(items, size, fn, onTick){
+  const out=[]; let i=0;
+  await Promise.all(Array.from({length:size},async()=>{
+    while(i<items.length){ const k=i++; out[k]=await fn(items[k]); onTick(); }
+  }));
+  return out;
+}
+(async()=>{
+  const out=document.getElementById('out'), bar=document.getElementById('bar');
+  let CO;
+  try{
+    const r=await fetch('companies.json',{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    CO=await r.json();
+  }catch(e){
+    out.innerHTML='<div class="dead">Could not load companies.json ('+e.message+'). Serve this page over http:// from the same folder, not file://.</div>';
+    window.__ROUTES={error:e.message};
+    return;
+  }
+  const WORK=(CO.needs_route||[]).map(e=>{
+    const [k,t]=String(e.tried||'').split(':');
+    return {company:e.company, oldKind:k||'—', token:t||''};
+  });
+  if(!WORK.length){ out.innerHTML='<div class="none">needs_route is empty — nothing to route.</div>'; window.__ROUTES={found:[],known:[],lost:[]}; return; }
+
+  let done=0;
+  const tick=()=>{ done++; bar.style.width=(done/WORK.length*100)+'%'; out.textContent='Hunting… '+done+' / '+WORK.length+' companies'; };
+  const res = await pool(WORK, 4, hunt, tick);
+
+  const found = res.filter(Boolean);
+  const known = WORK.filter(w=>KNOWN[w.company] && !found.some(f=>f.company===w.company));
+  const lost  = WORK.filter(w=>!found.some(f=>f.company===w.company) && !KNOWN[w.company]);
+  window.__ROUTES = {found, known: known.map(w=>({...w, ...KNOWN[w.company]})), lost, platforms:Object.keys(EP)};
+
+  document.getElementById('tiles').innerHTML=[
+    [WORK.length,'needed a route','#7b8ba3'],
+    [found.length,'API board found','#3ddc97'],
+    [known.length,'confirmed by hand','#5b8cff'],
+    [lost.length,'still unrouted','#6b7a92'],
+    [found.reduce((a,r)=>a+r.n,0),'jobs unlocked','#5b8cff']]
+    .map(([v,l,c])=>'<div class="t"><b style="color:'+c+'">'+v+'</b><span>'+l+'</span></div>').join('');
+
+  const sec=(t,note,arr,cls,fmt)=>arr.length
+    ? '<h2>'+t+' ('+arr.length+')</h2>'+(note?'<div class="note">'+note+'</div>':'')+
+      arr.map(r=>'<div class="row"><span>'+r.company+'</span><span class="'+cls+'">'+fmt(r)+'</span></div>').join('')
+    : '<h2>'+t+' (0)</h2><div class="note">None.</div>';
+
+  out.innerHTML=
+   sec('Live board found &mdash; move into its bucket',
+       'Paste the payload below into companies.json, delete these from needs_route, then regenerate FP_COMPANIES in index.html.',
+       found,'found', r=>(r.oldKind||'—')+':'+(r.token||'?')+' &rarr; <b>'+r.kind+':'+r.t+'</b> ('+r.n+' jobs)') +
+   sec('Confirmed by hand &mdash; no public JSON API',
+       'These have a real careers page but no scrapable API. They belong in the custom bucket and are fetched server-side by the daily Action.',
+       known,'known', r=>r.ats+': '+r.url+' &mdash; '+r.why) +
+   sec('Still unrouted',
+       'Tried twenty-three ATS APIs across hyphenated, flattened, suffixed and PascalCase token forms, plus post-acquisition names. These need a Workday tenant ID, an iCIMS/Eightfold route, or a careers URL found by hand. Leave them in needs_route — they produce no rows and no errors.',
+       lost,'none', r=>'no board on any of the twenty-three probed APIs') +
+   '<h2>Commit payload</h2><pre>'+JSON.stringify({
+      move_to_bucket: found.map(r=>({bucket:r.kind, company:r.company, token:r.t, open:r.n, url:r.url})),
+      move_to_custom: known.map(w=>({company:w.company, url:KNOWN[w.company].url, note:KNOWN[w.company].why})),
+      keep_in_needs_route: lost.map(w=>w.company),
+   },null,1)+'</pre>';
+})();
+</script></body></html>

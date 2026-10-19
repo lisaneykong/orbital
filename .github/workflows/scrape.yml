@@ -1,0 +1,258 @@
+name: Orbital daily scrape
+
+# Runs scraper.py in the cloud (no local machine needed) and upserts real
+# space-industry roles into Supabase, which jobs.lisaney.com reads live.
+#
+# SETUP (one time):
+#   1. Push this orbital folder to a GitHub repo.
+#   2. Repo -> Settings -> Secrets and variables -> Actions -> New repository secret:
+#        SUPABASE_URL                = https://<your-ref>.supabase.co
+#        SUPABASE_SERVICE_ROLE_KEY   = <your service_role key>
+#   3. That's it. It runs at 6am Central every day, and you can also trigger it from
+#      the dashboard's "Refresh roles" button or by hand
+#      (Actions tab -> "Orbital daily scrape" -> Run workflow).
+#
+# SELF-HEALING: if the 6am run writes nothing — rate limit, quota, network blip — the
+# catch-up slots at ~10am, 2pm and 6pm Chicago retry on their own. Nobody has to notice
+# or press anything. Once a run completes, the remaining slots see it and no-op.
+#
+# If a run fails, open it and read the FIRST red step — the preflight below names a
+# missing or malformed secret in plain English instead of letting the scraper die on
+# a stack trace 40 lines deep.
+
+on:
+  schedule:
+    # GitHub only schedules in UTC, and 6am America/Chicago is 11:00 UTC in summer
+    # (CDT) but 12:00 UTC in winter (CST). Both slots fire; the gate job below lets
+    # exactly ONE of them through — whichever one is actually 6am in Chicago today.
+    - cron: "0 11 * * *"
+    - cron: "0 12 * * *"
+    # Catch-up slots (~10am, 2pm, 6pm Chicago). On a normal day these cost a few
+    # seconds and stop: the gate sees the morning run already finished and exits.
+    # They exist so a scrape killed by a rate limit, a quota or a network blip
+    # resumes BY ITSELF later the same day, instead of leaving the board frozen
+    # until tomorrow at 6am and waiting on somebody to press a button.
+    - cron: "0 15 * * *"
+    - cron: "0 19 * * *"
+    - cron: "0 23 * * *"
+  workflow_dispatch:        # manual "Run workflow" button + the dashboard's Refresh roles
+    inputs:
+      mode:
+        description: "full = normal scrape · diagnose = fast per-ATS + Supabase health check"
+        type: choice
+        default: full
+        options: [full, diagnose]
+
+# A slow run must never overlap the next scheduled one — two scrapers upserting the
+# same rows at once is how duplicate/half-written days happen.
+concurrency:
+  group: orbital-scrape
+  cancel-in-progress: false
+
+jobs:
+  # Gate. Decides whether this particular trigger should really scrape, and answers two
+  # separate questions:
+  #
+  #   1. DST. Two UTC crons cover 6am Chicago year-round, so one of them is always an
+  #      hour off. Compare the real local hour and stop the wrong one.
+  #   2. Catch-up. The afternoon/evening crons should only do work if today has no
+  #      successful scrape yet — that is what makes a failed morning run resume on its
+  #      own. It asks Supabase directly rather than trusting GitHub's run history,
+  #      because a run can go green while writing nothing.
+  #
+  # Manual runs (workflow_dispatch) always pass straight through.
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+      kind: ${{ steps.check.outputs.kind }}
+    steps:
+      - id: check
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "Manual run — proceeding."
+            echo "run=true"      >> "$GITHUB_OUTPUT"
+            echo "kind=dispatch" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          hour=$(TZ=America/Chicago date +%H)
+          echo "Local time in America/Chicago: $(TZ=America/Chicago date '+%Y-%m-%d %H:%M %Z')"
+
+          case "${{ github.event.schedule }}" in
+            "0 11 * * *"|"0 12 * * *")
+              # The DST pair. Exactly one of these is 6am in Chicago today.
+              echo "kind=schedule" >> "$GITHUB_OUTPUT"
+              if [ "$hour" = "06" ]; then
+                echo "run=true" >> "$GITHUB_OUTPUT"
+              else
+                echo "Not 6am in Chicago (hour=$hour) — this is the other DST slot. Skipping."
+                echo "run=false" >> "$GITHUB_OUTPUT"
+              fi
+              ;;
+            *)
+              # A catch-up slot. Run only if nothing succeeded yet today (Chicago day).
+              echo "kind=catchup" >> "$GITHUB_OUTPUT"
+              day=$(TZ=America/Chicago date +%F)
+              since=$(TZ=America/Chicago date -d "$day 00:00" -u +%Y-%m-%dT%H:%M:%SZ)
+              echo "Looking for a completed scrape since $since (start of $day in Chicago)."
+
+              if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+                echo "::warning::Supabase secrets are not set, so the catch-up cannot tell whether today already ran. Skipping — fix the secrets and the 6am run will report the real error."
+                echo "run=false" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+
+              code=$(curl -sS -o /tmp/runs.json -w '%{http_code}' \
+                -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+                -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+                "$SUPABASE_URL/rest/v1/scrape_runs?select=run_id,finished_at&status=eq.done&finished_at=gte.$since&limit=1" \
+                || echo 000)
+
+              if [ "$code" = "404" ] || grep -q 'PGRST20[0-9]' /tmp/runs.json; then
+                # PERMANENT, not transient: the table isn't there. Failing open here would
+                # scrape at every catch-up slot every single day — four runs instead of one.
+                echo "::warning::scrape_runs does not exist in Supabase, so the catch-up cannot tell whether today already ran. Run the scrape_runs section of SUPABASE-SCHEMA.sql, then this self-healing retry starts working. Skipping."
+                echo "run=false" >> "$GITHUB_OUTPUT"
+              elif [ "$code" != "200" ]; then
+                # Transient (5xx, network, timeout). Fail OPEN: a duplicate scrape is
+                # harmless (every write is an upsert, and the concurrency group serialises
+                # runs); a frozen board is not.
+                echo "::warning::Could not read scrape_runs (HTTP $code) — running the catch-up anyway rather than risk a day with no data."
+                echo "run=true" >> "$GITHUB_OUTPUT"
+              elif grep -q '"run_id"' /tmp/runs.json; then
+                echo "Today's scrape already completed — nothing to catch up."
+                echo "run=false" >> "$GITHUB_OUTPUT"
+              else
+                echo "No completed scrape yet today — resuming now."
+                echo "run=true" >> "$GITHUB_OUTPUT"
+              fi
+              ;;
+          esac
+
+  scrape:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25    # a healthy run is ~1 min; anything past 25 is a hang, kill it
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the two secrets are actually set
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          fail=0
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "::error::Secret SUPABASE_URL is missing. Add it under Settings -> Secrets and variables -> Actions. It looks like https://abcdefgh.supabase.co"
+            fail=1
+          elif ! printf '%s' "$SUPABASE_URL" | grep -Eq '^https://[a-z0-9-]+\.supabase\.(co|in)/?$'; then
+            echo "::error::Secret SUPABASE_URL does not look like a Supabase project URL. Expected https://<your-ref>.supabase.co with no path or trailing slash. Got: ${SUPABASE_URL}"
+            fail=1
+          fi
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Secret SUPABASE_SERVICE_ROLE_KEY is missing. Supabase -> Settings -> API -> service_role (the SECRET one, not anon)."
+            fail=1
+          else
+            # The single most common setup mistake is pasting the read-only anon key here.
+            # Both key formats are checked: legacy JWTs carry a role claim, new keys are
+            # prefixed sb_publishable_ (read) vs sb_secret_ (write).
+            case "$SUPABASE_SERVICE_ROLE_KEY" in
+              sb_publishable_*)
+                echo "::error::That is a PUBLISHABLE (read-only) key. The scraper has to write. Copy the sb_secret_... key instead."
+                fail=1 ;;
+              sb_secret_*) echo "Service key format: new-style secret key — OK." ;;
+              eyJ*)
+                payload=$(printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | cut -d. -f2)
+                pad=$(( (4 - ${#payload} % 4) % 4 ))
+                decoded=$(printf '%s%*s' "$payload" $pad "" | tr ' ' '=' | tr '_-' '/+' | base64 -d 2>/dev/null || true)
+                case "$decoded" in
+                  *'"role":"service_role"'*) echo "Service key format: legacy JWT, role=service_role — OK." ;;
+                  *'"role":"anon"'*)
+                    echo "::error::That is the ANON (read-only) key. The scraper has to write. Copy the service_role key instead."
+                    fail=1 ;;
+                  *) echo "::warning::Could not read a role claim from the service key. Continuing — the scraper will report the real error if it cannot write." ;;
+                esac ;;
+              *) echo "::warning::Unrecognised service key format. Continuing anyway." ;;
+            esac
+          fi
+          exit $fail
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        # requirements.txt is pinned on purpose. But a pin that no longer resolves on PyPI
+        # would kill the daily scrape indefinitely for a reason nobody would think to look
+        # for, so an unpinned retry runs rather than leaving the feed silently frozen.
+        run: |
+          python -m pip install --upgrade pip
+          if ! pip install -r requirements.txt; then
+            echo "::warning::Pinned install failed — retrying unpinned. Check requirements.txt: a pinned version probably no longer exists on PyPI."
+            pip install requests supabase python-dotenv tenacity beautifulsoup4
+          fi
+
+      - name: Run scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          # Stamped onto the scrape_runs row so the dashboard can tell a run it asked for
+          # (dispatch) apart from the 6am one (schedule) and an automatic same-day retry
+          # of a failed morning run (catchup).
+          ORBITAL_TRIGGER: ${{ needs.gate.outputs.kind }}
+        run: python scraper.py ${{ inputs.mode == 'diagnose' && '--diagnose' || '' }}
+
+      - name: Upload failure log (if any)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-scrapes-log
+          path: failed_scrapes_log.csv
+          if-no-files-found: ignore
+
+  # AUTO-PREPARE. After a scrape that actually ran, build a tailored résumé + cover letter
+  # for every hot role (first posted ≤7 days ago) at 75%+ match that isn't queued, applied
+  # or dismissed, and file it in the app_queue table. Up to PREP_MAX (10) per run; the rest
+  # carry over. Nothing is submitted anywhere. Needs the ANTHROPIC_API_KEY repo secret and
+  # API credits (~5 cents a role). Skipped quietly when the secret isn't set.
+  prepare:
+    needs: [gate, scrape]
+    if: needs.gate.outputs.run == 'true' && needs.scrape.result == 'success' && inputs.mode != 'diagnose'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the API key is set
+        id: key
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::warning::ANTHROPIC_API_KEY is not set, so auto-prepare is off. Add it under Settings → Secrets and variables → Actions."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.key.outputs.ok == 'true'
+        with:
+          node-version: "20"
+      - name: Install docx
+        if: steps.key.outputs.ok == 'true'
+        working-directory: automation
+        run: npm install --no-audit --no-fund
+      - name: Prepare résumés and cover letters
+        if: steps.key.outputs.ok == 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PREP_MIN_MATCH: "75"
+          PREP_MAX: "10"
+        run: node automation/prepare.mjs

@@ -1,0 +1,30 @@
+{
+  "name": "Orbital CRM · Command Console",
+  "short_name": "Orbital",
+  "description": "Space-industry job intelligence: live scraped roles scored against your résumé, requirement-by-requirement match analysis, company profiles, and application tracking.",
+  "id": "/orbital-crm",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#04060c",
+  "theme_color": "#04060c",
+  "categories": ["productivity", "business"],
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Today's queue", "url": "index.html#view=queue" },
+    { "name": "Jobs", "url": "index.html#view=jobs" },
+    { "name": "Companies", "url": "index.html#view=companies" },
+    { "name": "Setup", "url": "setup.html" }
+  ],
+  "_notes": {
+    "data": "Live roles come from Supabase (table: jobs), written by scraper.py running as a GitHub Action at 6:00 AM America/Chicago.",
+    "runs": "Fully hosted — IONOS serves the static site, GitHub Actions runs the scraper. Nothing runs locally.",
+    "icons": "Generated from orbital-logo.png (planet mark only) by the build; regenerate if the logo changes."
+  }
+}

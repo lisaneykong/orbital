@@ -1,0 +1,62 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Match score: before vs after</title>
+<style>body{margin:0;background:#070b12;color:#dbe6f3;font:13px/1.55 ui-monospace,Menlo,monospace;padding:18px}
+h1{font:700 17px/1.2 system-ui;margin:0 0 4px}.sub{color:#7b8ba3;font-size:12px;margin-bottom:14px;max-width:900px}
+.tiles{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.t{border:1px solid #1e2a3d;border-radius:8px;padding:10px 14px;background:#0c1320;min-width:120px}
+.t b{display:block;font:700 22px/1 ui-monospace}.t span{font-size:11px;color:#7b8ba3}
+h2{font:700 13px/1 system-ui;letter-spacing:.1em;text-transform:uppercase;color:#8fa2bd;margin:18px 0 7px;border-bottom:1px solid #1e2a3d;padding-bottom:6px}
+table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:4px 8px;border-bottom:1px solid #121a27;font-size:12px}
+th{color:#7b8ba3;font-weight:600}.n{text-align:right;font-family:ui-monospace}
+.up{color:#3ddc97}.same{color:#6b7a92}.chars{color:#5b8cff}</style></head><body>
+<h1>Ingest fix &mdash; before vs after</h1>
+<div class="sub">Real postings pulled live. <b>Before</b> scores the title only, which is what Workday and Ashby rows actually stored. <b>After</b> scores title + the real description the fixed extractors now pull. Same scoring function both times &mdash; the tiered one now in scraper.py.</div>
+<div id="tiles" class="tiles"></div><div id="out">Fetching&hellip;</div>
+<script>
+const SKILLS=["systems engineering","requirements development","requirements management","verification and validation","trade study","trade studies","program management","technical program","technical project management","project management","mission integration","mission operations","mission assurance","space operations","spacecraft operations","payload integration","schedule management","integrated master schedule","critical path","risk management","risk mitigation","lifecycle management","configuration management","interface control","concept of operations","conops","design review","integration and test","work breakdown","budget","resource planning","capacity planning","stakeholder management","cross-functional","process automation","root cause analysis","supplier negotiation","regulatory compliance","operational excellence","agile","ms project","jira","python","tableau","power bi","salesforce","proposal","p&l","startup"];
+const CORE=["systems engineering","requirements development","requirements management","verification and validation","trade study","trade studies","technical program","technical project management","program management","mission integration","mission operations","mission assurance","space operations","spacecraft operations","payload integration","schedule management","integrated master schedule","critical path","concept of operations","conops","interface control"];
+// Mirror of scraper.py calculate_resume_alignment() after the tiering fix.
+const score=(title,desc)=>{const tl=(title||'').toLowerCase(),bl=((title||'')+' '+(desc||'')).toLowerCase();
+ let s=30;for(const k of SKILLS){if(!bl.includes(k))continue;let w=CORE.includes(k)?7:3;if(tl.includes(k))w*=2;s+=w;}return Math.min(100,s);};
+const strip=h=>String(h||'').replace(/<[^>]*>/g,' ').replace(/&[a-z]+;/gi,' ').replace(/\s+/g,' ').trim();
+const BOARDS=[
+ {co:'Stoke Space',kind:'greenhouse',tok:'stokespacetechnologies'},
+ {co:'Varda Space',kind:'greenhouse',tok:'vardaspace'},
+ {co:'True Anomaly',kind:'greenhouse',tok:'trueanomalyinc'},
+ {co:'Muon Space',kind:'greenhouse',tok:'muonspace'},
+ {co:'Impulse Space',kind:'ashby',tok:'impulse'},
+ {co:'ICEYE',kind:'ashby',tok:'iceye'},
+ {co:'Outpost',kind:'ashby',tok:'outpost'},
+ {co:'Loft Orbital',kind:'lever',tok:'loftorbital'},
+ {co:'Kepler Comms',kind:'lever',tok:'kepler'}];
+async function pull(b){
+ try{
+  if(b.kind==='greenhouse'){const r=await fetch('https://boards-api.greenhouse.io/v1/boards/'+b.tok+'/jobs?content=true');if(!r.ok)return[];
+   return ((await r.json()).jobs||[]).map(j=>({title:j.title,desc:strip(j.content)}));}
+  if(b.kind==='ashby'){const r=await fetch('https://api.ashbyhq.com/posting-api/job-board/'+b.tok);if(!r.ok)return[];
+   return ((await r.json()).jobs||[]).map(j=>({title:j.title,desc:j.descriptionPlain||strip(j.descriptionHtml)}));}
+  const r=await fetch('https://api.lever.co/v0/postings/'+b.tok+'?mode=json');if(!r.ok)return[];
+  return (await r.json()).map(j=>({title:j.text,desc:j.descriptionPlain||strip(j.description)}));
+ }catch(e){return[]}
+}
+(async()=>{
+ const rows=[];
+ for(const b of BOARDS){
+  const js=await pull(b);
+  for(const j of js.slice(0,14)) rows.push({co:b.co,kind:b.kind,title:j.title||'',before:score(j.title||'',''),after:score(j.title||'',j.desc),chars:(j.desc||'').length});
+ }
+ window.__CMP=rows;
+ const withDesc=rows.filter(r=>r.chars>200);
+ const avgB=Math.round(rows.reduce((a,r)=>a+r.before,0)/(rows.length||1));
+ const avgA=Math.round(rows.reduce((a,r)=>a+r.after,0)/(rows.length||1));
+ const over70=rows.filter(r=>r.after>=70).length, over70b=rows.filter(r=>r.before>=70).length;
+ const avgChars=Math.round(rows.reduce((a,r)=>a+r.chars,0)/(rows.length||1));
+ document.getElementById('tiles').innerHTML=[
+  [rows.length,'postings scored','#dbe6f3'],[withDesc.length,'with real text','#5b8cff'],
+  [avgB+'%','avg before','#ff6b7f'],[avgA+'%','avg after','#3ddc97'],
+  [over70b+' \u2192 '+over70,'clear the 70% floor','#ffc94d'],[avgChars.toLocaleString(),'avg description chars','#8fa2bd']]
+  .map(([v,l,c])=>'<div class="t"><b style="color:'+c+'">'+v+'</b><span>'+l+'</span></div>').join('');
+ rows.sort((a,b)=>(b.after-b.before)-(a.after-a.before));
+ document.getElementById('out').innerHTML='<h2>Biggest movers</h2><table><tr><th>Company</th><th>Role</th><th class="n">Before</th><th class="n">After</th><th class="n">Δ</th><th class="n">Desc chars</th></tr>'+
+  rows.slice(0,26).map(r=>'<tr><td>'+r.co+'</td><td>'+r.title.slice(0,58)+'</td><td class="n">'+r.before+'%</td><td class="n up">'+r.after+'%</td><td class="n '+(r.after>r.before?'up':'same')+'">'+(r.after-r.before>0?'+':'')+(r.after-r.before)+'</td><td class="n chars">'+r.chars.toLocaleString()+'</td></tr>').join('')+'</table>';
+})();
+</script></body></html>

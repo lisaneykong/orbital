@@ -1,0 +1,237 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ORBITAL — cloud scraper probe</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* Tokens copied from index.html's :root so this page and the console stay one product. */
+:root{
+  --bg:#18212f; --panel:#243045; --panelhi:#36465f;
+  --line:#3b4d66; --line2:#51677f; --text:#f6faff; --muted:#b6c5d9; --dim:#8fa0b8;
+  --a:#5b8cff; --a3:#37d6e6; --gold:#f5c560; --good:#37e0a0; --bad:#ff7a7a;
+  --r:14px; --rx:6px;
+  --sh:0 16px 44px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+}
+*{box-sizing:border-box}
+html{font-size:18px}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter Tight','Segoe UI',system-ui,sans-serif;
+  font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;padding:clamp(20px,5vw,52px)}
+h1{font-family:'Space Grotesk',sans-serif;font-weight:600;margin:0 0 10px;letter-spacing:-.01em;
+  font-size:clamp(1.55rem,4vw,2.05rem);line-height:1.15}
+h2{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1rem;margin:34px 0 12px;
+  letter-spacing:-.005em}
+a{color:var(--a3);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--a3);outline-offset:2px;border-radius:var(--rx)}
+.wrap{max-width:980px;margin:0 auto}
+.kicker{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:.64rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--a3);margin-bottom:10px}
+.lede{color:var(--muted);margin:0 0 10px;max-width:66ch;text-wrap:pretty;font-size:.95rem}
+.mono{font-family:'JetBrains Mono',monospace}
+.checks{display:grid;gap:10px;margin-top:22px}
+.row{display:grid;grid-template-columns:22px 1fr auto;gap:12px;align-items:baseline;
+  padding:14px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+.dot{font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.5}
+.ok{color:var(--good)} .no{color:var(--bad)} .warn{color:var(--gold)} .pend{color:var(--dim)}
+.lab{font-weight:600;font-size:.9rem}
+.det{color:var(--muted);font-size:.82rem;text-wrap:pretty;grid-column:2/4}
+.val{font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--dim);white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:.64rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim)}
+td.n{font-family:'JetBrains Mono',monospace;text-align:right;white-space:nowrap}
+tr.dead td{color:var(--bad)}
+.miss{color:var(--dim);font-size:.74rem;font-family:'JetBrains Mono',monospace}
+.verdict{margin-top:26px;padding:20px 22px;border:1px solid var(--line2);border-left:3px solid var(--gold);
+  border-radius:var(--r);background:var(--panel);box-shadow:var(--sh)}
+.verdict h3{font-family:'Space Grotesk',sans-serif;font-size:1rem;margin:0 0 8px}
+.verdict p{margin:0 0 10px;color:var(--muted);font-size:.88rem;text-wrap:pretty}
+.verdict ol{margin:0;padding-left:20px;color:var(--muted);font-size:.88rem}
+.verdict li{margin-bottom:7px;text-wrap:pretty}
+.verdict b{color:var(--text);font-weight:600}
+code{font-family:'JetBrains Mono',monospace;font-size:.76rem;color:var(--a3)}
+footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:.82rem}
+</style></head><body>
+<div class="wrap">
+  <div class="kicker">Orbital // Command</div>
+  <h1>Cloud scraper probe</h1>
+  <p class="lede">Answers one question: <b>has the GitHub Action ever written to this Supabase project, and if not, how far did it get?</b> Reads the live database with the public anon key — <code>scrape_runs</code>, <code>scrape_progress</code>, and the per-ATS shape of the <code>jobs</code> table — then compares what is in there against every board configured in <code>companies.json</code>.</p>
+  <div id="checks" class="checks"></div>
+  <div id="verdict"></div>
+  <div id="families"></div>
+  <footer>Open this over <b>http://</b> (or on jobs.lisaney.com), not by double-clicking the file — it reads <code>companies.json</code> alongside it. <a href="tools.html">← All diagnostics</a></footer>
+</div>
+<script src="orbital-config.js"></script>
+<script>
+const CFG = window.ORBITAL_CONFIG || {};
+const URL_ = (CFG.url || '').replace(/\/$/, '');
+const KEY  = CFG.anonKey || '';
+const H = { apikey: KEY, Authorization: 'Bearer ' + KEY };
+const checksEl = document.getElementById('checks');
+
+const rows = [];
+function put(id, state, lab, det, val) {
+  let r = rows.find(x => x.id === id);
+  if (!r) { r = { id }; rows.push(r); }
+  Object.assign(r, { state, lab, det, val });
+  checksEl.innerHTML = rows.map(r => `<div class="row">
+    <span class="dot ${r.state}">${({ok:'✓',no:'✕',warn:'!',pend:'·'})[r.state]}</span>
+    <span class="lab">${r.lab}</span>
+    <span class="val">${r.val || ''}</span>
+    ${r.det ? `<span class="det">${r.det}</span>` : ''}</div>`).join('');
+}
+
+async function once(path) {
+  const res = await fetch(`${URL_}/rest/v1/${path}`, { headers: { ...H, Prefer: 'count=exact' } });
+  const text = await res.text();
+  let body = null; try { body = JSON.parse(text); } catch (e) {}
+  const cr = res.headers.get('content-range') || '';
+  const count = cr.includes('/') ? parseInt(cr.split('/')[1], 10) : (Array.isArray(body) ? body.length : null);
+  return { ok: res.ok, code: res.status, body, count, raw: text.slice(0, 300) };
+}
+// One retry with a short backoff. A cold Supabase edge can drop the FIRST request of a
+// page load at the network layer, and a code-0 "Failed to fetch" reported as-is looks
+// identical to an unreadable table — which sends the verdict to the wrong fix.
+async function probe(path) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try { return await once(path); }
+    catch (e) {
+      if (attempt) return { ok: false, code: 0, body: null, count: null, raw: String(e.message || e) };
+      await new Promise(r => setTimeout(r, 450));
+    }
+  }
+}
+const missingTable = r => r.code === 404 || /PGRST20[0-9]/.test(r.raw);
+const fmt = t => t ? new Date(t).toISOString().replace('T', ' ').slice(0, 16) + 'Z' : '—';
+const ago = t => { if (!t) return ''; const h = (Date.now() - new Date(t)) / 36e5;
+  return h < 48 ? `${h.toFixed(1)}h ago` : `${Math.round(h / 24)}d ago`; };
+
+(async function run() {
+  put('cfg', 'pend', 'Supabase config', '', '');
+  if (!URL_ || !KEY) {
+    put('cfg', 'no', 'Supabase config missing', 'orbital-config.js has no url/anonKey, so this page cannot read anything. Fill both in and redeploy.', '');
+    return;
+  }
+  put('cfg', 'ok', 'Supabase config', '', URL_.replace('https://', ''));
+
+  put('runs', 'pend', 'scrape_runs', 'Reading…', '');
+  put('prog', 'pend', 'scrape_progress', '', '');
+  put('jobs', 'pend', 'jobs table', '', '');
+
+  const runs = await probe('scrape_runs?select=*&order=started_at.desc&limit=20');
+  let runState;
+  if (missingTable(runs)) {
+    runState = 'missing';
+    put('runs', 'no', 'scrape_runs does not exist', 'The table was never created in this project, so the scraper writes its run header into nothing and the catch-up gate skips every afternoon slot. Run the scrape_runs / scrape_progress section of SUPABASE-SCHEMA.sql.', `HTTP ${runs.code}`);
+  } else if (!runs.ok) {
+    runState = 'error';
+    put('runs', 'warn', 'scrape_runs unreadable', `HTTP ${runs.code} — ${runs.raw}`, `HTTP ${runs.code}`);
+  } else if (!runs.count) {
+    runState = 'empty';
+    put('runs', 'no', 'scrape_runs is empty', 'The table exists but holds zero rows. The Action has never reached its first write against this project — it either never executed, or it died before the scrape step (missing secrets, checkout, pip install).', '0 rows');
+  } else {
+    const L = runs.body[0];
+    const done = runs.body.filter(r => r.status === 'done').length;
+    runState = 'rows';
+    put('runs', L.status === 'done' ? 'ok' : 'warn', `scrape_runs: ${runs.count} run${runs.count === 1 ? '' : 's'}`,
+      `Latest: <b>${L.status}</b> · trigger ${L.trigger || '—'} · ${L.boards_done || 0}/${L.boards_total || 0} boards · ${L.rows_upserted || 0} rows upserted · started ${fmt(L.started_at)} (${ago(L.started_at)})${L.note ? `<br>note: <code>${String(L.note).slice(0, 300)}</code>` : ''}`,
+      `${done} done`);
+    const rl = runs.body.map(r => `<tr class="${r.status === 'done' ? '' : 'dead'}"><td class="mono">${(r.run_id || '').slice(0, 28)}</td><td>${r.status}</td><td>${r.trigger || '—'}</td><td class="n">${r.boards_done || 0}/${r.boards_total || 0}</td><td class="n">${r.rows_upserted || 0}</td><td class="mono">${fmt(r.started_at)}</td><td>${r.note ? String(r.note).slice(0, 120) : ''}</td></tr>`).join('');
+    document.getElementById('families').insertAdjacentHTML('beforeend',
+      `<h2>Run history</h2><table><thead><tr><th>run_id</th><th>status</th><th>trigger</th><th>boards</th><th>rows</th><th>started</th><th>note</th></tr></thead><tbody>${rl}</tbody></table>`);
+  }
+
+  const prog = await probe('scrape_progress?select=*&order=updated_at.desc&limit=40');
+  if (missingTable(prog)) put('prog', 'no', 'scrape_progress does not exist', 'Same SQL section creates it. Without it the Refresh roles button cannot show per-ATS progress.', `HTTP ${prog.code}`);
+  else if (!prog.ok) put('prog', 'warn', 'scrape_progress unreadable', `HTTP ${prog.code}`, `HTTP ${prog.code}`);
+  else if (!prog.count) put('prog', 'warn', 'scrape_progress is empty', 'Table exists, no per-ATS rows yet — consistent with a scrape that never started.', '0 rows');
+  else {
+    const byRun = prog.body[0].run_id;
+    const mine = prog.body.filter(p => p.run_id === byRun);
+    put('prog', 'ok', `scrape_progress: ${prog.count} rows`,
+      mine.map(p => `${p.source} ${p.status} ${p.boards_done}/${p.boards_total} (${p.rows} rows)`).join(' · '), byRun.slice(0, 24));
+  }
+
+  // Everything in jobs, minus the heavy text columns.
+  const jobs = await probe('jobs?select=company,source,created_at,timestamp,is_intern&limit=20000');
+  if (!jobs.ok) { put('jobs', 'no', 'jobs table unreadable', `HTTP ${jobs.code} — ${jobs.raw}`, `HTTP ${jobs.code}`); return; }
+  const J = jobs.body || [];
+  const newest = J.reduce((m, r) => (r.created_at > m ? r.created_at : m), '');
+  const haveCo = new Set(J.map(r => (r.company || '').trim().toLowerCase()));
+  const bySrc = {};
+  J.forEach(r => { const s = (r.source || 'unknown').toLowerCase(); bySrc[s] = (bySrc[s] || 0) + 1; });
+  put('jobs', J.length ? 'ok' : 'no', `jobs: ${jobs.count} rows`,
+    `${haveCo.size} distinct companies · newest row written ${fmt(newest)} (${ago(newest)})<br>by source: ${Object.entries(bySrc).sort((a, b) => b[1] - a[1]).map(([s, n]) => `${s} ${n}`).join(' · ') || 'none'}`,
+    `${haveCo.size} cos`);
+
+  // companies.json: expected boards per ATS family.
+  let cj = null;
+  try { cj = await (await fetch('companies.json', { cache: 'no-store' })).json(); } catch (e) {}
+  if (!cj) { put('cos', 'warn', 'companies.json not readable', 'Open this page over http://, not file://.', ''); return; }
+
+  // companies.json holds two bucket shapes: greenhouse is an object of token -> name or
+  // token -> {company,...}, every other ATS family is an array of {company,...}. Reading
+  // only the object shape would silently drop ~160 of the ~192 configured boards, workday
+  // included — which is the one family this page exists to check.
+  const nameOf = v => (typeof v === 'string' ? v : (v && (v.company || v.name)) || null);
+  const fams = [];
+  Object.entries(cj).forEach(([fam, bucket]) => {
+    if (fam.startsWith('_') || fam === 'needs_route' || !bucket || typeof bucket !== 'object') return;
+    const names = (Array.isArray(bucket) ? bucket : Object.values(bucket)).map(nameOf).filter(Boolean);
+    if (!names.length) return;
+    const have = names.filter(n => haveCo.has(n.trim().toLowerCase()));
+    const missing = names.filter(n => !haveCo.has(n.trim().toLowerCase()));
+    fams.push({ fam, total: names.length, have: have.length, missing, rows: bySrc[fam.toLowerCase()] || 0 });
+  });
+  // Rank by the honest signal: rows actually in the jobs table, THEN name coverage.
+  fams.sort((a, b) => (a.rows === 0 ? 0 : 1) - (b.rows === 0 ? 0 : 1)
+    || (a.have / a.total) - (b.have / b.total) || b.total - a.total);
+
+  const configured = fams.reduce((n, f) => n + f.total, 0);
+  const covered = fams.reduce((n, f) => n + f.have, 0);
+  const co = n => `${n} compan${n === 1 ? 'y' : 'ies'}`;
+  // Dead by EITHER measure. A family can show a company or two under "with rows" purely
+  // because that company is also configured in another bucket and got its rows from there
+  // — workday reads have:2 / rows:0 exactly that way. Rows in the jobs table is what says
+  // whether this family was ever actually fetched.
+  const dead = fams.filter(f => f.rows === 0 || f.have === 0);
+  put('cos', dead.length ? 'no' : 'ok', `Board coverage: ${covered} of ${configured} configured companies have rows`,
+    dead.length ? `<b>${dead.length} ATS famil${dead.length === 1 ? 'y' : 'ies'} contributing zero rows:</b> ${dead.map(f => `${f.fam} (${co(f.total)})`).join(', ')}. A family absent from the <code>source</code> breakdown was never fetched at all — that is the cloud scraper's job, not the browser's.` : 'Every configured ATS family has rows in the jobs table.',
+    `${Math.round(100 * covered / configured)}%`);
+
+  const unrouted = Array.isArray(cj.needs_route) ? cj.needs_route.length : 0;
+  if (unrouted) put('route', 'warn', `${unrouted} companies have no board configured`,
+    'These are in <code>needs_route</code> — no ATS token was ever found for them, so no scraper can reach them. Separate problem from a family that has tokens but no rows; <a href="heal-probe.html">the route finder</a> is the page for it.', `${unrouted} unrouted`);
+
+  document.getElementById('families').insertAdjacentHTML('beforeend',
+    `<h2>Per-ATS coverage</h2><table><thead><tr><th>ATS family</th><th>configured</th><th>with rows</th><th>rows in jobs</th><th>missing companies</th></tr></thead><tbody>` +
+    fams.map(f => `<tr class="${f.rows === 0 || f.have === 0 ? 'dead' : ''}"><td class="mono">${f.fam}</td><td class="n">${f.total}</td><td class="n">${f.have}</td><td class="n">${f.rows}</td><td class="miss">${f.missing.slice(0, 10).join(', ')}${f.missing.length > 10 ? ` +${f.missing.length - 10} more` : ''}</td></tr>`).join('') +
+    `</tbody></table>`);
+
+  // ---- Verdict: name the single next action, not a list of possibilities.
+  let head, body;
+  if (runState === 'missing') {
+    head = 'The telemetry tables were never created.';
+    body = `<p>The Action may well be running fine and upserting jobs — but with <code>scrape_runs</code> absent it cannot record a run, and the afternoon catch-up slots deliberately skip rather than scrape four times a day blind.</p><ol><li>Supabase → SQL Editor → run the <b>LIVE SCRAPE PROGRESS</b> section of <code>SUPABASE-SCHEMA.sql</code>.</li><li>Actions → <b>Orbital daily scrape</b> → Run workflow → mode <code>diagnose</code>.</li><li>Reload this page: a run row should appear.</li></ol>`;
+  } else if (runState === 'empty' && dead.length) {
+    head = 'The cloud scraper has never written to this project.';
+    body = `<p><code>scrape_runs</code> exists and is empty, and ${dead.length} ATS famil${dead.length === 1 ? 'y is' : 'ies are'} entirely absent from <code>jobs</code> while the browser-reachable ones are populated. Every row in the database came from the in-browser First Pass. The Python scraper never reached its first write.</p><ol><li>GitHub → <b>Actions</b> → <b>Orbital daily scrape</b>. If there are <b>no runs listed</b>, the schedule is not active — open the workflow and press <b>Enable workflow</b> (GitHub suspends cron in repos with 60 days of no commits), then Run workflow.</li><li>If runs are listed and red, open the newest and read the <b>first</b> red step. <code>Check the two secrets are actually set</code> failing means <code>SUPABASE_URL</code> / <code>SUPABASE_SERVICE_ROLE_KEY</code> are missing or you pasted the anon key — Settings → Secrets and variables → Actions.</li><li>Delete the stray <code>scrape.yml</code> at the repo <b>root</b>. It is an old 772-byte copy, GitHub never runs it, and it makes the Actions list ambiguous.</li><li>Re-run with mode <code>diagnose</code> — it reports per-ATS reachability and Supabase write health in about a minute.</li></ol>`;
+  } else if (runState === 'empty') {
+    head = 'No run has ever been recorded.';
+    body = `<p><code>scrape_runs</code> is empty, so the Action has not written here — check Actions → <b>Orbital daily scrape</b> for whether it is enabled, and read the first red step of the newest run.</p>`;
+  } else if (runState === 'rows' && dead.length) {
+    head = 'Runs are recorded, but whole ATS families are still empty.';
+    body = `<p>The Action reaches Supabase — so secrets and schema are fine. What is failing is per-board: ${dead.map(f => f.fam).join(', ')} contributed no rows to <code>jobs</code>. Download the <b>failed-scrapes-log</b> artifact from the newest run, or re-run with mode <code>diagnose</code>, and check those tenants in <code>companies.json</code>.</p>`;
+  } else if (runState === 'rows') {
+    head = 'Pipeline healthy.';
+    body = `<p>Runs are recorded and every configured ATS family has rows. Newest job row written ${ago(newest)}.</p>`;
+  } else {
+    head = 'Could not read the telemetry tables.';
+    body = `<p>The <code>scrape_runs</code> read failed outright, which is usually a paused Supabase project or a rotated anon key. Check the project is awake, then reload.</p>`;
+  }
+  document.getElementById('verdict').innerHTML = `<div class="verdict"><h3>${head}</h3>${body}</div>`;
+})();
+</script>
+</body></html>
