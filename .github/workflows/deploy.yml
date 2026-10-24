@@ -105,17 +105,24 @@ jobs:
           probe . || true
 
           TARGET=""
-          for c in "$RP" / /jobs /htdocs /html; do
-            [ -z "$c" ] && continue
-            echo "== candidate $c =="
-            OUT="$(probe "$c" || true)"
-            echo "$OUT"
-            case "$OUT" in *index.html*) TARGET="$c"; break;; esac
-          done
-
+          if [ -n "$RP" ]; then
+            # An explicit folder always wins, and is created if it does not exist yet, so the
+            # very first publish into an empty web space works.
+            TARGET="$RP"
+            printf -- '-mkdir %s\nbye\n' "$RP" > /tmp/mk.sftp; sf /tmp/mk.sftp || true
+          else
+            for c in / /jobs /htdocs /html; do
+              echo "== candidate $c =="
+              OUT="$(probe "$c" || true)"
+              echo "$OUT"
+              case "$OUT" in *index.html*) TARGET="$c"; break;; esac
+            done
+          fi
           if [ -z "$TARGET" ]; then
-            echo "::error::Could not find a folder holding index.html on the server. Read the listings above, then set IONOS_REMOTE_PATH to the folder that serves jobs.lisaney.com."
-            exit 1
+            # Nothing published yet anywhere: IONOS jails each SFTP user to the folder its
+            # domain serves, so the login folder is the right place on a first install.
+            TARGET="."
+            echo "::warning::No existing index.html found, so publishing into the SFTP login folder. If the site does not update, set IONOS_REMOTE_PATH to the folder jobs.lisaney.com points at (IONOS -> Domains & SSL -> your subdomain -> Directory)."
           fi
           echo "Publishing into: $TARGET   (user $U)"
 
@@ -137,8 +144,10 @@ jobs:
       # The transfer above reports success as soon as the bytes are written. Only the live
       # URL proves a publish happened, so ask the website itself.
       - name: Verify the live site is serving this commit
+        env:
+          SITE_URL: ${{ vars.SITE_URL || 'https://jobs.lisaney.com' }}
         run: |
-          URL="https://jobs.lisaney.com/build.txt?cb=${GITHUB_RUN_ID}"
+          URL="${SITE_URL%/}/build.txt?cb=${GITHUB_RUN_ID}"
           for i in 1 2 3 4 5 6; do
             BODY="$(curl -fsS --max-time 20 -H 'Cache-Control: no-cache' "$URL" || true)"
             echo "attempt $i: ${BODY:-<no response>}"
@@ -149,5 +158,5 @@ jobs:
             esac
             sleep 10
           done
-          echo "::error::Bytes uploaded, but https://jobs.lisaney.com/build.txt is not serving ${GITHUB_SHA}. Read the folder listings in the upload step: the directory that received build.txt is not the one jobs.lisaney.com serves. Set IONOS_REMOTE_PATH to the correct folder."
+          echo "::error::Bytes uploaded, but ${SITE_URL%/}/build.txt is not serving ${GITHUB_SHA}. The folder that received the files is not the one the site serves. In IONOS, open Domains & SSL, click the subdomain, read its Directory, and set the repo secret IONOS_REMOTE_PATH to that folder (for example /jobs)."
           exit 1

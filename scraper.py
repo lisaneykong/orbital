@@ -908,6 +908,13 @@ def parse_posted_date(raw):
     return None
 
 
+# A bare "Fellow" is a senior title ("Technical Fellow"); only fellowships are programs.
+INTERN_TITLE_RE = re.compile(
+    r"\b(intern|interns?hip|co-?op|fellowship|fellows? program|"
+    r"(?:summer|graduate|student|undergraduate|postdoctoral|postdoc) fellow|"
+    r"summer analyst|student\s+(?:program|worker|employee)|trainee|apprentice|practicum)\b", re.I)
+
+
 def build_row(company, ats_id, title, location, url, source, description="", posted=None):
     title = (title or "").strip()
     if not title or not url:
@@ -916,7 +923,7 @@ def build_row(company, ats_id, title, location, url, source, description="", pos
     if not hub:
         return None
     score = calculate_resume_alignment(title, description)
-    is_intern = bool(re.search(r"\b(intern|interns?hip|co-?op|fellow(?:ship)?|summer analyst|student\s+(?:program|worker|employee)|trainee|apprentice|practicum)\b", title, re.I))
+    is_intern = bool(INTERN_TITLE_RE.search(title))
     if not space_qualifies(title, score, is_intern, hub):
         return None
     intern_rate, intern_weeks = extract_intern_pay(title, description, is_intern)
@@ -966,6 +973,9 @@ def build_row(company, ats_id, title, location, url, source, description="", pos
         "description": clean_text(description)[:12000],
         "requirements": "",
         "timestamp": posted_iso,
+        # When this run last saw the role on its board. The app hides roles a company's
+        # latest scrape no longer returns, i.e. postings that have closed.
+        "last_seen": datetime.now(timezone.utc).isoformat(),
         "itar_flag": sig["itar_flag"],
         "clearance_level": sig["clearance_level"],
         "degree_levels": sig["degree_levels"],
@@ -1021,42 +1031,55 @@ def scrape_lever(token, company):
     return rows
 
 
-def _workday_description(base, tenant, board, ext):
-    """Workday's job LIST endpoint carries NO description — only the per-job detail endpoint
-    does. Until this existed the pipeline stored the job TITLE as the description, which
-    starved every downstream consumer: resume alignment, vertical classification, ITAR and
-    clearance parsing, intern pay extraction and deadline parsing all read that field.
-    Called only for postings whose location already resolved to a target hub, so this costs
-    one request per KEPT row rather than one per posting."""
+def _workday_detail(base, tenant, board, ext):
+    """Workday's job LIST endpoint carries no description, and for a multi-site role only
+    "2 Locations". The per-job detail endpoint has both. Without it the pipeline stored the
+    title as the description (starving scoring, ITAR, clearance and pay parsing) and dropped
+    every multi-site role at the hub gate."""
     if not ext:
-        return ""
+        return {}
     try:
         r = request("GET", f"{base}/wday/cxs/{tenant}/{board}{ext}",
                     headers={"Accept": "application/json"})
-        if r.status_code != 200:
-            return ""
-        info = (r.json() or {}).get("jobPostingInfo") or {}
-        return (info.get("jobDescription")
-                or info.get("jobDescriptionSummary")
-                or info.get("jobRequisitionDescription") or "")
+        return ((r.json() or {}).get("jobPostingInfo") or {}) if r.status_code == 200 else {}
     except Exception:
-        return ""
+        return {}
+
+
+def _title_worth_detail(title, hub, big_board):
+    """Title-only version of space_qualifies(), run before paying for a detail request.
+    Excluded engineering titles never qualify. On a very large board only titles that
+    qualify on their own are fetched, which keeps a 4,000-posting prime inside the run."""
+    if INTERN_TITLE_RE.search(title or ""):
+        return True
+    if TITLE_EXCLUDE.search(title or "") and not MANAGER_OVERRIDE.search(title or ""):
+        return hub == "NEW_ZEALAND"
+    return bool(TITLE_INCLUDE.search(title or "")) or not big_board
 
 
 _WD_CACHE = {}
+# Postings read per Workday board. The primes list 2,000 to 5,000; the old cap of 400
+# meant most of their list was never looked at.
+WORKDAY_MAX_POSTINGS = 2000
 
 
 def _wd_server_variants(server):
-    return _dedupe([server, "wd1", "wd5", "wd3", "wd103", "wd12", "wd2", "wd101"])
+    return _dedupe([server, "wd1", "wd5", "wd3", "wd12", "wd103", "wd2", "wd101",
+                    "wd501", "wd503", "wd10", "wd108"])
 
 
 def _wd_board_variants(company, tenant, board):
-    """Board tokens Workday tenants actually use, derived from the company name."""
+    """Board tokens Workday tenants actually use, derived from the company and tenant."""
     camel = re.sub(r"[^A-Za-z0-9]", "", (company or "").title())
+    snake = re.sub(r"[^A-Za-z0-9]+", "_", (company or "").strip()).strip("_")
+    t = tenant or ""
     return _dedupe([b for b in [
-        board, camel, f"{camel}Careers", f"{camel}_Careers", f"{camel}External",
+        board, camel, f"{camel}Careers", f"{camel}_Careers", f"{camel}External", f"{camel}_External",
+        f"{snake}_External_Career_Site", f"{snake}_External_Site", f"{camel}_External_Career_Site",
         "Careers", "careers", "External", "External_Career_Site", "ExternalCareerSite",
-        tenant, (tenant or "").capitalize(),
+        "External_Careers", "EXTERNAL_CAREERS", "ExternalCareers", "Search", "jobs",
+        t, t.capitalize(), t.upper(), f"{t}_careers", f"{t.capitalize()}_Careers", f"{t.upper()}_Careers",
+        f"{t.upper()}_External_Career_Site", f"{t.capitalize()}_External_Career_Site",
     ] if b])
 
 
@@ -1068,9 +1091,11 @@ def resolve_workday(company, tenant, server, board):
     resolved their tokens this way; Workday, the one family sitting at zero rows in the
     database, was the one that did not.
 
-    Two passes so a wrong board costs ~18 requests, not ~80: find the subdomain that
-    answers at all (a bad host errors at the socket; a bad board answers 404), then try
-    board variants against that host only."""
+    Two passes: find the data center that hosts the tenant, then try board variants there.
+    Every Workday host answers, so "it answered" proves nothing: Workday returns 404 when
+    the tenant lives on that host but the board name is wrong, and 422 when the tenant is
+    not on that host or does not exist. Treating any answer as the right host is what kept
+    31 of 39 boards at zero."""
     key = (tenant, server, board)
     if key in _WD_CACHE:
         hit = _WD_CACHE[key]
@@ -1088,36 +1113,38 @@ def resolve_workday(company, tenant, server, board):
         except Exception:
             return None
 
-    live_host = None
+    tenant_hosts = []
     for srv in _wd_server_variants(server):
         host = f"https://{tenant}.{srv}.myworkdayjobs.com"
         rr = probe(host, board)
         if rr is None:
             continue
         if rr.status_code == 200 and "jobPostings" in rr.text:
+            if srv != server:
+                print(f"   ~~ workday {company}: data center is {srv}, not {server} (fix companies.json)")
             _WD_CACHE[key] = (host, board)
             return host, board
         if rr.status_code == 429:
             time.sleep(2)
-        # It answered, so the tenant is hosted here — the board name is what is wrong.
-        if live_host is None:
-            live_host = host
+        if rr.status_code == 404:
+            tenant_hosts.append((srv, host))
 
-    if live_host:
+    for srv, host in tenant_hosts:
         for bd in _wd_board_variants(company, tenant, board):
             if bd == board:
                 continue
-            rr = probe(live_host, bd)
+            rr = probe(host, bd)
             if rr is not None and rr.status_code == 200 and "jobPostings" in rr.text:
-                print(f"   ~~ workday {company}: board '{board}' is wrong -> using '{bd}' "
+                print(f"   ~~ workday {company}: board is {srv}/{bd}, not {server}/{board} "
                       f"(fix companies.json)")
-                _WD_CACHE[key] = (live_host, bd)
-                return live_host, bd
+                _WD_CACHE[key] = (host, bd)
+                return host, bd
 
     _WD_CACHE[key] = None
-    detail = (f"host {live_host} answers but no board variant matched"
-              if live_host else "no data-center subdomain answered")
-    raise RetryableHTTP(f"workday: no live board for {company} ({tenant}) — {detail}")
+    detail = (f"tenant '{tenant}' is on {', '.join(s for s, _ in tenant_hosts)} but no board name matched"
+              if tenant_hosts else
+              f"tenant '{tenant}' is on no Workday data center (wrong tenant, or the company is not on Workday)")
+    raise RetryableHTTP(f"workday: no live board for {company} — {detail}")
 
 
 def scrape_workday(cfg):
@@ -1135,6 +1162,9 @@ def scrape_workday(cfg):
         payload = {"limit": 20, "offset": offset, "appliedFacets": {}}
         r = request("POST", cxs, headers=headers, data=json.dumps(payload))
         if r.status_code != 200:
+            if rows:
+                print(f"   .. workday {company}: page at {offset} -> HTTP {r.status_code}; keeping {len(rows)} role(s)")
+                break
             raise RetryableHTTP(f"workday {tenant} -> {r.status_code}")
         data = r.json()
         if total is None:
@@ -1142,26 +1172,38 @@ def scrape_workday(cfg):
         postings = data.get("jobPostings", [])
         if not postings:
             break
+        big_board = (total or 0) > 400
         for p in postings:
             ext = p.get("externalPath", "") or ""
-            loc = p.get("locationsText", "")
-            # Cheap local gate BEFORE paying for a detail request: most postings sit
-            # outside the target hubs and build_row would drop them anyway.
-            if not determine_location_hub(loc):
+            loc = (p.get("locationsText") or "").strip()
+            title = p.get("title") or ""
+            multi_site = bool(re.match(r"^\d+\s+locations?$", loc, re.I))
+            hub = None if multi_site else determine_location_hub(loc)
+            # Cheap gates BEFORE paying for a detail request: most postings sit outside
+            # the target hubs or are titles that can never qualify.
+            if not multi_site and not hub:
                 continue
+            if not _title_worth_detail(title, hub, big_board):
+                continue
+            info = _workday_detail(base, tenant, board, ext)
+            if multi_site:
+                loc = "; ".join(x for x in [info.get("location")] + list(info.get("additionalLocations") or []) if x)
+                if not determine_location_hub(loc):
+                    continue
             m = re.search(r"_(R[-\d]+)\b", ext) or re.search(r"_(\w+\d+)$", ext)
             jid = m.group(1) if m else hashlib.md5(ext.encode()).hexdigest()[:8]
             url = f"{base}/en-US/{board}{ext}"
-            desc = _workday_description(base, tenant, board, ext)
-            row = build_row(company, jid, p.get("title"), loc, url, "workday",
-                            desc, posted=p.get("postedOn") or p.get("startDate"))
+            desc = (info.get("jobDescription") or info.get("jobDescriptionSummary")
+                    or info.get("jobRequisitionDescription") or "")
+            row = build_row(company, jid, title, loc, url, "workday",
+                            desc, posted=p.get("postedOn") or info.get("startDate"))
             if row:
                 rows.append(row)
-            time.sleep(0.25 + random.random() * 0.25)
+            time.sleep(0.15 + random.random() * 0.15)
         offset += 20
-        if offset >= (total or 0) or offset >= 400:
+        if offset >= (total or 0) or offset >= WORKDAY_MAX_POSTINGS:
             break
-        time.sleep(0.5 + random.random())
+        time.sleep(0.3 + random.random() * 0.3)
     return rows
 
 
@@ -1255,6 +1297,17 @@ def scrape_amazon(cfg):
     return rows
 
 
+# Site navigation, not postings. New Zealand roles skip the score test, so on a careers
+# page every one of these links used to become a "role".
+_NAV_LINK_TEXT_RE = re.compile(
+    r"^(?:careers?|jobs?|vacancies|current (?:openings|vacancies|roles)|open (?:roles|positions)|"
+    r"join (?:us|our team|the team)|work (?:with|for) us|apply(?: now| here| today)?|"
+    r"view (?:all )?(?:jobs|roles|openings|positions|vacancies)|see (?:all )?(?:jobs|roles|openings)|"
+    r"(?:learn|read|find out) more|life at .{1,40}|our (?:team|people|culture|values)|about(?: us)?|"
+    r"home|contact(?: us)?|news|blog|privacy(?: policy)?|terms.*|cookies?.*|log ?in|sign ?(?:in|up))$",
+    re.I)
+
+
 def scrape_custom(cfg):
     company, url = cfg["company"], cfg.get("url", "")
     region_hint = cfg.get("region", "New Zealand")   # explicit per-entry, not hardcoded
@@ -1273,13 +1326,15 @@ def scrape_custom(cfg):
     sel = cfg.get("selector", "a")
     for a in soup.select(sel):
         href = a.get("href") or ""
-        title = a.get_text(strip=True)
-        if not href or not title or len(title) < 4:
+        title = a.get_text(" ", strip=True)
+        if not href or not title or len(title) < 4 or _NAV_LINK_TEXT_RE.match(title):
+            continue
+        if title.lower() == company.lower():
             continue
         if not re.search(r"job|career|position|opening|role|apply", href, re.I):
             continue
-        full = urllib.parse.urljoin(url, href)
-        if full in seen:
+        full = urllib.parse.urljoin(url, href).split("#")[0]
+        if full in seen or full.rstrip("/") == url.split("#")[0].rstrip("/"):
             continue
         seen.add(full)
         jid = hashlib.md5(full.encode()).hexdigest()[:8]
@@ -1646,6 +1701,34 @@ def build_tasks():
     return tasks
 
 
+def _keep_earliest_posting_dates(payload):
+    """A board's relative dates drift: Workday says "Posted 30+ Days Ago" every morning for
+    a role that is months old, which read as exactly 30 days and kept it on the board for
+    good. A dated role keeps the earliest posting date already stored for it. Undated rows
+    are left undated, so an old stored guess is never carried forward."""
+    known, start, page = {}, 0, 1000
+    try:
+        while True:
+            res = supabase.table(TABLE).select("id,timestamp").range(start, start + page - 1).execute()
+            data = res.data or []
+            known.update({r["id"]: r["timestamp"] for r in data if r.get("timestamp")})
+            if len(data) < page:
+                break
+            start += page
+    except Exception as exc:
+        print(f"   .. stored posting dates not read ({str(exc)[:90]}) — using today's board dates only")
+        return
+    now, kept = datetime.utcnow(), 0
+    for row in payload:
+        prev, cur = parse_posted_date(known.get(row["id"])), parse_posted_date(row.get("timestamp"))
+        if prev and cur and prev < cur:
+            row["timestamp"] = prev.isoformat()
+            row["posting_age"] = max(0, (now - prev).days)
+            kept += 1
+    if kept:
+        print(f"   .. kept the earlier stored posting date on {kept} role(s)")
+
+
 def execute_scrub():
     print(f"\n>>> Orbital multi-ATS scrub  ({datetime.now():%Y-%m-%d %H:%M})")
     tasks = build_tasks()
@@ -1680,32 +1763,35 @@ def execute_scrub():
     payload = list(dedup.values())
 
     # Smart cross-source de-dup: the SAME role posted to two different ATSes gets two
-    # different ids, so the id-based pass above misses it. Merge anything that shares a
-    # normalized (company, title, location_hub) fingerprint, keeping the richer/newer row.
+    # different ids, so the id-based pass above misses it. Merge rows that share a
+    # normalized (company, title, location_hub, internship) fingerprint ACROSS sources only:
+    # two ids on one board are two real openings, which used to be collapsed into one.
     def _fingerprint(r):
         norm_title = re.sub(r"[^a-z0-9]+", " ", (r.get("title") or "").lower()).strip()
         norm_title = re.sub(r"\b(20\d{2}|summer|fall|spring|winter|intern(ship)?|co-?op)\b", "", norm_title).strip()
-        return (r.get("company", "").lower(), norm_title, r.get("location_hub", ""))
+        return (r.get("company", "").lower(), norm_title, r.get("location_hub", ""), bool(r.get("is_intern")))
 
-    by_fp = {}
+    groups, merged_count = {}, 0
     for row in payload:
-        fp = _fingerprint(row)
-        prev = by_fp.get(fp)
-        if prev is None:
-            by_fp[fp] = row
-        else:
-            # keep whichever has a longer description (more complete) / more recent timestamp
-            keep_new = len(row.get("description") or "") > len(prev.get("description") or "")
-            kept, other = (row, prev) if keep_new else (prev, row)
-            # The same role on two boards: its original posting date is the EARLIER one.
-            if other.get("timestamp") and (not kept.get("timestamp") or other["timestamp"] < kept["timestamp"]):
-                kept["timestamp"] = other["timestamp"]
-                kept["posting_age"] = other.get("posting_age")
-            by_fp[fp] = kept
-    merged_count = len(payload) - len(by_fp)
-    payload = list(by_fp.values())
+        group = groups.setdefault(_fingerprint(row), [])
+        i = next((k for k, g in enumerate(group) if g.get("source") != row.get("source")), None)
+        if i is None:
+            group.append(row)
+            continue
+        prev = group[i]
+        # keep whichever has a longer description (more complete)
+        keep_new = len(row.get("description") or "") > len(prev.get("description") or "")
+        kept, other = (row, prev) if keep_new else (prev, row)
+        # The same role on two boards: its original posting date is the EARLIER one.
+        if other.get("timestamp") and (not kept.get("timestamp") or other["timestamp"] < kept["timestamp"]):
+            kept["timestamp"] = other["timestamp"]
+            kept["posting_age"] = other.get("posting_age")
+        group[i] = kept
+        merged_count += 1
+    payload = [r for g in groups.values() for r in g]
     if merged_count:
         print(f"   .. merged {merged_count} cross-source duplicate posting(s)")
+    _keep_earliest_posting_dates(payload)
 
     written, failed_batches = 0, 0
     for i in range(0, len(payload), 100):
@@ -1877,54 +1963,175 @@ def _upsert_with_autoheal(chunk):
     return 0
 
 
+def _get_json(url, method="GET", **kw):
+    r = SESSION.request(method, url, timeout=15, **kw)
+    if r.status_code != 200:
+        raise RuntimeError(f"HTTP {r.status_code}")
+    return r.json()
+
+
+def _diagnose_tasks():
+    """(company, family, probe) for every configured board. A probe makes one or two light
+    requests and returns (postings listed right now, note), or raises with the reason."""
+    tasks = []
+
+    def add(family, company, fn):
+        tasks.append((company, family, fn))
+
+    for token, val in GREENHOUSE.items():
+        name = val.get("company") if isinstance(val, dict) else val
+        def gh(token=token, name=name):
+            real = resolve_gh(name, token)
+            if not real:
+                raise RuntimeError(f"no live board for '{token}' or its variants")
+            return len(_get_json(f"https://boards-api.greenhouse.io/v1/boards/{real}/jobs").get("jobs", [])), real
+        add("greenhouse", name, gh)
+    for c in LEVER:
+        def lv(c=c):
+            real = resolve_lever(c["company"], c["token"])
+            if not real:
+                raise RuntimeError(f"no live board for '{c['token']}' or its variants")
+            return len(_get_json(f"https://api.lever.co/v0/postings/{real}?mode=json")), real
+        add("lever", c["company"], lv)
+    for c in WORKDAY:
+        def wd(c=c):
+            host, board = resolve_workday(c["company"], c["tenant"], c["server"], c["board"])
+            data = _get_json(f"{host}/wday/cxs/{c['tenant']}/{board}/jobs", "POST",
+                             headers={"Content-Type": "application/json", "Accept": "application/json"},
+                             data=json.dumps({"limit": 1, "offset": 0, "appliedFacets": {}}))
+            note = f"{host.split('//')[1]} board {board}"
+            if board != c["board"]:
+                note += f" — companies.json says '{c['board']}', change it"
+            if c.get("unverified"):
+                note += " — token was a guess, now confirmed"
+            return int(data.get("total") or 0), note
+        add("workday", c["company"], wd)
+
+    simple = {
+        "ashby": (ASHBY, lambda c: f"https://api.ashbyhq.com/posting-api/job-board/{c['token']}",
+                  lambda d: len(d.get("jobs") or [])),
+        "amazon": (AMAZON, lambda c: "https://www.amazon.jobs/en/search.json?result_limit=1&base_query="
+                   + urllib.parse.quote(c["query"]), lambda d: int(d.get("hits") or 0)),
+        "bamboohr": (BAMBOOHR, lambda c: f"https://{c['token']}.bamboohr.com/careers/list",
+                     lambda d: len(d.get("result") or [])),
+        "workable": (WORKABLE, lambda c: f"https://apply.workable.com/api/v1/widget/accounts/{c['token']}",
+                     lambda d: len(d.get("jobs") or [])),
+        "smartrecruiters": (SMARTRECRUITERS, lambda c: f"https://api.smartrecruiters.com/v1/companies/{c['token']}/postings?limit=1",
+                            lambda d: int(d.get("totalFound") or len(d.get("content") or []))),
+        "recruitee": (RECRUITEE, lambda c: f"https://{c['token']}.recruitee.com/api/offers/",
+                      lambda d: len(d.get("offers") or [])),
+        "breezy": (BREEZY, lambda c: f"https://{c['token']}.breezy.hr/json",
+                   lambda d: len(d) if isinstance(d, list) else 0),
+        "rippling": (RIPPLING, lambda c: f"https://api.rippling.com/platform/api/ats/v1/board/{c['token']}/jobs",
+                     lambda d: len(d) if isinstance(d, list) else 0),
+        "pinpoint": (PINPOINT, lambda c: f"https://{c['token']}.pinpointhq.com/postings.json",
+                     lambda d: len(d.get("data") or [])),
+        "manatal": (MANATAL, lambda c: f"https://api.manatal.com/open/v3/career-page/{c['token']}/jobs/",
+                    lambda d: int(d.get("count") or len(d.get("results") or []))),
+    }
+    for family, (configs, url_of, count_of) in simple.items():
+        for c in configs:
+            add(family, c["company"], lambda c=c, url_of=url_of, count_of=count_of: (count_of(_get_json(url_of(c))), ""))
+
+    for c in PERSONIO:
+        def ps(c=c):
+            import xml.etree.ElementTree as ET
+            r = SESSION.get(f"https://{c['token']}.jobs.personio.de/xml", timeout=15)
+            if r.status_code != 200:
+                raise RuntimeError(f"HTTP {r.status_code}")
+            return len(list(ET.fromstring(r.content).iter("position"))), ""
+        add("personio", c["company"], ps)
+    for c in WELCOMEKIT:
+        def wk(c=c):
+            for api in (f"https://api.welcometothejungle.com/api/v1/organizations/{c['token']}/jobs",
+                        f"https://www.welcomekit.co/api/v1/embed/organizations/{c['token']}/jobs"):
+                try:
+                    d = _get_json(api)
+                except Exception:
+                    continue
+                jobs = d.get("jobs") or d.get("results") or (d if isinstance(d, list) else [])
+                return len(jobs), api.split("/")[2]
+            raise RuntimeError("neither WelcomeKit endpoint answered")
+        add("welcomekit", c["company"], wk)
+    for c in CUSTOM_HTML:
+        def cu(c=c):
+            if not c.get("url"):
+                raise RuntimeError("no url in companies.json")
+            r = SESSION.get(c["url"], timeout=15, headers={"Accept": "text/html"})
+            if r.status_code != 200:
+                raise RuntimeError(f"HTTP {r.status_code}")
+            if not _HAS_BS4:
+                return 0, "beautifulsoup4 not installed"
+            links = [a for a in BeautifulSoup(r.text, "html.parser").select(c.get("selector", "a"))
+                     if re.search(r"job|career|position|opening|role|apply", a.get("href") or "", re.I)
+                     and not _NAV_LINK_TEXT_RE.match(a.get_text(" ", strip=True) or "careers")]
+            note = "page is likely built by JavaScript; needs an ATS route" if not links else "candidate links"
+            return len(links), note
+        add("custom", c["company"], cu)
+    return tasks
+
+
 def diagnose():
-    """Fast health probe: one endpoint per ATS family + Supabase read/write, PASS/FAIL
-    per line, done in under a minute. Run via Actions -> Run workflow -> mode=diagnose."""
-    print(">>> ORBITAL DIAGNOSE — probing one endpoint per family\n")
-    checks = [
-        ("greenhouse", "GET",  "https://boards-api.greenhouse.io/v1/boards/spacex/jobs", None),
-        ("lever",      "GET",  "https://api.lever.co/v0/postings/kepler?mode=json&limit=1", None),
-        ("ashby",      "POST", "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
-         {"operationName": "ApiJobBoardWithTeams",
-          "variables": {"organizationHostedJobsPageName": "apex.space"}, "query": ASHBY_QUERY}),
-        ("workday",    "POST", "https://blueorigin.wd5.myworkdayjobs.com/wday/cxs/blueorigin/BlueOrigin/jobs",
-         {"limit": 1, "offset": 0, "appliedFacets": {}}),
-        # The six families added by the 2026-09-06 route passes. A family with no probe
-        # here can break silently for weeks, because nothing but the row count would say so.
-        ("smartrecruiters", "GET", "https://api.smartrecruiters.com/v1/companies/AstroscaleUS/postings?limit=1", None),
-        ("recruitee",  "GET",  "https://aetherflux.recruitee.com/api/offers/", None),
-        ("breezy",     "GET",  "https://zeno-power.breezy.hr/json", None),
-        ("rippling",   "GET",  "https://api.rippling.com/platform/api/ats/v1/board/orbitfab/jobs", None),
-        ("pinpoint",   "GET",  "https://astrolab.pinpointhq.com/postings.json", None),
-        ("manatal",    "GET",  "https://api.manatal.com/open/v3/career-page/castelion-corporation/jobs/", None),
-    ]
-    failures = 0
-    for fam, method, url, body in checks:
+    """Board health check: every configured board gets one light request (Workday also runs
+    its token resolution), plus Supabase table, column and write checks. Writes no jobs.
+    Failures go to failed_scrapes_log.csv. Run via Actions -> Run workflow -> mode=diagnose."""
+    tasks = _diagnose_tasks()
+    print(f">>> ORBITAL DIAGNOSE — checking {len(tasks)} boards\n")
+    results = []
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        futures = {pool.submit(fn): (company, family) for company, family, fn in tasks}
+        for fut in as_completed(futures):
+            company, family = futures[fut]
+            try:
+                n, note = fut.result()
+                results.append((family, company, "PASS" if n else "EMPTY", n, note))
+                if not n:
+                    log_failure(company, family, f"board answered but lists 0 postings {note}".strip())
+            except Exception as exc:
+                results.append((family, company, "FAIL", 0, str(exc)[:160]))
+                log_failure(company, family, exc)
+    by_family = {}
+    for family, company, status, n, note in sorted(results):
+        print(f"   {status:5s} {family:15s} {company[:34]:34s} {n:6d}  {note}")
+        by_family.setdefault(family, {"PASS": 0, "EMPTY": 0, "FAIL": 0})[status] += 1
+    print("\n>>> By family (boards):")
+    for family, c in sorted(by_family.items()):
+        print(f"      {family:15s} {c['PASS']:3d} ok · {c['EMPTY']:3d} empty · {c['FAIL']:3d} failed")
+
+    print("\n>>> Supabase")
+    hard = 0
+    missing = []
+    for table in ("jobs", "user_state", "scrape_runs", "scrape_progress", "app_queue", "email_log"):
         try:
-            kw = {"timeout": 15}
-            if body is not None:
-                kw["headers"] = {"Content-Type": "application/json", "Accept": "application/json"}
-                kw["data"] = json.dumps(body)
-            r = SESSION.request(method, url, **kw)
-            ok = r.status_code == 200
-            print(f"   {'PASS' if ok else 'FAIL'}  {fam:11s} HTTP {r.status_code}"
-                  + ("" if ok else f"  <- this family is blocked/broken from this runner"))
-            failures += 0 if ok else 1
+            supabase.table(table).select("*").limit(1).execute()
+            print(f"   PASS  table {table}")
         except Exception as exc:
-            print(f"   FAIL  {fam:11s} {type(exc).__name__}: {str(exc)[:90]}")
-            failures += 1
-    try:
-        supabase.table(TABLE).select("id").limit(1).execute()
-        print(f"   PASS  supabase-read")
-    except Exception as exc:
-        print(f"   FAIL  supabase-read  {str(exc)[:110]}"); failures += 1
-    try:
-        supabase.table("user_state").upsert({"k": "diagnose-probe", "v": {"ts": 0}}).execute()
-        print(f"   PASS  supabase-write (user_state probe row)")
-    except Exception as exc:
-        print(f"   WARN  supabase-write  {str(exc)[:110]}  (run the user_state SQL if not set up)")
-    print(f"\n>>> Diagnose complete — {failures} hard failure(s).")
-    raise SystemExit(1 if failures else 0)
+            print(f"   FAIL  table {table}: {str(exc)[:100]}")
+            missing.append(table)
+            hard += table == "jobs"
+    if "jobs" not in missing:
+        try:
+            supabase.table(TABLE).select("last_seen").limit(1).execute()
+            print("   PASS  jobs has the current columns")
+        except Exception:
+            print("   FAIL  jobs is missing new columns (last_seen)")
+            missing.append("jobs columns")
+    if "scrape_progress" not in missing:
+        try:
+            probe = {"run_id": "diagnose-write-check", "source": "diagnose", "status": "done"}
+            supabase.table("scrape_progress").upsert(probe).execute()
+            supabase.table("scrape_progress").delete().eq("run_id", "diagnose-write-check").execute()
+            print("   PASS  the service key can write")
+        except Exception as exc:
+            print(f"   FAIL  the service key cannot write: {str(exc)[:100]}")
+            hard += 1
+    if missing:
+        print("   -> Run SUPABASE-SCHEMA.sql in Supabase (SQL Editor). It is safe to re-run and keeps your data.")
+
+    live = sum(1 for r in results if r[2] == "PASS")
+    print(f"\n>>> Diagnose complete — {live} of {len(results)} boards list postings. "
+          f"Every failed or empty board is in failed_scrapes_log.csv (run artifact).")
+    raise SystemExit(1 if hard or not live else 0)
 
 
 if __name__ == "__main__":

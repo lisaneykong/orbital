@@ -114,20 +114,34 @@ export function loadOrbitalCore(docx, resumeLibrary = []) {
   return new Function('docx', 'resumeLibrary', src)(docx, () => resumeLibrary);
 }
 
+// Rate limits, overloads and dropped connections are retried (3 attempts, honouring
+// retry-after). A bad key or an empty credit balance is fatal: retrying cannot fix it.
 export async function claude(system, user, maxTokens) {
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: maxTokens, system, messages: [{ role: 'user', content: user }] }),
-  });
-  const body = await r.text();
-  if (!r.ok) {
-    const err = new Error(`Anthropic API ${r.status}: ${body.slice(0, 240)}`);
-    err.fatal = r.status === 401 || r.status === 403 || /credit balance|billing/i.test(body);
-    throw err;
+  let last;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    let r, body;
+    try {
+      r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: maxTokens, system, messages: [{ role: 'user', content: user }] }),
+      });
+      body = await r.text();
+    } catch (e) {
+      last = new Error(`Anthropic API unreachable: ${e.message}`);
+    }
+    if (r && r.ok) return (JSON.parse(body).content || []).map(c => c.text || '').join('\n');
+    if (r) {
+      last = new Error(`Anthropic API ${r.status}: ${body.slice(0, 240)}`);
+      last.fatal = r.status === 401 || r.status === 403 || /credit balance|billing/i.test(body);
+      if (last.fatal || !(r.status === 429 || r.status >= 500)) throw last;
+    }
+    if (attempt < 3) {
+      const ra = r ? parseFloat(r.headers.get('retry-after') || '0') : 0;
+      await new Promise(res => setTimeout(res, Math.min(30000, ra > 0 ? ra * 1000 : 2000 * 2 ** (attempt - 1))));
+    }
   }
-  const data = JSON.parse(body);
-  return (data.content || []).map(c => c.text || '').join('\n');
+  throw last;
 }
 
 export function esc(s) {

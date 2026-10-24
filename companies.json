@@ -178,261 +178,131 @@
   },
   "workday": [
     {
-      "company": "Virgin Galactic",
-      "tenant": "virgingalactic",
-      "server": "wd5",
-      "board": "VirginGalactic"
-    },
-    {
       "company": "Blue Origin",
       "tenant": "blueorigin",
       "server": "wd5",
-      "board": "BlueOrigin"
+      "board": "BlueOrigin",
+      "verified": "Workday API 2026-10-19: board returns postings"
     },
     {
       "company": "Sierra Space",
       "tenant": "sierraspace",
-      "server": "wd5",
-      "board": "SierraSpace"
+      "server": "wd1",
+      "board": "Sierra_Space_External_Career_Site",
+      "verified": "Workday API 2026-10-19: 204 postings"
     },
     {
       "company": "Axiom Space",
       "tenant": "axiomspace",
       "server": "wd5",
-      "board": "AxiomSpace"
-    },
-    {
-      "company": "Intuitive Machines",
-      "tenant": "intuitivemachines",
-      "server": "wd5",
-      "board": "Careers"
-    },
-    {
-      "company": "BlackSky",
-      "tenant": "blacksky",
-      "server": "wd5",
-      "board": "BlackSky"
-    },
-    {
-      "company": "York Space Systems",
-      "tenant": "yorkspacesystems",
-      "server": "wd5",
-      "board": "York"
-    },
-    {
-      "company": "Lockheed Martin Space",
-      "tenant": "lockheedmartin",
-      "server": "wd5",
-      "board": "LockheedMartin"
+      "board": "External_Career_Site",
+      "verified": "Workday API 2026-10-19: 108 postings"
     },
     {
       "company": "Northrop Grumman Space",
-      "tenant": "northropgrumman",
+      "tenant": "ngc",
       "server": "wd1",
-      "board": "NG"
+      "board": "Northrop_Grumman_External_Site",
+      "verified": "Workday API 2026-10-19: 3815 postings"
     },
     {
       "company": "The Boeing Company",
       "tenant": "boeing",
       "server": "wd1",
-      "board": "Boeing"
-    },
-    {
-      "company": "L3Harris Technologies",
-      "tenant": "l3harris",
-      "server": "wd5",
-      "board": "L3Harris"
+      "board": "EXTERNAL_CAREERS",
+      "verified": "Workday API 2026-10-19: 709 postings"
     },
     {
       "company": "RTX Corporation",
-      "tenant": "rtx",
-      "server": "wd1",
-      "board": "RTX"
+      "tenant": "globalhr",
+      "server": "wd5",
+      "board": "REC_RTX_Ext_Gateway",
+      "verified": "Workday API 2026-10-19: 4826 postings"
     },
     {
       "company": "Airbus Defence and Space",
-      "tenant": "airbus",
+      "tenant": "ag",
       "server": "wd3",
       "board": "Airbus",
-      "intl": true
-    },
-    {
-      "company": "United Launch Alliance",
-      "tenant": "ulalaunch",
-      "server": "wd5",
-      "board": "ULA"
+      "intl": true,
+      "verified": "Workday API 2026-10-19: 2000 postings"
     },
     {
       "company": "Maxar Technologies",
       "tenant": "maxar",
       "server": "wd1",
-      "board": "Maxar"
-    },
-    {
-      "company": "Terran Orbital",
-      "tenant": "terranorbital",
-      "server": "wd5",
-      "board": "TerranOrbital"
-    },
-    {
-      "company": "Blue Canyon Technologies",
-      "tenant": "rtx",
-      "server": "wd1",
-      "board": "BCT"
-    },
-    {
-      "company": "Mynaric",
-      "tenant": "mynaric",
-      "server": "wd3",
-      "board": "Mynaric",
-      "intl": true
+      "board": "Vantor",
+      "verified": "Workday API 2026-10-19: 142 postings"
     },
     {
       "company": "Leidos",
       "tenant": "leidos",
       "server": "wd5",
       "board": "External",
-      "unverified": true
+      "verified": "Workday API 2026-10-19: board returns postings"
     },
     {
       "company": "Booz Allen Hamilton",
       "tenant": "bah",
       "server": "wd1",
       "board": "BAH_Jobs",
-      "unverified": true
-    },
-    {
-      "company": "SAIC",
-      "tenant": "saic",
-      "server": "wd1",
-      "board": "External",
-      "unverified": true
+      "verified": "Workday API 2026-10-19: board returns postings"
     },
     {
       "company": "CACI",
       "tenant": "caci",
       "server": "wd1",
       "board": "External",
-      "unverified": true
+      "verified": "Workday API 2026-10-19: board returns postings"
     },
     {
       "company": "Parsons",
       "tenant": "parsons",
       "server": "wd5",
       "board": "Search",
-      "unverified": true
-    },
-    {
-      "company": "Peraton",
-      "tenant": "peraton",
-      "server": "wd1",
-      "board": "Peraton_Careers",
-      "unverified": true
+      "verified": "Workday API 2026-10-19: board returns postings"
     },
     {
       "company": "KBR",
       "tenant": "kbr",
       "server": "wd5",
       "board": "KBR_Careers",
-      "unverified": true
+      "verified": "Workday API 2026-10-19: board returns postings"
     },
     {
       "company": "Amentum",
-      "tenant": "amentum",
+      "tenant": "pae",
       "server": "wd1",
-      "board": "Amentum",
-      "unverified": true
-    },
-    {
-      "company": "Jacobs",
-      "tenant": "jacobs",
-      "server": "wd1",
-      "board": "Jacobs_Careers",
-      "unverified": true
+      "board": "Amentum_Careers",
+      "verified": "Workday API 2026-10-19: 2831 postings"
     },
     {
       "company": "MITRE",
       "tenant": "mitre",
       "server": "wd5",
-      "board": "MITRE_Careers",
-      "unverified": true
+      "board": "Mitre",
+      "verified": "Workday API 2026-10-19: board exists but lists 0 postings"
     },
     {
       "company": "The Aerospace Corporation",
-      "tenant": "aerospace",
-      "server": "wd1",
+      "tenant": "aero",
+      "server": "wd5",
       "board": "External",
-      "unverified": true
-    },
-    {
-      "company": "Viasat",
-      "tenant": "viasat",
-      "server": "wd1",
-      "board": "Viasat_Careers",
-      "unverified": true
-    },
-    {
-      "company": "Iridium",
-      "tenant": "iridium",
-      "server": "wd1",
-      "board": "Iridium",
-      "unverified": true
+      "verified": "Workday API 2026-10-19: 422 postings"
     },
     {
       "company": "EchoStar",
       "tenant": "echostar",
-      "server": "wd1",
-      "board": "EchoStar_Careers",
-      "unverified": true
-    },
-    {
-      "company": "Intelsat",
-      "tenant": "intelsat",
-      "server": "wd1",
-      "board": "Intelsat_Careers",
-      "unverified": true
-    },
-    {
-      "company": "SES Space & Defense",
-      "tenant": "ses",
-      "server": "wd3",
-      "board": "SES_Careers",
-      "unverified": true
-    },
-    {
-      "company": "Kratos Defense",
-      "tenant": "kratosdefense",
-      "server": "wd1",
-      "board": "Kratos_Careers",
-      "unverified": true
-    },
-    {
-      "company": "BWXT",
-      "tenant": "bwxt",
-      "server": "wd1",
-      "board": "BWXT_Careers",
-      "unverified": true
-    },
-    {
-      "company": "Redwire",
-      "tenant": "redwirespace",
-      "server": "wd1",
-      "board": "Redwire",
-      "unverified": true
+      "server": "wd501",
+      "board": "Echostar",
+      "verified": "Workday API 2026-10-19: board exists but lists 0 postings"
     },
     {
       "company": "Moog Space & Defense",
       "tenant": "moog",
       "server": "wd5",
-      "board": "Moog_Careers",
-      "unverified": true
-    },
-    {
-      "company": "Honeywell Aerospace",
-      "tenant": "honeywell",
-      "server": "wd1",
-      "board": "Honeywell_Careers",
-      "unverified": true
+      "board": "MOOG_External_Career_Site",
+      "verified": "Workday API 2026-10-19: 440 postings"
     }
   ],
   "lever": [
@@ -1115,6 +985,111 @@
       "tried": "workable:vaya-space",
       "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
       "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+    },
+    {
+      "company": "Virgin Galactic",
+      "tried": "workday:virgingalactic/VirginGalactic",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Intuitive Machines",
+      "tried": "workday:intuitivemachines/Careers",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "BlackSky",
+      "tried": "workday:blacksky/BlackSky",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "York Space Systems",
+      "tried": "workday:yorkspacesystems/York",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Lockheed Martin Space",
+      "tried": "workday:lockheedmartin/LockheedMartin",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "L3Harris Technologies",
+      "tried": "workday:l3harris/L3Harris",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "United Launch Alliance",
+      "tried": "workday:ulalaunch/ULA",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Terran Orbital",
+      "tried": "workday:terranorbital/TerranOrbital",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Blue Canyon Technologies",
+      "tried": "workday:rtx/BCT",
+      "note": "RTX business: its roles come in through RTX Corporation's board (globalhr/REC_RTX_Ext_Gateway)."
+    },
+    {
+      "company": "Mynaric",
+      "tried": "workday:mynaric/Mynaric",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "SAIC",
+      "tried": "workday:saic/External",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Peraton",
+      "tried": "workday:peraton/Peraton_Careers",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Jacobs",
+      "tried": "workday:jacobs/Jacobs_Careers",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Viasat",
+      "tried": "workday:viasat/Viasat_Careers",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Iridium",
+      "tried": "workday:iridium/Iridium",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Intelsat",
+      "tried": "workday:intelsat/Intelsat_Careers",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "SES Space & Defense",
+      "tried": "workday:ses/SES_Careers",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Kratos Defense",
+      "tried": "workday:kratosdefense/Kratos_Careers",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "BWXT",
+      "tried": "workday:bwxt/BWXT_Careers",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Redwire",
+      "tried": "workday:redwirespace/Redwire",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Honeywell Aerospace",
+      "tried": "workday:honeywell/Honeywell_Careers",
+      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
     }
   ],
   "recruitee": [

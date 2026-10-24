@@ -4,10 +4,31 @@
 
 👉  START HERE:  open  CLEAN-INSTALL.html  in your web browser.
 
-That one page walks you through the whole setup in 3 simple steps
-(about 15 minutes, one time). 100% browser-based — no Python to
-install, no command line, no local server. If you can copy & paste,
-you can do it.
+That one page walks you through the whole setup in 6 steps
+(about 20 minutes, one time): Supabase, your IONOS SFTP details,
+the GitHub secrets, one upload. 100% browser-based. Every step is
+safe to repeat and nothing deletes your data.
+
+------------------------------------------------------------
+BUILD 2026-10-19.1
+------------------------------------------------------------
+· ONE DATABASE FILE. SUPABASE-SCHEMA.sql is now safe to run on a
+  live database: it creates what is missing, adds new columns and
+  never deletes a row. SUPABASE-TELEMETRY-ONLY.sql and
+  SUPABASE-APPLY-QUEUE.sql are gone (delete them from the repo).
+  (The notes further down that say the schema starts with "drop
+  table jobs" describe older builds.)
+· IONOS PUBLISH WORKS ON AN EMPTY WEB SPACE. Set IONOS_REMOTE_PATH
+  to the folder jobs.lisaney.com points at and the first publish
+  creates it. The live check reads repo variable SITE_URL if set.
+· WORKDAY FIXED. The resolver mistook "wrong data center" for
+  "wrong board"; 10 boards now confirmed live (Northrop, RTX,
+  Boeing, Sierra Space, Airbus, Amentum, Aerospace Corp, Moog,
+  Maxar/Vantor, Axiom) and multi-site roles are no longer dropped.
+  21 companies not on Workday moved to needs_route.
+· DIAGNOSE CHECKS EVERY BOARD (PASS / EMPTY / FAIL with reasons)
+  and all six tables. Closed postings disappear from the board.
+  Full list in HANDOFF.md.
 
 ------------------------------------------------------------
 BUILD 17  —  CLEAN-INSTALL KIT   (build 2026-09-28.1)

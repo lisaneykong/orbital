@@ -2357,7 +2357,8 @@ function fitRules(j, text){
 }
 function seniorityOf(title){
   const t=(title||'').toLowerCase();
-  if(/\b(intern|co-?op|fellow)\b/.test(t)) return 0;
+  if(/\b(intern|co-?op|fellowship|(?:summer|graduate|student|undergraduate|postdoc\w*) fellow)\b/.test(t)) return 0;
+  if(/\bfellow\b/.test(t)) return 5;   // "Technical Fellow" is a top-of-ladder title
   // Senior titles are tested FIRST: "Associate Director" and "Senior Associate" are senior
   // roles, and reading the word "associate" first mislabelled them as new-grad on-ramps.
   if(/\b(vp|vice president|chief|cxo)\b/.test(t)) return 6;
@@ -4073,7 +4074,7 @@ async function generateCoverLetter(jobId){
     const master = masterResume();
     const an = tailoringAnalysis(j);
     const posting = `${j.title} at ${j.company}\nLocation: ${j.location||j.location_hub||''}\n\n${(j.description||'').slice(0,6000)}\n\n${(j.requirements||'').slice(0,2000)}`;
-    const user = `MASTER RÉSUMÉ JSON:\n${JSON.stringify(master)}\n\nJOB POSTING:\n"""${posting}"""\n\nREQUIREMENTS SHE ALREADY COVERS: ${an.rows.filter(r=>r.ok).map(r=>r.line).slice(0,6).join(' | ')||'(none detected)'}\nREQUIREMENTS WITH NO DETECTED COVERAGE: ${an.rows.filter(r=>!r.ok).map(r=>r.line).slice(0,6).join(' | ')||'(none)'}\nPOSTING LANGUAGE WORTH MIRRORING: ${an.mirror.join(', ')||'(none)'}`;
+    const user = `MASTER RÉSUMÉ JSON:\n${JSON.stringify(master)}\n\nJOB POSTING:\n"""${posting}"""\n\nREQUIREMENTS HE ALREADY COVERS: ${an.rows.filter(r=>r.ok).map(r=>r.line).slice(0,6).join(' | ')||'(none detected)'}\nREQUIREMENTS WITH NO DETECTED COVERAGE: ${an.rows.filter(r=>!r.ok).map(r=>r.line).slice(0,6).join(' | ')||'(none)'}\nPOSTING LANGUAGE WORTH MIRRORING: ${an.mirror.join(', ')||'(none)'}`;
     progressTo(20,'Claude is drafting the letter…',70,22000);
     const text = await aiCompleteLong(COVER_LETTER_RULES, user, 1600, note);
     progressTo(76,'Checking the draft…');
@@ -4185,7 +4186,7 @@ function salaryValue(j){ return j.salMax || (j.internRate? j.internRate*40*(j.in
 // Live window is ROLE_WINDOW_DAYS (60d; internships 270d); ≤HOT_DAYS (7d) + match floor = HOT
 // Early-career / new-grad detector — shared everywhere so the whole platform treats this
 // as a first-class category, not just one widget: track filter, badges, and match scoring.
-const EARLY_CAREER_RE=/\b(intern|co-?op|fellow|new ?grad|early ?career|associate|entry.level|junior|jr\.?|university|graduate|rotational|apprentice)\b/i;
+const EARLY_CAREER_RE=/\b(intern|co-?op|fellowship|new ?grad|early ?career|associate|entry.level|junior|jr\.?|university|graduate|rotational|apprentice)\b/i;
 // A posting counts as an on-ramp when the TITLE reads early-career, or when the posting
 // text says so explicitly ("early career", "new grad", "recent graduate") — many companies
 // only put it in the body. The seniority guard still applies either way, so
@@ -4226,7 +4227,14 @@ function isHot(j){ return daysOnMarket(j)<=HOT_DAYS && (j.match||0) >= HOT_MATCH
 // start date, so a 60-day cutoff would empty the internship board.
 const ROLE_WINDOW_DAYS = 60;
 const INTERN_WINDOW_DAYS = 270;
-function isArchived(j){ const max=(j.type==='Internship')?INTERN_WINDOW_DAYS:ROLE_WINDOW_DAYS; return daysOnMarket(j) >= max; }
+function isArchived(j){
+  if(j.closed) return true;
+  const max=(j.type==='Internship')?INTERN_WINDOW_DAYS:ROLE_WINDOW_DAYS;
+  let d=daysOnMarket(j);
+  // Undated roles age out from the day Orbital first saw them (never counted toward Hot).
+  if(isNaN(d) && j.firstSeen) d=Math.floor((Date.now()-j.firstSeen)/864e5);
+  return d >= max;
+}
 // ---- Listing temperature: how long a role has been sitting on the board ----
 // Hot additionally requires HOT_MATCH_FLOOR (10%) — NOT settings.matchFloor. A fresh
 // posting under 10% is labelled Warm rather than promoted on recency alone.
@@ -4387,6 +4395,16 @@ async function sbAll(client, table, cols, perPage){
   }
   return rows;
 }
+// A posting has closed when its company's latest scrape no longer returned it. Judged per
+// company, so a board that failed today does not make all of its roles look closed.
+let liveClosed = new Set();
+function closedRoleIds(rows){
+  const newest={}, out=new Set();
+  rows.forEach(r=>{ const t=Date.parse(r.last_seen); if(t && !(newest[r.company]>=t)) newest[r.company]=t; });
+  rows.forEach(r=>{ const n=newest[r.company]; if(!n) return; const t=Date.parse(r.last_seen);
+    if(!t || n-t > 36*3600e3) out.add(r.id); });
+  return out;
+}
 async function initData(){
   // decide mode
   const wantLive = settings.dataSource==='live' || (settings.dataSource==='auto' && SB_URL && SB_KEY);
@@ -4394,6 +4412,7 @@ async function initData(){
     try{
       sb = window.supabase.createClient(SB_URL, SB_KEY);
       liveJobs = await sbAll(sb, 'jobs', '*');
+      liveClosed = closedRoleIds(liveJobs);
       dataMode = 'live'; liveError = '';
       _sigCache.clear();   // stale internship-signal cache would misreport after a refresh
       return;
@@ -4508,6 +4527,7 @@ function mapLiveJob(r){
     match, planets: r.planets!=null ? r.planets : Math.max(0,Math.min(5,Math.round(match/20))),
     days: r.posting_age!=null ? r.posting_age : null,
     postedAt: (r.timestamp && !isNaN(Date.parse(r.timestamp))) ? Date.parse(r.timestamp) : null,
+    firstSeen: Date.parse(r.created_at) || null, closed: liveClosed.has(r.id),
     location: r.location || r.location_hub || '', type: isIntern?'Internship':(r.type||'Full-time'),
     logo:(r.company||'?').replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase()||'JB', logoBg:r.logo_bg||'#2a4d7a',
     tech:(r.tech||'').toString().split(',').map(s=>s.trim()).filter(Boolean),
@@ -7298,8 +7318,8 @@ function earlyCareerWidget(){
   // Pull early-career + internship roles from the current region's pool, with a derived
   // application-deadline estimate (postings typically close ~45 days after they appear).
   let pool=[]; try{ const cf=companyFilter, tk=track; companyFilter=''; track='fulltime'; pool=jobsForRegion(); track='intern'; pool=pool.concat(jobsForRegion()); companyFilter=cf; track=tk; }catch(e){ pool=[]; }
-  const seen={}, EC=/\b(intern|co-?op|fellow|new ?grad|early ?career|associate|entry|junior|jr\.?|university|graduate|rotational|apprentice|\bi\b)\b/i;
-  const items=pool.filter(j=>{ if(seen[j.id])return false; seen[j.id]=1; return j.type==='Internship' || EC.test(j.title||''); })
+  const seen={};
+  const items=pool.filter(j=>{ if(seen[j.id])return false; seen[j.id]=1; return isEarlyCareer(j); })
     .sort((a,b)=>(domSort(a)-domSort(b))).slice(0,4);
   if(!items.length) return '';
   const card=items.map(j=>{
@@ -7338,7 +7358,7 @@ async function loadApplyQueue(force){
     applyQueue = data||[]; applyQueueErr='';
   }catch(e){
     applyQueue = [];
-    applyQueueErr = /PGRST20\d|does not exist|schema cache/i.test(e.message||'') ? 'The app_queue table does not exist yet. Run SUPABASE-APPLY-QUEUE.sql (or the full SUPABASE-SCHEMA.sql) in Supabase.' : (e.message||String(e));
+    applyQueueErr = /PGRST20\d|does not exist|schema cache/i.test(e.message||'') ? 'The app_queue table does not exist yet. Run SUPABASE-SCHEMA.sql in Supabase (SQL Editor). It is safe to re-run and keeps your data.' : (e.message||String(e));
   }
   applyQueueLoading = false;
   if(view==='apply' || view==='pipeline') refreshContent();
@@ -7937,7 +7957,7 @@ function missionAssuranceBlock(j){
 }
 function careerImpactBlock(j){
   const t=(j.title||'').toLowerCase(), d=(j.description||'').toLowerCase();
-  const isEarly = j.type==='Internship' || /\b(intern|co-?op|fellow|new ?grad|early ?career|associate|entry|junior|jr\.?|university|graduate|rotational|apprentice)\b/i.test(j.title||'');
+  const isEarly = isEarlyCareer(j);
   if(!isEarly) return '';
   // Skills this role builds, matched to Lisaney's Space-Ops / Mission-Integration trajectory.
   const SKILLBANK=[
@@ -8339,8 +8359,8 @@ function alumniFacts(j){
 function narrativeFacts(j){
   const m=skillsMatch(j);
   const fit=lifestyleFit(j);
-  const aligned=(m.rows||[]).filter(r=>r.lvl==='direct').map(r=>r.skill).slice(0,4);
-  const gaps=(m.rows||[]).filter(r=>r.lvl==='gap').map(r=>r.skill).slice(0,3);
+  const aligned=(m.rows||[]).filter(r=>r.lvl==='professional').map(r=>r.skill).slice(0,4);
+  const gaps=(m.rows||[]).filter(r=>r.lvl==='none').map(r=>r.skill).slice(0,3);
   const alignedTxt = aligned.length ? aligned.join(', ') : 'program management, operations, and stakeholder leadership';
   return {
     why:`You're a strong fit for ${j.company}'s ${j.title}. Ten-plus years running enterprise software operations and cross-functional program coordination — co-architecting Vault.co's first enterprise information system in Salesforce, onboarding 1,000 users on its largest customer deployment, and integrating three disconnected platforms into one automated process at Achievers — map directly onto this role's core needs: ${alignedTxt}. Your ERAU M.S. in Space Operations adds the domain language (space mission operations, systems engineering, launch and satellite systems) to translate that commercial track record into the aerospace context — as graduate coursework, not industry time.`,
@@ -9828,7 +9848,7 @@ function fpNormalize(item,type,company,slug){
   else { title=(item.text||'').trim(); desc=item.descriptionPlain||item.description||''; loc=(item.categories||{}).location||''; url=item.applyUrl||item.hostedUrl||`https://jobs.lever.co/${slug}/${jid}/apply`; }
   if(!title || !url) return null;            // never emit a row without a real posting link
   const hub=fpHubOf(loc); if(!hub) return null;
-  const sc=fpAlign(title,desc); const intern=/\b(intern|interns?hip|co-?op|fellow(?:ship)?|summer analyst|student\s+(?:program|worker|employee)|trainee|apprentice|practicum)\b/i.test(title);
+  const sc=fpAlign(title,desc); const intern=/\b(intern|interns?hip|co-?op|fellowship|fellows? program|(?:summer|graduate|student|undergraduate|postdoctoral|postdoc) fellow|summer analyst|student\s+(?:program|worker|employee)|trainee|apprentice|practicum)\b/i.test(title);
   if(!fpQualifies(title,sc,intern,hub)) return null;
   const [smin,smax]=fpEst(title,hub);
   // Original posting date only. updated_at / updatedAt change whenever a recruiter edits the
@@ -9842,7 +9862,7 @@ function fpNormalize(item,type,company,slug){
     intern_rate:pay.rate, intern_weeks:pay.weeks, is_intern:intern, type:intern?'Internship':'Full-time',
     match:sc, planets:Math.max(0,Math.min(5,Math.round(sc/20))), demand:sc, posting_age:age,
     tech:terms.filter(t=>bl.includes(t.toLowerCase())).join(','), clearance:'NONE', relocation_flag:false, relocation_note:'—',
-    logo_bg:'#2a4d7a', source:type, status:'active', saved:false, archived:false, url, description:fpStrip(desc).slice(0,4000), timestamp:posted };
+    logo_bg:'#2a4d7a', source:type, status:'active', saved:false, archived:false, url, description:fpStrip(desc).slice(0,4000), timestamp:posted, last_seen:new Date().toISOString() };
 }
 const fpSkipCols=new Set();
 async function fpUpsert(client,row){
@@ -10303,6 +10323,7 @@ function watchScrapeRun(sinceISO, onTick, onEnd){
   },3000);
 }
 function doRefresh(btn){
+  if(!canEdit()) return guestBlock();
   const b = btn || $('#manualRefresh');
   if(!b) { initData().then(render); return; }
   if(b.dataset.busy==='1') return;

@@ -10,12 +10,14 @@ requireEnv(['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ANTHROPIC_API_KEY']);
 const MIN_MATCH = +process.env.PREP_MIN_MATCH || 75;
 const MAX_PER_RUN = +process.env.PREP_MAX || 10;
 
-const queue = await sbSelect('app_queue', 'select=job_id');
+const queue = await sbSelect('app_queue', 'select=job_id,status,updated_at');
 if (queue.missing) {
-  console.log('::warning::The app_queue table does not exist. Run SUPABASE-APPLY-QUEUE.sql in the Supabase SQL Editor, then auto-prepare starts on the next run.');
+  console.log('::warning::The app_queue table does not exist. Run SUPABASE-SCHEMA.sql in the Supabase SQL Editor, then auto-prepare starts on the next run.');
   process.exit(0);
 }
-const queued = new Set(queue.rows.map(r => r.job_id));
+// A role that failed is tried again once a day, not on every run.
+const retryable = r => r.status === 'failed' && Date.now() - Date.parse(r.updated_at || 0) > 864e5;
+const queued = new Set(queue.rows.filter(r => !retryable(r)).map(r => r.job_id));
 const tracking = await loadTracking();
 
 const since = new Date(Date.now() - HOT_DAYS * 864e5).toISOString();
@@ -85,6 +87,13 @@ for (const j of todo.slice(0, MAX_PER_RUN)) {
   } catch (e) {
     failed++;
     console.log(`  ✗ ${label}: ${e.message}`);
+    if (!e.fatal) {
+      try {
+        await sbUpsert('app_queue', [{ job_id: j.id, company: j.company, title: j.title, location: j.location,
+          location_hub: j.location_hub, url: j.url, match: j.match, posted_at: j.timestamp, status: 'failed',
+          updated_at: new Date().toISOString(), error: String(e.message).slice(0, 500) }]);
+      } catch (e2) { console.log(`    (could not record the failure: ${e2.message})`); }
+    }
     if (e.fatal) {
       console.log('::error::The Anthropic API refused the key or the account is out of credits. Fix it at console.anthropic.com → Plans & Billing, then the next run picks up where this one stopped.');
       break;

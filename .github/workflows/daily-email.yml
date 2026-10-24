@@ -44,7 +44,10 @@ jobs:
           if [ "${{ github.event_name }}" != "schedule" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
           hour=$(TZ=America/Chicago date +%H)
           echo "Chicago time: $(TZ=America/Chicago date '+%Y-%m-%d %H:%M %Z')"
-          if [ "$hour" = "08" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "Not 8am in Chicago — the other DST slot. Skipping."; echo "run=false" >> "$GITHUB_OUTPUT"; fi
+          # 8am or later: a late-starting slot still sends; email_log stops a second send.
+          if [ "$hour" \< "08" ]; then echo "Before 8am in Chicago — the other DST slot. Skipping."; echo "run=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          echo "run=true" >> "$GITHUB_OUTPUT"
+          [ "$hour" != "08" ] && echo "late=1" >> "$GITHUB_OUTPUT" || true
 
       - uses: actions/checkout@v4
         if: steps.gate.outputs.run == 'true'
@@ -62,6 +65,7 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          LATE_SLOT: ${{ steps.gate.outputs.late }}
         run: |
           if [ "${{ inputs.mode }}" = "preview" ]; then
             node automation/daily-email.mjs --preview

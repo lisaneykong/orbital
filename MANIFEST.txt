@@ -1,5 +1,5 @@
-ORBITAL // COMMAND — build 17 (2026-09-28.1)
-FILE MANIFEST — 55 files
+ORBITAL // COMMAND — build 2026-10-19.1
+FILE MANIFEST — 53 files
 
 After uploading to IONOS or pushing to GitHub, compare against this list.
 The 5 entries marked [HIDDEN] start with a dot. Most FTP clients and
@@ -25,9 +25,7 @@ Missing .htaccess means the site serves cached stale HTML. Missing
          ORBITAL-OPERATIONS.md
          README.txt
          START-HERE.html
-         SUPABASE-APPLY-QUEUE.sql
          SUPABASE-SCHEMA.sql
-         SUPABASE-TELEMETRY-ONLY.sql
          automation/daily-email.mjs
          automation/lib.mjs
          automation/package.json

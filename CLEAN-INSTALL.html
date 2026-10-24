@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <meta name="orbital-build" content="2026-10-19.1" />
-<title>ORBITAL // CLEAN INSTALL — build 17</title>
+<title>Install Orbital on IONOS</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   :root{
@@ -90,160 +90,140 @@
 
 <header>
   <div class="eyebrow">Orbital // Command</div>
-  <h1>Clean install — build 17</h1>
-  <p class="sub">Six steps, in order. Everything is a browser click; nothing here needs a command line. Budget about twenty minutes. Tick each step as you go — the ticks are saved in this browser, so you can close the page and come back.</p>
+  <h1>Install Orbital on IONOS</h1>
+  <p class="sub">Six steps, in order, all in the browser. About twenty minutes the first time. Every step is safe to repeat, and nothing here deletes your data. Tick each step as you go; the ticks are saved in this browser.</p>
   <div class="meta">
     <span class="tag">BUILD 2026-10-19.1</span>
-    <span class="tag">47 FILES</span>
+    <span class="tag">53 FILES</span>
     <span class="tag">OWNER PIN 1725</span>
   </div>
 </header>
 
-<div class="note bad">
-  <div class="ico">STOP</div>
-  <p><strong>Step 1 deletes every job currently in your database.</strong> That is the point of a clean install and the jobs are all re-scrapable, but it is irreversible. If you want to keep the current rows, open Supabase → Table Editor → jobs → Export → CSV before you start. Your saved roles, notes and applications live in a different table (<code>user_state</code>) and survive.</p>
+<div class="note good">
+  <div class="ico">HOW</div>
+  <p><strong>How the pieces fit.</strong> Supabase holds the data. GitHub runs the daily scrape and, on every upload, publishes the site to your IONOS web space over SFTP. IONOS serves <code>jobs.lisaney.com</code>. You set each one up once; after that, uploading files to GitHub is the only thing you ever do.</p>
 </div>
 
 <ol class="steps">
 
   <li class="step" data-k="s1">
     <div class="head">
-      <h2>Reset the database<span class="where">supabase.com</span></h2>
+      <h2>Set up the database<span class="where">supabase.com</span></h2>
       <label class="done"><input type="checkbox" /> Done</label>
     </div>
     <div class="body">
-      <p>One paste builds all four tables: <code>jobs</code>, <code>user_state</code>, <code>scrape_runs</code>, <code>scrape_progress</code>. The last two are the ones currently returning 404, which is why no scrape has ever been able to tell you which job boards failed.</p>
+      <p>One paste creates or updates all six tables. It keeps every job, application and note you already have, so it is also the upgrade step for later builds.</p>
       <ul class="clicks">
         <li>Open <code>SUPABASE-SCHEMA.sql</code> from this kit in any text editor, select all, copy</li>
         <li>Go to <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">supabase.com/dashboard</a> and open your Orbital project</li>
-        <li>Left sidebar → <b>SQL Editor</b></li>
-        <li>Click <b>+ New query</b></li>
-        <li>Paste, then click <b>Run</b> <span style="color:var(--faint)">(or <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd>)</span></li>
+        <li>Left sidebar → <b>SQL Editor</b> → <b>+ New query</b></li>
+        <li>Paste, then click <b>Run</b> <span style="color:var(--faint)">(or <kbd>Ctrl</kbd> + <kbd>Enter</kbd>)</span></li>
+        <li>Left sidebar → <b>Table Editor</b>: check the six tables are listed</li>
       </ul>
-      <p style="margin-top:14px">Stay on the same Supabase project. <code>orbital-config.js</code> already points at it, so a brand-new project would mean editing that file and re-deploying.</p>
-      <div class="expect"><span class="lbl">Expect</span><p>Success. No rows returned.</p></div>
+      <p style="margin-top:14px">Stay on the same Supabase project. <code>orbital-config.js</code> already points at it.</p>
+      <div class="expect"><span class="lbl">Expect</span><p>"Success. No rows returned", and six tables: <code>jobs</code>, <code>user_state</code>, <code>scrape_runs</code>, <code>scrape_progress</code>, <code>app_queue</code>, <code>email_log</code>.</p></div>
     </div>
   </li>
 
   <li class="step" data-k="s2">
     <div class="head">
-      <h2>Confirm the four tables<span class="where">supabase.com</span></h2>
+      <h2>Collect your IONOS details<span class="where">my.ionos.com</span></h2>
       <label class="done"><input type="checkbox" /> Done</label>
     </div>
     <div class="body">
-      <p>Thirty seconds, and it is worth it. If <code>scrape_runs</code> is missing, the scraper's self-healing retry stays switched off without saying so, and the diagnose run in step 6 has nowhere to write its findings.</p>
+      <p>GitHub needs three things to publish the site for you. Write them down for step 3.</p>
       <ul class="clicks">
-        <li>Left sidebar → <b>Table Editor</b></li>
-        <li>Open the table dropdown at the top of the list</li>
-        <li>Check all four names are there: <code>jobs</code> · <code>user_state</code> · <code>scrape_runs</code> · <code>scrape_progress</code></li>
+        <li><b>Hosting</b> → your web hosting package → <b>SFTP &amp; SSH</b>. Note the <b>Host</b> (looks like <code>home123456789.1and1-data.host</code>) and the <b>User name</b>. Set or reset the password if you don't have it. The protocol is <b>SFTP, port 22</b>; IONOS does not offer plain FTP or FTPS for this.</li>
+        <li><b>Domains &amp; SSL</b> → click <code>jobs.lisaney.com</code>. Note the <b>Directory</b> it points at, for example <code>/jobs</code>. That folder is where the site goes.</li>
+        <li>On the same page, make sure an <b>SSL certificate</b> is active for <code>jobs.lisaney.com</code>, so the site loads over https.</li>
       </ul>
-      <p style="margin-top:14px">If any are missing, step 1 did not finish — scroll up in the SQL Editor and read the red error. <code>jobs</code> should exist and be empty.</p>
-      <div class="expect"><span class="lbl">Expect</span><p>Six tables: <code>jobs</code>, <code>user_state</code>, <code>scrape_runs</code>, <code>scrape_progress</code>, <code>app_queue</code>, <code>email_log</code>. <code>jobs</code> shows 0 rows.</p></div>
+      <div class="expect"><span class="lbl">Expect</span><p>A host, a user name, a password, and a directory.</p></div>
     </div>
   </li>
 
   <li class="step" data-k="s3">
     <div class="head">
-      <h2>Push build 17 to GitHub<span class="where">github.com/lisaneykong/orbital</span></h2>
+      <h2>Add the GitHub secrets<span class="where">github.com/lisaneykong/orbital → Settings</span></h2>
       <label class="done"><input type="checkbox" /> Done</label>
     </div>
     <div class="body">
-      <p>Upload the <em>contents</em> of the <code>ORBITAL-v17</code> folder to the top level of the repo, not the folder itself. Same-named files are replaced; your commit history is kept.</p>
+      <p>Repo → <b>Settings</b> → <b>Secrets and variables</b> → <b>Actions</b> → <b>New repository secret</b>, once per row. Names must match exactly. A saved secret can't be read back; if unsure, overwrite it.</p>
       <ul class="clicks">
-        <li>Repo home → <b>Add file</b> → <b>Upload files</b></li>
-        <li>Drag in everything inside <code>ORBITAL-v17</code></li>
-        <li>Commit message: <code>build 17 — clean install</code> → <b>Commit changes</b></li>
+        <li><code>SUPABASE_URL</code>: <code>https://&lt;your-ref&gt;.supabase.co</code> (Supabase → Settings → API)</li>
+        <li><code>SUPABASE_SERVICE_ROLE_KEY</code>: the <b>service_role</b> / <code>sb_secret_</code> key, never the anon / publishable one</li>
+        <li><code>IONOS_FTP_SERVER</code>, <code>IONOS_FTP_USERNAME</code>, <code>IONOS_FTP_PASSWORD</code>: the host, user and password from step 2</li>
+        <li><code>IONOS_REMOTE_PATH</code>: the directory from step 2, for example <code>/jobs</code>. Leave it out only if the SFTP user already lands in that folder</li>
+        <li>Optional, for the morning Apply Queue: <code>ANTHROPIC_API_KEY</code> (an account with credits, about 5 cents per prepared role)</li>
+        <li>Optional, for the 8 AM email: <code>RESEND_API_KEY</code>, plus <code>EMAIL_FROM</code> once lisaney.com is verified in Resend, and <code>EMAIL_TO</code> (defaults to one@lisaney.com)</li>
       </ul>
-      <p style="margin-top:14px">Then two checks that matter more than they look:</p>
-      <ul class="clicks" style="margin-top:12px">
-        <li>Is there a <code>resolved_tokens.json</code> at the repo top level? If yes, open it → <b>trash icon</b> → <b>Commit changes</b>. The scraper trusts that cache and skips re-probing, so a stale copy pins companies to dead job-board tokens and returns zero roles forever. It is ignored by <code>.gitignore</code> now, but that does not remove a file already committed.</li>
-        <li>Open <code>.github/workflows/</code>. There should be exactly three files: <code>scrape.yml</code>, <code>deploy.yml</code> and <code>daily-email.yml</code>. Delete any others — an old workflow left behind keeps running on its own schedule and fights this one.</li>
-      </ul>
-      <div class="expect"><span class="lbl">Expect</span><p>A new commit listing ~53 changed files, and exactly three workflow files.</p></div>
+      <div class="note bad" style="margin:18px 0 0">
+        <div class="ico">!</div>
+        <p><strong>The most common failure</strong> is the anon key pasted into <code>SUPABASE_SERVICE_ROLE_KEY</code>. The anon key can only read, so the scraper finds jobs and can't save them. The workflow checks this first and says so.</p>
+      </div>
+      <div class="expect"><span class="lbl">Expect</span><p>Six secrets minimum (two Supabase, four IONOS). Eight with the Apply Queue and the email.</p></div>
     </div>
   </li>
 
   <li class="step" data-k="s4">
     <div class="head">
-      <h2>Check the secrets<span class="where">github.com → Settings</span></h2>
+      <h2>Upload the files to GitHub<span class="where">github.com/lisaneykong/orbital</span></h2>
       <label class="done"><input type="checkbox" /> Done</label>
     </div>
     <div class="body">
-      <p>These carry over from before, so this is a verification pass, not a re-entry. You cannot read a saved secret back — if you are unsure about one, overwrite it.</p>
+      <p>Upload the <em>contents</em> of this folder to the top level of the repo, not the folder itself. This upload also publishes the site to IONOS.</p>
       <ul class="clicks">
-        <li>Repo → <b>Settings</b> → <b>Secrets and variables</b> → <b>Actions</b></li>
-        <li>Required: <code>SUPABASE_URL</code> and <code>SUPABASE_SERVICE_ROLE_KEY</code></li>
-        <li>For auto-publishing to IONOS: <code>IONOS_FTP_SERVER</code> · <code>IONOS_FTP_USERNAME</code> · <code>IONOS_FTP_PASSWORD</code></li>
-        <li>For the morning Apply Queue: <code>ANTHROPIC_API_KEY</code>, a key from console.anthropic.com on an account with credits (about 5 cents per prepared role, up to 10 roles a day).</li>
-        <li>For the 8 AM email: <code>RESEND_API_KEY</code> from resend.com (free tier). Optional: <code>EMAIL_FROM</code>, for example <code>Orbital &lt;orbital@lisaney.com&gt;</code>, after you verify lisaney.com in Resend, and <code>EMAIL_TO</code>, which defaults to one@lisaney.com.</li>
+        <li>In Windows File Explorer, turn on <b>View → Show → Hidden items</b>, so the <code>.github</code> folder and <code>.htaccess</code> are included</li>
+        <li>Repo home → <b>Add file</b> → <b>Upload files</b> → drag in everything in this folder → <b>Commit changes</b></li>
+        <li>Open <code>.github/workflows/</code>: there should be exactly three files, <code>scrape.yml</code>, <code>deploy.yml</code> and <code>daily-email.yml</code>. Delete any other workflow, and any stray <code>scrape.yml</code> at the repo top level</li>
+        <li>Delete <code>SUPABASE-TELEMETRY-ONLY.sql</code> and <code>SUPABASE-APPLY-QUEUE.sql</code> if the repo still has them; <code>SUPABASE-SCHEMA.sql</code> replaces both</li>
       </ul>
-      <div class="note bad" style="margin:18px 0 0">
-        <div class="ico">!</div>
-        <p><strong>The single most common failure.</strong> <code>SUPABASE_SERVICE_ROLE_KEY</code> must be the <em>service_role</em> / <code>sb_secret_</code> key, not the anon / publishable one. The anon key can only read, so the scraper finds jobs and then silently has nothing to write them with. Supabase → Settings → API Keys → reveal <b>service_role</b>. The workflow checks this before it runs and says so in plain English.</p>
-      </div>
-      <div class="expect"><span class="lbl">Expect</span><p>Two secrets minimum. Five if IONOS publishes itself. Add <code>ANTHROPIC_API_KEY</code> for the Apply Queue and <code>RESEND_API_KEY</code> for the daily email.</p></div>
+      <p style="margin-top:14px">Compare against <code>MANIFEST.txt</code> if anything seems missing. It flags the hidden files most upload tools skip.</p>
+      <div class="expect"><span class="lbl">Expect</span><p>A new commit, exactly three workflow files, and <code>.htaccess</code> visible in the file list.</p></div>
     </div>
   </li>
 
   <li class="step" data-k="s5">
     <div class="head">
-      <h2>Upload to IONOS<span class="where">jobs.lisaney.com</span></h2>
+      <h2>Check the site went live<span class="where">github.com → Actions</span></h2>
       <label class="done"><input type="checkbox" /> Done</label>
     </div>
     <div class="body">
-      <p>Skip this entirely if the three IONOS secrets are set — the deploy workflow publishes on every push, and step 3 already triggered it. Do it by hand only if you would rather not rely on that.</p>
+      <p>The upload started a run called <b>Publish website to IONOS</b>. It turns green only when <code>jobs.lisaney.com</code> is actually serving the new files.</p>
       <ul class="clicks">
-        <li>Turn on <b>show hidden files</b> in your FTP client first</li>
-        <li>Upload the <em>contents</em> of <code>ORBITAL-v17</code> into the web root — not the folder itself</li>
-        <li>Confirm <code>.htaccess</code> arrived. Without it the site serves stale cached HTML and you will think the upload failed</li>
-        <li>Overwrite when prompted. Leaving old extra files behind is harmless; they just become dead URLs</li>
+        <li>Repo → <b>Actions</b> → the newest <b>Publish website to IONOS</b> run. Wait for the green tick (about a minute)</li>
+        <li>Open <a href="https://jobs.lisaney.com" target="_blank" rel="noopener">jobs.lisaney.com</a> → <b>Settings</b>: the build should read <code>2026-10-19.1</code></li>
       </ul>
-      <p style="margin-top:14px">Open <code>MANIFEST.txt</code> to check nothing was dropped. It flags the four hidden files most upload tools skip.</p>
-      <div class="expect"><span class="lbl">Expect</span><p><a href="https://jobs.lisaney.com" target="_blank" rel="noopener">jobs.lisaney.com</a> → Settings shows build <code>2026-10-19.1</code>.</p></div>
+      <p style="margin-top:14px"><b>If it's red:</b> "Repo secrets not set" means a step 3 name is wrong. "not serving" means the files went to a different folder than the site uses: set <code>IONOS_REMOTE_PATH</code> to the directory from step 2, then <b>Re-run all jobs</b>.</p>
+      <div class="expect"><span class="lbl">Expect</span><p>A green run and build <code>2026-10-19.1</code> on the live site.</p></div>
     </div>
   </li>
 
   <li class="step" data-k="s6">
     <div class="head">
-      <h2>Run diagnose, then read the log<span class="where">github.com → Actions</span></h2>
+      <h2>Check the job boards, then fill the board<span class="where">github.com → Actions</span></h2>
       <label class="done"><input type="checkbox" /> Done</label>
     </div>
     <div class="body">
-      <p>Diagnose before full. It probes one endpoint per job-board family plus a Supabase read <em>and</em> write, in under a minute, and it is the run that will finally say what the 39 Workday boards are doing.</p>
+      <p>First a health check that writes no jobs, then the real scrape.</p>
       <ul class="clicks">
-        <li>Repo → <b>Actions</b> tab</li>
-        <li>Left sidebar → <b>Orbital daily scrape</b></li>
-        <li>Right side → <b>Run workflow</b></li>
-        <li>Change <b>mode</b> from <code>full</code> to <code>diagnose</code></li>
-        <li>Green <b>Run workflow</b> → wait ~15s → refresh → click the new run at the top</li>
-        <li>Click the <b>scrape</b> job → expand <b>Run scraper</b></li>
+        <li>Repo → <b>Actions</b> → <b>Orbital daily scrape</b> → <b>Run workflow</b> → mode <code>diagnose</code> → <b>Run workflow</b></li>
+        <li>Open the run → <b>scrape</b> job → <b>Run scraper</b>. It lists every board as PASS, EMPTY or FAIL with the reason, then checks the six tables and that the key can write. <code>failed-scrapes-log</code> under <b>Artifacts</b> has the same list as a spreadsheet</li>
+        <li>Run the workflow again with mode <code>full</code>. From then on it runs by itself every morning at 6 AM Central</li>
+        <li>Open <a href="pipeline-probe.html">pipeline-probe.html</a> on the live site to see the run land</li>
       </ul>
-      <p style="margin-top:14px">Scroll that log to the <code>workday</code> lines. You are looking for one of three things: <em>no data-center subdomain answered</em>, <em>host answers but no board variant matched</em>, or an HTTP <code>401 / 403 / 404</code>. Each points at a different one of the three tokens.</p>
-      <p>At the bottom of the run summary, if an <b>Artifacts</b> box shows <code>failed-scrapes-log</code>, download it — that CSV is the per-company failure list.</p>
-      <p>When diagnose looks healthy, run it again with mode <code>full</code> to fill the board.</p>
-      <div class="expect"><span class="lbl">Expect</span><p>Green run, per-family results printed, and a first row in <code>scrape_runs</code>.</p></div>
+      <div class="expect"><span class="lbl">Expect</span><p>A green full run, roles on <code>jobs.lisaney.com</code>, and a <code>done</code> row in <code>scrape_runs</code> with rows written.</p></div>
     </div>
   </li>
 
 </ol>
 
-<div class="after">
-  <h3>Send me the log</h3>
-  <p>Paste the Workday lines from step 6, or attach <code>failed_scrapes_log.csv</code>. That turns "39 boards, zero rows" into named causes, and I can correct the tokens from it.</p>
-  <ul>
-    <li><strong>A clean install does not fix the Workday tokens.</strong> 21 of the 39 boards carry guesses marked <code>unverified</code> in <code>companies.json</code>. This install gives the scraper somewhere to record what happens to them; the repair comes from the log.</li>
-    <li><strong>If the 18 verified boards return rows and the 21 do not</strong>, it is purely bad tokens and I fix them by hand.</li>
-    <li><strong>If all 39 stay at zero</strong>, the cause is upstream of routing — the family failing before its loop, or rows being rejected on write — and I would look at the location filter next, since a role only survives if it maps to Seattle, Greater LA, New Zealand or US Other.</li>
-  </ul>
-</div>
-
 <div class="note good" style="margin-top:28px">
   <div class="ico">API</div>
-  <p><strong>Optional, any time after the above.</strong> The AI features (tailored résumé, cover letter, essays) need a Claude key: live site → Settings → 🔑 Claude API Key → paste → Save → Test → wait for the green ✓ Working. It is stored in that one browser and goes nowhere else. Give it a monthly spend cap in the Anthropic console — a key sitting in a browser is readable by anyone using that device.</p>
+  <p><strong>Optional, any time.</strong> The AI buttons on the site (tailored résumé, cover letter, essays) need a Claude key in that browser: live site → Settings → 🔑 Claude API Key → paste → Save → Test. It stays in that browser. Give it a monthly spend cap in the Anthropic console. To preview the 8 AM email without sending: Actions → <b>Orbital daily email</b> → Run workflow → mode <code>preview</code>.</p>
 </div>
 
 <footer>
-  Other pages in this kit: <a href="START-HERE.html">START-HERE.html</a> (the long-form setup guide) · <a href="tools.html">tools.html</a> (five live diagnostics) · <a href="pipeline-probe.html">pipeline-probe.html</a> (has the scraper ever written to Supabase) · <a href="index.html">index.html</a> (the console itself). Full file list in <code>MANIFEST.txt</code>; what changed in build 17 is at the top of <code>README.txt</code>.
+  Other pages in this kit: <a href="tools.html">tools.html</a> (live diagnostics) · <a href="pipeline-probe.html">pipeline-probe.html</a> (has the scraper written to Supabase) · <a href="START-HERE.html">START-HERE.html</a> (background reading) · <a href="index.html">index.html</a> (the console). Full file list in <code>MANIFEST.txt</code>.
 </footer>
 
 </div>

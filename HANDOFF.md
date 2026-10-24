@@ -7,11 +7,42 @@ is not in here. Add it below under "Notes from the user".
 ## Where things stand
 
 - **Working copy:** `C:\Users\one\Documents\Orbital` (a local git repo; first commit is build 17 exactly as zipped).
-  Stamp `2026-10-19.1`, 55 kit files. See the 2026-10-19 entry below for what changed.
+  Stamp `2026-10-19.1`, 53 kit files. See the 2026-10-23 and 2026-10-19 entries below for what changed.
 - **Repo:** `lisaneykong/orbital` on `main`. At last read the repo was on `2026-09-09.6`. Builds .7 onward have never been pushed.
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
-- **Clean install:** not done yet (as of 2026-10-19). Note: CLEAN-INSTALL.html is right that there are
-  **three** workflow files (scrape, deploy, daily-email). The "two workflow files" line in the test steps below is out of date.
+- **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
+
+## 2026-10-23 — deep pass: Workday, closed postings, install
+
+- **Runtime sweep:** every view × 6 regions × 3 tracks (576 renders), 60 dossiers, every owner action and ~35 real
+  clicks, as guest and as owner (writes blocked). Zero errors.
+- **Real board check** (new diagnose, run from a laptop against the live boards on 2026-10-19): only 79 of 165
+  boards listed postings. Workday 7/39, BambooHR 3/31 (27 return non-JSON, likely changed endpoint), WelcomeKit 0/6,
+  Personio 1/5, custom 4/13, Greenhouse 28/31 (Apex, Slingshot, Starcloud dead), Lever 11/13.
+- **Workday resolver bug:** Workday answers 422 for a wrong data center/tenant and 404 for a wrong board; the old
+  resolver treated any answer as the right host. Fixed, with more data centers and board-name variants.
+- **companies.json:** 10 Workday boards confirmed live by the Workday API and corrected (Northrop `ngc`, RTX
+  `globalhr`, Boeing, Sierra Space, Airbus `ag`, Amentum `pae`, Aerospace Corp `aero`, Moog, Maxar → board `Vantor`,
+  Axiom). 21 companies not on Workday moved to `needs_route` with the reason (Lockheed, L3Harris, ULA, Virgin
+  Galactic, Intuitive Machines, BlackSky, York, Terran Orbital, Mynaric, SAIC, Peraton, Jacobs, Viasat, Iridium,
+  Intelsat, SES, Kratos, BWXT, Redwire, Honeywell; Blue Canyon comes in under RTX).
+- **Workday scraping:** multi-site roles ("2 Locations") were all dropped; the detail call now supplies the real
+  locations. Cap raised from 400 to 2,000 postings per board; on boards over 400 only titles that can qualify get a
+  detail request, so the primes fit in the run. A page error mid-board keeps the rows already read.
+- **Posting dates:** a dated role keeps the earliest date ever stored for it, so "Posted 30+ Days Ago" no longer
+  resets daily. **Closed postings:** new `last_seen` column; the app hides a role its company's latest scrape no
+  longer returned (judged per company, 36 h grace). Undated roles age out from `created_at` (first seen).
+- **Dedupe** only merges across different boards, and keeps full-time and internship apart. "Technical Fellow" is no
+  longer an internship (scraper, app, setup.html). Careers-page navigation links no longer become roles.
+- **Schedules:** a 6 AM slot that starts late acts as a catch-up instead of being skipped; the 8 AM email sends if
+  its slot starts late (email_log still prevents doubles). Claude calls in Actions retry rate limits/overloads;
+  a role that fails is saved as `failed` and retried once a day.
+- **App:** Early-Career radar uses `isEarlyCareer()`; dossier "why you fit" now lists real professional skills;
+  "SHE" → "HE" in the cover-letter prompt; Scrape now is owner-only.
+- **Install:** `SUPABASE-SCHEMA.sql` is idempotent and never deletes (parsed OK by the PostgreSQL parser); the two
+  partial SQL files are removed; setup.html's SQL box matches. `deploy.yml` publishes into `IONOS_REMOTE_PATH`
+  (created if missing) or the SFTP login folder on a first install; repo variable `SITE_URL` optional.
+  CLEAN-INSTALL.html rewritten as one IONOS path.
 
 ## 2026-10-19 — quick-win fixes (stamp `2026-10-19.1`)
 
@@ -62,52 +93,24 @@ is not in here. Add it below under "Notes from the user".
 
 ## Open problems
 
-1. **Workday and custom boards produce no rows.** That's 39 Workday boards and 13 custom boards. 21 of the Workday
-   boards use guessed tokens (`unverified: true` in `companies.json`). A clean install won't fix this.
-   It makes a diagnosis possible.
-2. **The telemetry tables don't exist.** `scrape_runs` and `scrape_progress` return 404 PGRST205, so the scraper
-   has never recorded which boards failed. The scraper's self-healing retry is also silently switched off
-   until `scrape_runs` exists.
-3. **Repo cleanup:**
-   - A stray `scrape.yml` sits at the repo root. Delete it.
-   - The repo has no `.htaccess`, so the no-cache rules never publish.
-   - Check for a committed `resolved_tokens.json` and delete it if present. A stale copy pins boards to dead tokens.
-4. **Known limits (by design, not bugs):**
-   - Matching is keyword/regex, not semantic.
-   - About 50 companies are maintained by hand.
-   - Internship deadlines are usually estimates.
-   - Saves, dismisses and applications are tracked per device.
-5. **On hold at the user's request:** a step-by-step wizard version of `setup.html`.
+1. **Boards still at zero** (from the 2026-10-19 board check; rerun diagnose after install for current numbers):
+   - BambooHR 27 of 31 return a non-JSON page from `/careers/list`. The endpoint has probably changed.
+   - WelcomeKit 0/6 and Personio 4/5 fail (HTTP 404 / no endpoint).
+   - 21 companies not on Workday now sit in `needs_route`; each needs its real ATS found.
+   - Custom pages: several are JavaScript-built (no links in the HTML) or have moved (404/410).
+2. **Telemetry and Apply Queue tables don't exist on the live database** until `SUPABASE-SCHEMA.sql` is run.
+3. **Repo cleanup** (CLEAN-INSTALL step 4): stray top-level `scrape.yml`, the two removed SQL files, and `.htaccess`
+   missing from the repo.
+4. **Not done yet:** one match score everywhere (the dashboard rescores; the Apply Queue and email use the raw scraper
+   score); `user_state` and `app_queue` are readable/writable with the public anon key; interview-guide generator.
+5. **Known limits (by design):** keyword matching, not semantic; ~165 hand-maintained boards; internship deadlines
+   are usually estimates; salaries are estimates until a posting gives pay.
+6. **On hold at the user's request:** a step-by-step wizard version of `setup.html`.
 
-## Tests to run (the clean install, in order)
+## Install checks
 
-Follow `CLEAN-INSTALL.html`. What each step should produce:
-
-1. **Reset the database.** Run `SUPABASE-SCHEMA.sql` in the Supabase SQL Editor. This deletes every job row, so export a CSV first if you want to keep them. `user_state` survives.
-   → "Success. No rows returned."
-2. **Confirm the tables.** Table Editor should list `jobs`, `user_state`, `scrape_runs` and `scrape_progress`.
-   → Four tables, and `jobs` has 0 rows.
-3. **Push build 17 to GitHub.** Upload the *contents* of `ORBITAL-v17` to the repo top level. Then:
-   - Delete `resolved_tokens.json` if present.
-   - Make sure `.github/workflows/` holds only `scrape.yml` and `deploy.yml`.
-   - Delete the stray root `scrape.yml`.
-   → About 47 changed files and exactly two workflow files.
-4. **Check the secrets.** `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` must be set. The service key must be the service_role key, not the anon key. The three `IONOS_FTP_*` secrets are needed for auto-publish.
-5. **Publish to IONOS.** This happens automatically if the IONOS secrets are set. For a manual upload, turn on hidden files and confirm `.htaccess` arrived.
-   → The live Settings page shows `2026-09-28.1`.
-6. **Run diagnose.** Actions → Orbital daily scrape → Run workflow, with mode set to `diagnose`. Read the Workday lines in the log and look for one of these:
-   - "no data-center subdomain answered"
-   - "host answers but no board variant matched"
-   - HTTP 401 / 403 / 404
-   
-   Download `failed-scrapes-log` if it's attached. Once diagnose looks healthy, run again with mode `full`.
-   → A green run, per-family results, and a first row in `scrape_runs`.
-
-**Send back:** the Workday log lines and/or `failed_scrapes_log.csv`. Also a screenshot of `pipeline-probe.html` after the full run.
-
-**How to read the result:**
-- **The 18 verified boards return rows and the 21 guessed ones don't:** the tokens are wrong. Fix them by hand in `companies.json`.
-- **All 39 stay at zero:** the problem is upstream. Check two things. First, whether the whole Workday family fails before its loop. Second, whether rows are rejected on write by the location filter. A role only survives if it maps to Seattle, Greater LA, New Zealand or US Other.
+Follow `CLEAN-INSTALL.html`. **Send back:** the diagnose log (or `failed_scrapes_log.csv`) and a screenshot of
+`pipeline-probe.html` after the first full run.
 
 ## 2026-09-28 — résumé generator synced to the job kit (stamp `2026-09-28.1`)
 

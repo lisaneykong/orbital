@@ -19,7 +19,11 @@ const today = chicagoDate();
 
 // ---- once per day ----
 const log = await sbSelect('email_log', `select=sent_on&sent_on=eq.${today}`);
-if (log.missing) console.log('::warning::email_log table missing (run SUPABASE-APPLY-QUEUE.sql) — sending without the once-a-day guard.');
+if (log.missing && process.env.LATE_SLOT && !FORCE && !PREVIEW) {
+  console.log('::warning::email_log table missing, so this later slot cannot tell whether 8am already sent. Skipping. Run SUPABASE-SCHEMA.sql.');
+  process.exit(0);
+}
+if (log.missing) console.log('::warning::email_log table missing (run SUPABASE-SCHEMA.sql) — sending without the once-a-day guard.');
 else if (log.rows.length && !FORCE && !PREVIEW) { console.log(`Today's email (${today}) already went out. Use --force to resend.`); process.exit(0); }
 
 // ---- data ----

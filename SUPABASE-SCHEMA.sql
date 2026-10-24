@@ -1,64 +1,69 @@
--- ORBITAL // COMMAND — Supabase schema
--- Extracted verbatim from setup.html's Step 1 block, so this file and the setup screen
--- cannot drift apart. Paste the whole thing into Supabase -> SQL Editor -> Run.
--- Expect "Success. No rows returned".
+-- ORBITAL // COMMAND — Supabase schema. The ONLY database file you need.
+-- Paste the whole thing into Supabase -> SQL Editor -> Run. Expect "Success. No rows returned".
+-- Safe to run any number of times, on a new or an existing database: it creates what is
+-- missing, adds any missing columns, and never deletes a row. setup.html shows the same SQL.
 
--- WIPES the jobs table and rebuilds it fresh to this EXACT schema.
--- Use this if a previous table was a different shape and caused "no match" / "permission denied".
-drop table if exists public.jobs cascade;
-create table public.jobs (
-  idx             bigint generated always as identity,
-  id              text primary key,
-  company         text not null,
-  title           text not null,
-  location_hub    text,
-  location        text,
-  salary_range    text,
-  salary_min      int,
-  salary_max      int,
-  intern_rate     int,
-  intern_weeks    int,
-  is_intern       boolean default false,
-  type            text,
-  match           int,
-  planets         int,
-  demand          int,
-  posting_age     int,
-  tech            text,
-  clearance       text,
-  relocation_flag boolean default false,
-  relocation_note text,
-  logo_bg         text,
-  url             text,
-  timestamp       timestamptz,
-  description     text,
-  requirements    text,
-  source          text,
-  status          text default 'active',
-  saved           boolean default false,
-  archived        boolean default false,
-  itar_flag       boolean default false,
-  clearance_level text,
-  degree_levels   text,
-  hw_sw_track     text,
-  housing_stipend boolean default false,
-  intern_skills   text,
-  apply_deadline  timestamptz,
-  program_start   timestamptz,
-  verticals       text,
-  created_at      timestamptz default now()
+-- ============ JOBS (written by the daily scraper) ============
+create table if not exists public.jobs (
+  id text primary key
 );
--- Upgrade-in-place for tables created before the verticals column existed
--- ("create table if not exists" silently no-ops on an old table — this doesn't):
-alter table public.jobs add column if not exists verticals text;
+alter table public.jobs add column if not exists idx             bigint generated always as identity;
+alter table public.jobs add column if not exists company         text;
+alter table public.jobs add column if not exists title           text;
+alter table public.jobs add column if not exists location_hub    text;
+alter table public.jobs add column if not exists location        text;
+alter table public.jobs add column if not exists salary_range    text;
+alter table public.jobs add column if not exists salary_min      int;
+alter table public.jobs add column if not exists salary_max      int;
+alter table public.jobs add column if not exists intern_rate     int;
+alter table public.jobs add column if not exists intern_weeks    int;
+alter table public.jobs add column if not exists is_intern       boolean default false;
+alter table public.jobs add column if not exists type            text;
+alter table public.jobs add column if not exists match           int;
+alter table public.jobs add column if not exists planets         int;
+alter table public.jobs add column if not exists demand          int;
+alter table public.jobs add column if not exists posting_age     int;
+alter table public.jobs add column if not exists tech            text;
+alter table public.jobs add column if not exists clearance       text;
+alter table public.jobs add column if not exists relocation_flag boolean default false;
+alter table public.jobs add column if not exists relocation_note text;
+alter table public.jobs add column if not exists logo_bg         text;
+alter table public.jobs add column if not exists url             text;
+alter table public.jobs add column if not exists timestamp       timestamptz;   -- original posting date, NULL when unknown
+alter table public.jobs add column if not exists last_seen       timestamptz;   -- last scrape that saw the posting
+alter table public.jobs add column if not exists description     text;
+alter table public.jobs add column if not exists requirements    text;
+alter table public.jobs add column if not exists source          text;
+alter table public.jobs add column if not exists status          text default 'active';
+alter table public.jobs add column if not exists saved           boolean default false;
+alter table public.jobs add column if not exists archived        boolean default false;
+alter table public.jobs add column if not exists itar_flag       boolean default false;
+alter table public.jobs add column if not exists clearance_level text;
+alter table public.jobs add column if not exists degree_levels   text;
+alter table public.jobs add column if not exists hw_sw_track     text;
+alter table public.jobs add column if not exists housing_stipend boolean default false;
+alter table public.jobs add column if not exists intern_skills   text;
+alter table public.jobs add column if not exists apply_deadline  timestamptz;
+alter table public.jobs add column if not exists program_start   timestamptz;
+alter table public.jobs add column if not exists verticals       text;
+alter table public.jobs add column if not exists created_at      timestamptz default now();   -- first time Orbital saw it
+create index if not exists jobs_hub_time_idx on public.jobs (location_hub, timestamp desc);
 
--- ============ CROSS-DEVICE TRACKING (saves / dismissals / applied) ============
--- One row keyed 'tracking', last-write-wins by timestamp. HONEST TRADEOFF: the
--- browser only ships the public anon key, so this table grants anon INSERT/UPDATE
--- on itself (and ONLY itself — the jobs table stays read-only to anon). Anyone who
--- extracts the public key could scribble on this one row of job-ID bookmarks; for a
--- single-user tool holding no sensitive data, that is the accepted cost of sync
--- without shipping the service key. No DELETE granted.
+-- The browser holds only the public anon key: it may READ jobs. Only the scraper's
+-- service_role key writes.
+grant usage on schema public to anon, authenticated, service_role;
+grant select on public.jobs to anon, authenticated;
+grant all privileges on public.jobs to service_role;
+alter table public.jobs disable row level security;
+drop policy if exists "anon read jobs" on public.jobs;
+create policy "anon read jobs" on public.jobs for select to anon using (true);
+drop policy if exists "service role writes" on public.jobs;
+create policy "service role writes" on public.jobs for all to service_role using (true) with check (true);
+
+-- ============ CROSS-DEVICE SYNC (saves, applications, notes, master résumé) ============
+-- One row keyed 'tracking', last write wins. Trade-off: the browser only has the public
+-- anon key, so anon may read and write this one table (never delete). Anyone holding the
+-- key could read or overwrite it. No other table is writable this way except app_queue status.
 create table if not exists public.user_state (
   k          text primary key,
   v          jsonb,
@@ -66,31 +71,8 @@ create table if not exists public.user_state (
 );
 grant select, insert, update on public.user_state to anon, authenticated, service_role;
 alter table public.user_state disable row level security;
-drop policy if exists "anon read jobs" on public.jobs;
-create policy "anon read jobs" on public.jobs
-  for select to anon using (true);
--- GRANT table permissions — fixes "permission denied for table jobs" even with the
--- correct service_role key (the role needs an explicit grant to write).
-grant usage on schema public to anon, authenticated, service_role;
-grant select on public.jobs to anon, authenticated;
-grant all privileges on public.jobs to service_role;
--- Single-user tool: RLS off so the service_role key can always write. (The policies
--- above are kept as belt-and-suspenders in case a future change re-enables RLS.)
-alter table public.jobs disable row level security;
--- Belt & suspenders: an explicit write policy (in case the key resolves as authenticated).
-drop policy if exists "service role writes" on public.jobs;
-create policy "service role writes" on public.jobs
-  for all to service_role using (true) with check (true);
-create index if not exists jobs_hub_time_idx
-  on public.jobs (location_hub, timestamp desc);
 
--- ============ LIVE SCRAPE PROGRESS (powers the Refresh roles button) ============
--- The browser cannot watch scraper.py run: GitHub's API only reports whole workflow
--- STEPS, so "greenhouse came back, workday is still going" has to come from the
--- scraper itself. It writes one header row per run plus one row per ATS family as
--- each finishes, and the dashboard polls these two tables while a run is in flight.
--- Read-only to anon (it is progress telemetry, not user data); only the service key
--- the Action holds can write.
+-- ============ SCRAPE TELEMETRY (catch-up gate, Scrape now progress, pipeline-probe) ============
 create table if not exists public.scrape_runs (
   run_id        text primary key,
   started_at    timestamptz default now(),
@@ -98,18 +80,18 @@ create table if not exists public.scrape_runs (
   status        text default 'running',   -- running | done | failed
   boards_total  int  default 0,
   boards_done   int  default 0,
-  rows_upserted int  default 0,
-  trigger       text,                    -- schedule | manual | dispatch
+  rows_upserted int  default 0,           -- rows actually written
+  trigger       text,                    -- schedule | catchup | dispatch
   note          text
 );
 create table if not exists public.scrape_progress (
-  run_id      text not null,
-  source      text not null,             -- greenhouse | lever | workday | ...
-  boards_done int  default 0,
-  boards_total int default 0,
-  rows        int  default 0,
-  status      text default 'running',     -- running | done | failed
-  updated_at  timestamptz default now(),
+  run_id       text not null,
+  source       text not null,
+  boards_done  int  default 0,
+  boards_total int  default 0,
+  rows         int  default 0,
+  status       text default 'running',
+  updated_at   timestamptz default now(),
   primary key (run_id, source)
 );
 create index if not exists scrape_runs_started_idx on public.scrape_runs (started_at desc);
@@ -117,10 +99,8 @@ grant select on public.scrape_runs, public.scrape_progress to anon, authenticate
 grant all privileges on public.scrape_runs, public.scrape_progress to service_role;
 alter table public.scrape_runs     disable row level security;
 alter table public.scrape_progress disable row level security;
--- ============ APPLY QUEUE + DAILY EMAIL LOG (auto-prepare, 8am email) ============
--- One row per role the morning job prepared. The résumé and cover letter are stored as
--- base64 .docx so the dashboard can download them with the anon key. You change status
--- from the dashboard (ready → applied / skipped); only the Action's service key inserts.
+
+-- ============ APPLY QUEUE (morning auto-prepare) + DAILY EMAIL LOG ============
 create table if not exists public.app_queue (
   job_id        text primary key,
   company       text,
@@ -132,7 +112,7 @@ create table if not exists public.app_queue (
   posted_at     timestamptz,
   salary_range  text,
   is_intern     boolean default false,
-  status        text default 'ready',      -- ready | applied | skipped
+  status        text default 'ready',      -- ready | applied | skipped | failed
   prepared_at   timestamptz default now(),
   applied_at    timestamptz,
   updated_at    timestamptz default now(),
@@ -147,14 +127,10 @@ create table if not exists public.app_queue (
   error         text
 );
 create index if not exists app_queue_status_idx on public.app_queue (status, prepared_at desc);
--- Same accepted tradeoff as user_state: the browser only holds the public anon key, so it
--- can read the queue and update a row's status. No insert or delete for anon.
 grant select, update on public.app_queue to anon, authenticated;
 grant all privileges on public.app_queue to service_role;
 alter table public.app_queue disable row level security;
 
--- One row per day the 8am email went out, so two DST cron slots or a manual re-run can
--- never send the same day twice.
 create table if not exists public.email_log (
   sent_on    date primary key,
   sent_at    timestamptz default now(),
@@ -165,7 +141,5 @@ grant select on public.email_log to anon, authenticated;
 grant all privileges on public.email_log to service_role;
 alter table public.email_log disable row level security;
 
--- Supabase's REST layer (PostgREST) caches role permissions and does NOT always pick up
--- GRANT/RLS changes immediately — this NOTIFY forces an instant cache reload so the fix
--- above takes effect right away instead of waiting for PostgREST's automatic refresh.
+-- PostgREST caches permissions; this makes the changes above take effect immediately.
 NOTIFY pgrst, 'reload schema';
