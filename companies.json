@@ -1020,11 +1020,6 @@
       "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
     },
     {
-      "company": "Virgin Galactic",
-      "tried": "workday:virgingalactic/VirginGalactic",
-      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
-    },
-    {
       "company": "Intuitive Machines",
       "tried": "workday:intuitivemachines/Careers",
       "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
@@ -1252,6 +1247,7 @@
       "eightfold",
       "darwinbox",
       "zohorecruit",
+      "successfactors",
       "custom"
     ],
     "note": "browser_reachable buckets are fetched live by index.html (FP_COMPANIES + fpFetchBoard). action_only buckets are CORS-blocked from a browser and are fetched exclusively by the daily GitHub Action via scraper.py. Adding a bucket to companies.json does nothing until it has BOTH an fpFetchBoard branch and an fpNormalize branch in index.html.",
@@ -1263,7 +1259,8 @@
       "smartrecruiters": "api.smartrecruiters.com/v1/companies/<Identifier>/postings — {content:[...]}; identifiers are PascalCase and case-sensitive; list endpoint carries no description",
       "recruitee": "<slug>.recruitee.com/api/offers/ — {offers:[...]}; per-posting URL is careers_url",
       "darwinbox": "<slug>.darwinbox.in/ms/candidateapi/job?page=N&limit=50 — {message:{jobs:[...]}}; per-posting URL is /ms/candidate/careers/<id>",
-      "zohorecruit": "<host>/jobs/Careers — HTML with an HTML-escaped JSON list of records (Posting_Title, City, Country, id)"
+      "zohorecruit": "<host>/jobs/Careers — HTML with an HTML-escaped JSON list of records (Posting_Title, City, Country, id)",
+      "successfactors": "<host>/search/?q=&startrow=N — HTML rows tr.data-row (a.jobTitle-link, .jobLocation, .jobDate); job page has .jobdescription"
     }
   },
   "darwinbox": [
@@ -1282,6 +1279,14 @@
       "intl": true,
       "verified": "probed live 2026-10-24 (resolve pass)",
       "note": "Zoho Recruit — records are embedded in https://skyroot.zohorecruit.in/jobs/Careers ."
+    }
+  ],
+  "successfactors": [
+    {
+      "company": "Virgin Galactic",
+      "host": "careers.virgingalactic.com",
+      "verified": "probed live 2026-10-24 (88 open)",
+      "note": "SAP SuccessFactors career site; Workday tenant is gone. /search/ is server-rendered HTML, 25 rows a page."
     }
   ]
 }

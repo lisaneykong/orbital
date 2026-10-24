@@ -154,6 +154,7 @@ PINPOINT = _COMPANIES.get("pinpoint", [])
 MANATAL = _COMPANIES.get("manatal", [])
 DARWINBOX = _COMPANIES.get("darwinbox", [])
 ZOHORECRUIT = _COMPANIES.get("zohorecruit", [])
+SUCCESSFACTORS = _COMPANIES.get("successfactors", [])
 
 # Eightfold-powered portals (custom JSON API, server-side only — CORS-blocked in browser).
 # API: https://{host}/api/apply/v2/jobs?domain={domain}&start=0&num=100
@@ -222,6 +223,12 @@ RESUME_DOMAIN = [
     "technology readiness",
     "lifecycle cost",
     "constellation",
+    # NASA L'SPACE NPWEE: Principal Investigator on the team's submitted mission concept.
+    "principal investigator",
+    "mission concept",
+    "mission formulation",
+    "concept study",
+    "proposal development",
 ]
 
 # Tier 3 (weight 3) — supporting tooling and general operations terms from the résumé's
@@ -306,7 +313,7 @@ TITLE_INCLUDE = re.compile(
     r"operations manager|business operations|s&op|systems integration|systems engineer|systems engineering|requirements engineer|verification and validation|mbse|incose|solutions architect|"
     r"lifecycle|launch operations|supply chain|sourcing|procurement|program operations|"
     r"strategy manager|project coordinator|program coordinator|mission operations|mission planner|"
-    r"proposal manager|capture manager|integration and test|strategic operations|operations lead|senior manager|sr\.? manager|"
+    r"proposal manager|proposal lead|capture manager|space operations|spacecraft operations|satellite operations|mission systems|mission concept|mission formulation|integration and test|strategic operations|operations lead|senior manager|sr\.? manager|"
     r"portfolio manager|production manager|project manager)\b",
     re.I,
 )
@@ -1695,6 +1702,53 @@ def scrape_darwinbox(cfg):
     return rows
 
 
+def scrape_successfactors(cfg):
+    """SAP SuccessFactors career site (Virgin Galactic). /search/ is server-rendered HTML,
+    25 rows a page; each job page carries its description and an itemprop datePosted."""
+    company, host = cfg["company"], cfg["host"]
+    if not _HAS_BS4:
+        log_failure(company, host, "beautifulsoup4 not installed")
+        return []
+    rows, start = [], 0
+    while start < 1000:
+        r = request("GET", f"https://{host}/search/?q=&sortColumn=referencedate&sortDirection=desc&startrow={start}",
+                    headers={"Accept": "text/html"})
+        if r.status_code != 200:
+            raise RetryableHTTP(f"successfactors {host} -> {r.status_code}")
+        trs = BeautifulSoup(r.text, "html.parser").select("tr.data-row")
+        for tr in trs:
+            a = tr.select_one("a.jobTitle-link")
+            if not a or not a.get("href"):
+                continue
+            title = a.get_text(" ", strip=True)
+            url = urllib.parse.urljoin(f"https://{host}/", a["href"])
+            loc_el = tr.select_one("td.colLocation .jobLocation") or tr.select_one(".jobLocation")
+            loc = re.sub(r",\s*\d{5}$", "", loc_el.get_text(" ", strip=True)) if loc_el else ""
+            date_el = tr.select_one("td.colDate .jobDate") or tr.select_one(".jobDate")
+            posted = date_el.get_text(" ", strip=True) if date_el else None
+            hub = determine_location_hub(loc)
+            if not hub or not _title_worth_detail(title, hub, False):
+                continue
+            desc = ""
+            try:
+                d = request("GET", url, headers={"Accept": "text/html"})
+                if d.status_code == 200:
+                    el = BeautifulSoup(d.text, "html.parser").select_one(".jobdescription, [itemprop=description]")
+                    desc = el.get_text(" ", strip=True) if el else ""
+            except Exception:
+                pass
+            m = re.search(r"/(\d+)/?$", a["href"])
+            jid = m.group(1) if m else hashlib.md5(url.encode()).hexdigest()[:8]
+            row = build_row(company, jid, title, loc, url, "successfactors", desc or title, posted=posted)
+            if row:
+                rows.append(row)
+        if len(trs) < 25:
+            break
+        start += 25
+        time.sleep(0.3 + random.random() / 2)
+    return rows
+
+
 def scrape_zohorecruit(cfg):
     """Zoho Recruit career site (Skyroot). The job records are embedded in the page as
     HTML-escaped JSON; there is no public JSON endpoint and no posting date."""
@@ -1779,6 +1833,8 @@ def build_tasks():
         tasks.append((cfg["company"], "darwinbox", lambda c=cfg: scrape_darwinbox(c)))
     for cfg in ZOHORECRUIT:
         tasks.append((cfg["company"], "zohorecruit", lambda c=cfg: scrape_zohorecruit(c)))
+    for cfg in SUCCESSFACTORS:
+        tasks.append((cfg["company"], "successfactors", lambda c=cfg: scrape_successfactors(c)))
     random.shuffle(tasks)   # spread load across domains naturally
     return tasks
 
@@ -2163,6 +2219,14 @@ def _diagnose_tasks():
             import html as _html
             return _html.unescape(r.text).count('"Posting_Title"'), "records on the career page"
         add("zohorecruit", c["company"], zr)
+    for c in SUCCESSFACTORS:
+        def sf(c=c):
+            r = SESSION.get(f"https://{c['host']}/search/?q=&startrow=0", timeout=20)
+            if r.status_code != 200:
+                raise RuntimeError(f"HTTP {r.status_code}")
+            m = re.search(r"Results\s*<b>[^<]*</b>\s*of\s*<b>(\d+)", r.text)
+            return (int(m.group(1)) if m else r.text.count('class="data-row"')), "results on the search page"
+        add("successfactors", c["company"], sf)
     return tasks
 
 

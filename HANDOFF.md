@@ -12,6 +12,19 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-24 — profile update, Virgin Galactic back
+
+- **Profile:** M.S. Space Systems now ends September 2027, not August (OWNER.education, the résumé JSON,
+  CRED_SCHEDULE, both essays). NPWEE now records that Lisaney is Principal Investigator and that the team chose
+  their mission concept as its NASA submission (certs, résumé JSON, courseworkSentence, summary blurb).
+  CRED_SCHEDULE already switches each credential from "expected" to "held" on its end date.
+- **Scoring:** PI and proposal terms (principal investigator, mission concept, concept study, mission formulation,
+  announcement of opportunity, pre-Phase A) now count in PROPOSAL_RE and in the scraper's RESUME_DOMAIN. Satellite,
+  spacecraft and space operations, mission systems and proposal-lead titles pass the scraper's TITLE_INCLUDE.
+- **Virgin Galactic:** the Workday tenant is gone. The company now uses SAP SuccessFactors at
+  careers.virgingalactic.com, so there is a new `successfactors` bucket and `scrape_successfactors`. The test scrape
+  read 88 postings and kept 13. It was removed from needs_route and the dead Workday entry in FP_COMPANIES.
+
 ## 2026-10-24 — 2026 space-funding list added
 
 Of the 38 startups on the user's list (raised $20M+ in 2026), 21 were already configured and working. Added, each

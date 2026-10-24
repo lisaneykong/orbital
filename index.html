@@ -1946,10 +1946,10 @@ const ATS_BOARD={
   // --- Confirmed careers portals with no public JSON API (server-side / manual)
   'Firefly Aerospace':'https://firefly.hrmdirect.com/employment/job-openings.php?search=true',
   'Sierra Nevada Corporation':'https://www.sncorp.com/careers/',
+  'Virgin Galactic':'https://careers.virgingalactic.com/',
   // --- Workday external sites (tenant.server.myworkdayjobs.com/en-US/<board>)
   'Blue Origin':'https://blueorigin.wd5.myworkdayjobs.com/en-US/BlueOrigin',
   'Sierra Space':'https://sierraspace.wd5.myworkdayjobs.com/en-US/SierraSpace',
-  'Virgin Galactic':'https://virgingalactic.wd5.myworkdayjobs.com/en-US/VirginGalactic',
   'Axiom Space':'https://axiomspace.wd5.myworkdayjobs.com/en-US/AxiomSpace',
   'Intuitive Machines':'https://intuitivemachines.wd5.myworkdayjobs.com/en-US/Careers',
   'BlackSky':'https://blacksky.wd5.myworkdayjobs.com/en-US/BlackSky',
@@ -2174,12 +2174,12 @@ const OWNER = {
   education:[
     ['Master of Space Operations','Embry-Riddle Aeronautical University, Worldwide','expected December 2026','Space mission operations and the commercial space economy: launch systems, satellite communications, Earth observation and remote sensing, commercial and governmental space infrastructure, human spaceflight, space law and policy, and cybersecurity for space systems.'],
     ['Graduate Certificate in Systems Engineering','Embry-Riddle Aeronautical University, Worldwide','expected February 2027','Systems engineering lifecycle: requirements development and traceability, system architecture and modeling, configuration management, reliability and maintainability, and verification and validation. Team project: fault-tolerant redesign of the Boeing 737 MAX MCAS flight control system (authored introduction and conclusion).'],
-    ['Master of Science in Space Systems','Embry-Riddle Aeronautical University, Worldwide','expected August 2027','Design and analysis of space systems and components using systems engineering principles, with coursework in space systems engineering, program management, automation, and structural materials.'],
+    ['Master of Science in Space Systems','Embry-Riddle Aeronautical University, Worldwide','expected September 2027','Design and analysis of space systems and components using systems engineering principles, with coursework in space systems engineering, program management, automation, and structural materials.'],
     ['Bachelor of Arts in Theatre Arts','Catawba College, Salisbury, NC','2008',''],
   ],
   certs:[
     ['The National Society of Leadership and Success','Member','Leadership honor society.'],
-    ["NASA L'SPACE Proposal Writing & Evaluation Experience (NPWEE) Academy",'Fall 2026','Selected participant, NASA Lucy Mission \u2014 interdisciplinary team proposal development and NASA Proposal Review Panel'],
+    ["NASA L'SPACE Proposal Writing & Evaluation Experience (NPWEE) Academy",'Fall 2026','Principal Investigator, NASA Lucy Mission \u2014 mission concept selected as the team\u2019s NPWEE proposal submission to NASA; interdisciplinary team proposal development and NASA Proposal Review Panel'],
     (Date.now()>Date.parse('2027-01-31T23:59:59')
       ? ['Siemens NX CAD training','through the NPWEE program, completed January 2027','Training through NASA L\u2019SPACE NPWEE.']
       : ['Siemens NX CAD training','through the NPWEE program, expected January 2027','Training in progress \u2014 not a completed credential.']),
@@ -2192,7 +2192,7 @@ const OWNER = {
     ['20-year investment analysis of a commercial Earth-observation operator','sole-authored','Market sizing, government revenue exposure, constellation tradeoffs, and scenario-based projections.'],
     ['Air-launch provider and 72-satellite LEO constellation concept','sole-authored','Original concept for regulated biopharmaceutical payloads.'],
   ],
-  blurb:'A multidisciplinary operations professional with over a decade in enterprise software operations, systems implementation, and cross-functional program coordination, now completing a Master of Space Operations at Embry-Riddle Aeronautical University. Built a startup\u2019s first enterprise information system and BI platforms and carried them through its acquisition, integrated disconnected platforms into automated workflows, and served as the technical subject matter expert bridging engineering teams, business units, and executive leadership. Founded, scaled, and sold four business locations with full P&L ownership. Graduate training spans space mission operations, launch and satellite systems, space law and policy, space cybersecurity, and systems engineering, including a sole-authored capstone conceptual design of an Active Debris Removal mission covering trade studies, sensor selection, propulsion sizing, TRL gating, and lifecycle cost. Actively targeting Program Management, Technical Program Management, and Systems Engineering roles within the commercial space and defense sector.',
+  blurb:'A multidisciplinary operations professional with over a decade in enterprise software operations, systems implementation, and cross-functional program coordination, now completing a Master of Space Operations at Embry-Riddle Aeronautical University. Built a startup\u2019s first enterprise information system and BI platforms and carried them through its acquisition, integrated disconnected platforms into automated workflows, and served as the technical subject matter expert bridging engineering teams, business units, and executive leadership. Founded, scaled, and sold four business locations with full P&L ownership. Graduate training spans space mission operations, launch and satellite systems, space law and policy, space cybersecurity, and systems engineering, including a sole-authored capstone conceptual design of an Active Debris Removal mission covering trade studies, sensor selection, propulsion sizing, TRL gating, and lifecycle cost. Principal Investigator on a NASA L’SPACE NPWEE team whose mission concept was selected as the team’s proposal submission to NASA. Actively targeting Program Management, Technical Program Management, and Systems Engineering roles within the commercial space and defense sector.',
 };
 // The résumé list exactly as authored above, captured BEFORE any overlay can touch it.
 // The seed needs an uncorrupted copy to reset to.
@@ -2340,11 +2340,11 @@ function fitRules(j, text){
   if(!FIT_PROFILE.engDegree && /\b(bachelor'?s?|b\.?s\.?|bsc)\b[^.]{0,60}\b(engineering|physics|computer science)\b/i.test(text)){
     // Graduate work counts where the posting lets it: an M.S. Space Operations, the Systems
     // Engineering graduate certificate and an M.S. Space Systems are all in progress at ERAU
-    // (expected Dec 2026 · Feb 2027 · Aug 2027). They are expected, not held, so a strict
+    // (expected Dec 2026 · Feb 2027 · Sep 2027). They are expected, not held, so a strict
     // engineering-bachelor's requirement is still flagged, just less harshly.
     const gradOk=/\b(master'?s|m\.?s\.?|graduate (degree|certificate)|advanced degree)\b|systems engineering (certificate|certification)|\bincose\b/i.test(text);
     if(gradOk || /or related|or equivalent|equivalent (work )?experience|related (technical )?field|or similar/i.test(text)) add('degreePenalty', gradOk?0:-3);
-    else add('degreePenalty', -6, "Asks for an engineering bachelor's (your ERAU graduate credentials are in progress)");
+    else add('degreePenalty', -6, "Asks for an engineering bachelor's (your ERAU credentials are graduate-level, not an engineering bachelor's)");
   }
   // Siemens NX training (NPWEE, expected Jan 2027): a small coursework-strength nudge where a
   // non-hands-on role mentions CAD/PLM tooling. Hands-on CAD roles keep their penalty above.
@@ -2412,7 +2412,7 @@ function learnedPreferenceNudge(j){
    ===================================================================================== */
 const ERAU_CREDS = {
   mso:{ label:'M.S. Space Operations', short:'MSO', color:'#37d6e6',
-    re:/\b(mission (operations|control|planning|integration|assurance|management)|space operations|spacecraft operations|constellation (operations|management)|ground (segment|station|system|operations)|flight operations|launch operations|range operations|telemetry|tracking and command|tt&c|orbit determination|conjunction|space (domain awareness|traffic|situational awareness|cyber)|orbital debris|active debris removal|rendezvous|proximity operations|\brpo\b|payload operations|anomaly (resolution|investigation)|console operations|shift operations)\b/i },
+    re:/\b(mission (operations|control|planning|integration|assurance|management)|space operations|spacecraft operations|satellite operations|constellation (operations|management)|ground (segment|station|system|operations)|flight operations|launch operations|range operations|telemetry|tracking and command|tt&c|orbit determination|conjunction|space (domain awareness|traffic|situational awareness|cyber)|orbital debris|active debris removal|rendezvous|proximity operations|\brpo\b|payload operations|anomaly (resolution|investigation)|console operations|shift operations)\b/i },
   // Widened to the real 30-credit core (SPAC 500/515/520/525/530/540/550/560/570 + SYSE 500)
   // read off the ERAU catalog sheet: cyber, law/policy, Earth observation, human spaceflight,
   // transportation, SATCOM and space science are core courses, not adjacent interests.
@@ -2425,10 +2425,10 @@ const ERAU_CREDS = {
   syse:{ label:'Grad Cert. Systems Engineering', short:'SysE', color:'#37e0a0',
     re:/\b(systems engineer(ing)?|requirements? (development|management|analysis|decomposition|traceability|verification)|verification and validation|v&v|fault.?toleran(t|ce)|interface control|\bicd\b|configuration management|trade stud(y|ies)|risk (management|register)|\bmbse\b|sysml|technical baseline|integration and test|\bi&t\b|design review|\bpdr\b|\bcdr\b|\btrr\b|\bsrr\b|work breakdown|\bwbs\b|concept of operations|conops)\b/i },
 };
-// NASA L'SPACE NPWEE (Fall 2026) is a real, uncommon credential — proposal development and a
-// seat on a NASA proposal review panel. Roles touching capture/proposal work should register
+// NASA L'SPACE NPWEE (Fall 2026) is a real, uncommon credential — Principal Investigator on the
+// team's NASA proposal (Lisaney's concept was the one submitted) and a seat on a NASA proposal review panel. Roles touching capture/proposal work should register
 // it, so it scores as its own signal instead of being buried in the skills list.
-const PROPOSAL_RE=/\b(proposal|capture manager|capture management|\brfp\b|\brfi\b|solicitation|source selection|\bbaa\b|cost volume)\b/i;
+const PROPOSAL_RE=/\b(proposal|principal investigator|mission concept|concept stud(y|ies)|mission formulation|announcement of opportunity|pre-phase a|capture manager|capture management|\brfp\b|\brfi\b|solicitation|source selection|\bbaa\b|cost volume)\b/i;
 function erauFit(j){
   const title=(j.title||''), text=title+' '+(j.description||'');
   const creds=[]; let score=0;
@@ -3138,7 +3138,7 @@ const ORBITAL_MASTER_RESUME = {
     ]
   },
   "summary": [
-    "A multidisciplinary operations professional with over a decade in enterprise software operations, systems implementation, and cross‑functional program coordination, now completing a Master of Space Operations at Embry‑Riddle Aeronautical University. Built a startup’s first enterprise information system, BI platforms, and operating budgets and carried them through its acquisition, integrated disconnected platforms into automated workflows, and served as the technical subject matter expert bridging engineering teams, business units, and executive leadership. Founded, scaled, and sold four business locations with full P&L ownership. Graduate training spans space mission operations, launch and satellite systems, space law and policy, space cybersecurity, and systems engineering, including a sole‑authored capstone conceptual design of an Active Debris Removal mission covering trade studies, sensor selection, propulsion sizing, TRL gating, and lifecycle cost. Actively targeting ",
+    "A multidisciplinary operations professional with over a decade in enterprise software operations, systems implementation, and cross‑functional program coordination, now completing a Master of Space Operations at Embry‑Riddle Aeronautical University. Built a startup’s first enterprise information system, BI platforms, and operating budgets and carried them through its acquisition, integrated disconnected platforms into automated workflows, and served as the technical subject matter expert bridging engineering teams, business units, and executive leadership. Founded, scaled, and sold four business locations with full P&L ownership. Graduate training spans space mission operations, launch and satellite systems, space law and policy, space cybersecurity, and systems engineering, including a sole‑authored capstone conceptual design of an Active Debris Removal mission covering trade studies, sensor selection, propulsion sizing, TRL gating, and lifecycle cost. Principal Investigator on a NASA L’SPACE NPWEE team whose mission concept was selected as the team’s proposal submission to NASA. Actively targeting ",
     {
       "text": "Program Management",
       "bold": true
@@ -3209,7 +3209,7 @@ const ORBITAL_MASTER_RESUME = {
     },
     {
       "title": "Master of Science in Space Systems",
-      "trailing": ", expected August 2027",
+      "trailing": ", expected September 2027",
       "lines": [
         "Embry-Riddle Aeronautical University, Worldwide Campus",
         "Design and analysis of space systems and components using systems engineering principles, with coursework in space systems engineering, program management, automation, and structural materials"
@@ -3228,7 +3228,7 @@ const ORBITAL_MASTER_RESUME = {
       "title": "NASA L'SPACE Proposal Writing & Evaluation Experience (NPWEE) Academy",
       "trailing": ", Fall 2026",
       "lines": [
-        "Selected participant, NASA Lucy Mission — interdisciplinary team proposal development and NASA Proposal Review Panel",
+        "Principal Investigator, NASA Lucy Mission — mission concept selected as the team’s NPWEE proposal submission to NASA; interdisciplinary team proposal development and NASA Proposal Review Panel",
         "Siemens NX CAD training through the program, in progress"
       ]
     },
@@ -4272,7 +4272,7 @@ function targetSalary(){ return +localStorage.getItem('orbital.targetGross') || 
 const CRED_SCHEDULE={
   mso:  {label:'Master of Space Operations',                    ends:'2026-12-31', endsLabel:'December 2026'},
   syse: {label:'Graduate Certificate in Systems Engineering',   ends:'2027-02-28', endsLabel:'February 2027'},
-  mss:  {label:'M.S. Space Systems',                            ends:'2027-08-31', endsLabel:'August 2027'},
+  mss:  {label:'M.S. Space Systems',                            ends:'2027-09-30', endsLabel:'September 2027'},
   npwee:{label:"NASA L'SPACE NPWEE", starts:'2026-09-10', startsLabel:'September 10, 2026', ends:'2026-12-15', endsLabel:'December 2026'},
   nx:   {label:'Siemens NX CAD training',                       ends:'2027-01-31', endsLabel:'January 2027'},
 };
@@ -4289,9 +4289,9 @@ function courseworkSentence(){
   const list=a=>a.map(d=>d.label+' ('+d.endsLabel+')').join(', ');
   const np=credState('npwee');
   const npt = np.done
-    ? "NASA L'SPACE NPWEE (Fall 2026) covered proposal development on the Lucy mission and a seat on a NASA proposal review panel."
+    ? "NASA L'SPACE NPWEE (Fall 2026) covered Principal Investigator on the Lucy mission proposal (the team chose Lisaney’s own mission concept as its submission to NASA), plus a seat on a NASA proposal review panel."
     : np.started
-      ? "NASA L'SPACE NPWEE (Fall 2026) is underway \u2014 proposal development on the Lucy mission and a seat on a NASA proposal review panel, running to "+np.endsLabel+"."
+      ? "NASA L'SPACE NPWEE (Fall 2026) is underway \u2014 Principal Investigator on the Lucy mission proposal (the team chose Lisaney’s own mission concept as its submission to NASA), plus a seat on a NASA proposal review panel, running to "+np.endsLabel+"."
       : "NASA L'SPACE NPWEE (Fall 2026) \u2014 accepted participant; program begins "+np.startsLabel+".";
   const deg = pending.length
     ? (held.length?'Completed: '+list(held)+'. Still in progress, and expected rather than held: '+list(pending)+'.'
@@ -8882,7 +8882,7 @@ That instinct is why I care about verification and validation as practice rather
   goals:
 `Five years out, I want to be the systems engineer or technical program manager who owns requirements and schedule on a real mission — accountable for whether the thing works, not adjacent to the people who are.
 
-The nearer term is specific. I finish the Master of Space Operations in December 2026, the Graduate Certificate in Systems Engineering in February 2027, and the M.S. in Space Systems in August 2027. What I need between now and then is what coursework cannot provide: repetitions on real hardware, real integration, real anomaly response, with someone more experienced close enough to correct me.
+The nearer term is specific. I finish the Master of Space Operations in December 2026, the Graduate Certificate in Systems Engineering in February 2027, and the M.S. in Space Systems in September 2027. What I need between now and then is what coursework cannot provide: repetitions on real hardware, real integration, real anomaly response, with someone more experienced close enough to correct me.
 
 So for the first couple of years I want to be doing the work rather than directing it. Requirements development and management, verification and validation, integration and test support, mission operations. I want to have written requirements someone had to build to, and then found out where I was imprecise. That correction loop is the whole point.
 
@@ -8931,7 +8931,7 @@ So the honest comparison is this. Against a candidate with equivalent flight exp
 
 The first is a boundary I would rather state than have you infer. My space and systems engineering background is graduate coursework, not industry experience — three credentials at Embry-Riddle, a sole-authored Active Debris Removal capstone, and NASA L'SPACE NPWEE selection for Fall 2026. The program and operations experience underneath it is a decade long and real: integrated schedules in MS Project and JIRA, requirements across IT, operations and business teams, P&L across four locations, a startup held from initial phase through acquisition. I am not going to oversell the first part. I would rather you know exactly what you are getting.
 
-The second is timing. I finish the Master of Space Operations in December 2026, the systems engineering certificate in February 2027, and the M.S. in Space Systems in August 2027, all through Embry-Riddle Worldwide, which is built for people working while they study. Scheduling has not been a problem and I do not expect it to become one.
+The second is timing. I finish the Master of Space Operations in December 2026, the systems engineering certificate in February 2027, and the M.S. in Space Systems in September 2027, all through Embry-Riddle Worldwide, which is built for people working while they study. Scheduling has not been a problem and I do not expect it to become one.
 
 I am based in Nashville and I am willing to relocate. I have moved for work before, and I am not looking for a role that accommodates me from a distance if the work needs me on site.`,
   };
@@ -9582,7 +9582,6 @@ const FP_COMPANIES=[
   ['Starpath Robotics','starpath.space','ashby'],   // 20 open — all Hawthorne CA
   ['Aalyria','aalyria-careers','rippling'],   // 46 open
   // --- Workday (CORS-blocked in browser; listed so the log names them explicitly)
-  ['Virgin Galactic','virgingalactic|wd5|VirginGalactic','workday'],
   ['Blue Origin','blueorigin|wd5|BlueOrigin','workday'],
   ['Sierra Space','sierraspace|wd5|SierraSpace','workday'],
   ['Axiom Space','axiomspace|wd5|AxiomSpace','workday'],
