@@ -13,8 +13,8 @@ name: Orbital daily email
 #   EMAIL_TO        = OPTIONAL. Defaults to one@lisaney.com
 # Plus SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, which the scraper already uses.
 #
-# Test it any time: Actions → Orbital daily email → Run workflow → mode "preview" builds the
-# email and attaches it to the run without sending; "send" sends it now.
+# Test it any time: Actions → Orbital daily email → Run workflow. Mode "send" (the default) sends now; "preview" builds the
+# email and attaches it to the run without sending.
 
 on:
   schedule:
@@ -27,8 +27,8 @@ on:
       mode:
         description: "send = send now · preview = build and attach, don't send"
         type: choice
-        default: preview
-        options: [preview, send]
+        default: send
+        options: [send, preview]
 
 concurrency:
   group: orbital-email

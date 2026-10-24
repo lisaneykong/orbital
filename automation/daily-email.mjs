@@ -190,7 +190,7 @@ const text = [
 fs.mkdirSync(path.join(ROOT, 'automation', 'out'), { recursive: true });
 fs.writeFileSync(path.join(ROOT, 'automation', 'out', 'email-preview.html'), html);
 console.log(`Subject: ${subject}\nRoles: ${fresh.length} · ready: ${ready.length} · apps: ${appList.length} · html ${Math.round(html.length / 1024)} KB`);
-if (PREVIEW) { console.log('Preview only — wrote automation/out/email-preview.html, sent nothing.'); process.exit(0); }
+if (PREVIEW) { console.log('::notice::Preview only — nothing was sent. The email is attached to this run as "email-preview". Run again with mode "send" to send it.'); process.exit(0); }
 
 if (!process.env.RESEND_API_KEY) {
   console.log('::error::RESEND_API_KEY is not set, so nothing was sent. Add it under Settings → Secrets and variables → Actions. The built email is attached to this run as "email-preview".');
@@ -208,5 +208,5 @@ if (!r.ok) {
   process.exit(1);
 }
 const id = (() => { try { return JSON.parse(out).id; } catch { return null; } })();
-console.log(`Sent to ${TO} (${id || 'no id'}).`);
+console.log(`::notice::Sent to ${TO} (Resend id ${id || 'none'}). If it is not in the inbox, check spam.`);
 if (!log.missing) await sbUpsert('email_log', [{ sent_on: today, sent_at: new Date().toISOString(), roles: fresh.length, message_id: id }]);
