@@ -1877,7 +1877,7 @@ const ATS_BOARD={
   'Anduril':'https://job-boards.greenhouse.io/andurilindustries',
   'Stratolaunch':'https://job-boards.greenhouse.io/stratolaunch',
   'Albedo':'https://job-boards.greenhouse.io/albedo',
-  'Starcloud':'https://job-boards.greenhouse.io/starcloud',
+  'Starcloud':'https://starcloud.octbr.ai/',
   'Spaceium':'https://job-boards.greenhouse.io/spaceium',
   'Mithril Technologies':'https://job-boards.greenhouse.io/mithril',
   'Scout Space':'https://job-boards.greenhouse.io/scoutspace',
@@ -1891,7 +1891,7 @@ const ATS_BOARD={
   'Stoke Space':'https://job-boards.greenhouse.io/stokespacetechnologies',
   'Varda Space Industries':'https://job-boards.greenhouse.io/vardaspace',
   'Varda Space':'https://job-boards.greenhouse.io/vardaspace',
-  'Apex Space':'https://job-boards.greenhouse.io/apex',
+  'Apex Space':'https://jobs.ashbyhq.com/apex-technology-inc',
   'Muon Space':'https://job-boards.greenhouse.io/muonspace',
   'Gravitics':'https://job-boards.greenhouse.io/graviticsinc',
   'Inversion Space':'https://job-boards.greenhouse.io/inversionspace',
@@ -1946,7 +1946,6 @@ const ATS_BOARD={
   // --- Confirmed careers portals with no public JSON API (server-side / manual)
   'Firefly Aerospace':'https://firefly.hrmdirect.com/employment/job-openings.php?search=true',
   'Sierra Nevada Corporation':'https://www.sncorp.com/careers/',
-  'K2 Space':'https://www.k2space.com/careers',
   // --- Workday external sites (tenant.server.myworkdayjobs.com/en-US/<board>)
   'Blue Origin':'https://blueorigin.wd5.myworkdayjobs.com/en-US/BlueOrigin',
   'Sierra Space':'https://sierraspace.wd5.myworkdayjobs.com/en-US/SierraSpace',
@@ -2017,7 +2016,7 @@ function careersURL(co,title){
   return 'https://www.google.com/search?q='+encodeURIComponent('"'+(title||'')+'" '+co+' careers apply');
 }
 // derive the job board a listing came from (badge + apply-link context)
-const ATS_SOURCE={'SpaceX':'Greenhouse','Blue Origin':'Greenhouse','Rocket Lab':'Greenhouse','Relativity Space':'Greenhouse','Stoke Space':'Greenhouse','Impulse Space':'Greenhouse','Vast Space':'Greenhouse','Apex Space':'Greenhouse','BlackSky':'Lever','Maxar':'Lever','Spire Global':'Lever','Kepler Communications':'Lever','Boeing':'Careers','Amazon':'Careers','Microsoft':'Careers','Riot Games':'Greenhouse','Snap Inc.':'Careers','Xero':'Careers','Datacom':'Careers','Stats NZ':'Careers','NZX':'LinkedIn'};
+const ATS_SOURCE={'SpaceX':'Greenhouse','Blue Origin':'Greenhouse','Rocket Lab':'Greenhouse','Relativity Space':'Greenhouse','Stoke Space':'Greenhouse','Impulse Space':'Greenhouse','Vast Space':'Greenhouse','Apex Space':'Ashby','BlackSky':'Lever','Maxar':'Lever','Spire Global':'Lever','Kepler Communications':'Lever','Boeing':'Careers','Amazon':'Careers','Microsoft':'Careers','Riot Games':'Greenhouse','Snap Inc.':'Careers','Xero':'Careers','Datacom':'Careers','Stats NZ':'Careers','NZX':'LinkedIn'};
 function jobSource(j){ return j.source || ATS_SOURCE[j.company] || 'LinkedIn'; }
 // Button label follows the ACTUAL destination. A row only says "Apply here" when its
 // url is a real requisition link (isDirectPosting); a board root says so plainly.
@@ -9507,7 +9506,6 @@ const FP_COMPANIES=[
   ['Anduril','andurilindustries','greenhouse'],   // 2213 open
   ['Stratolaunch','stratolaunch','greenhouse'],   // 58 open
   ['Albedo','albedo','greenhouse'],   // 10 open
-  ['Starcloud','starcloud','greenhouse'],   // 12 open
   ['Spaceium','spaceium','greenhouse'],   // 10 open
   ['Mithril Technologies','mithril','greenhouse'],   // 3 open
   ['Scout Space','scoutspace','greenhouse'],   // 13 open
@@ -9520,7 +9518,16 @@ const FP_COMPANIES=[
   ['True Anomaly','trueanomalyinc','greenhouse'],   // 178 open
   ['Stoke Space','stokespacetechnologies','greenhouse'],   // 69 open
   ['Varda Space Industries','vardaspace','greenhouse'],   // 87 open
-  ['Apex Space','apex','greenhouse'],   // 1 open
+  ['Star Catcher','star-catcher','greenhouse'],   // 42 open
+  ['Isar Aerospace','isaraerospace','greenhouse'],   // 125 open
+  ['Cowboy Space','cowboyspace','ashby'],   // 69 open
+  ['Northwood Space','northwoodspace','ashby'],   // 62 open
+  ['Observable Space','observable-space','ashby'],   // 26 open
+  ['The Exploration Company','the-exploration-company','ashby'],   // 106 open
+  ['Kapta Space','kapta-space','lever'],   // 13 open
+  ['K2 Space','k2spacecorporation','greenhouse'],
+  ['Fortastra','fortastracorporation','greenhouse'],
+  ['Apex Space','apex-technology-inc','ashby'],
   ['Muon Space','muonspace','greenhouse'],   // 107 open
   ['Gravitics','graviticsinc','greenhouse'],   // 18 open
   ['Inversion Space','inversionspace','greenhouse'],   // 76 open

@@ -43,11 +43,6 @@
       "verified": "probed live 2026-09-05",
       "open": 10
     },
-    "starcloud": {
-      "company": "Starcloud",
-      "verified": "probed live 2026-09-05",
-      "open": 12
-    },
     "spaceium": {
       "company": "Spaceium",
       "verified": "probed live 2026-09-05",
@@ -115,12 +110,6 @@
       "open": 87,
       "healed_from": "ashby:varda"
     },
-    "apex": {
-      "company": "Apex Space",
-      "verified": "probed live 2026-09-05",
-      "open": 1,
-      "healed_from": "ashby:apexspace"
-    },
     "muonspace": {
       "company": "Muon Space",
       "verified": "probed live 2026-09-05",
@@ -174,6 +163,27 @@
       "verified": "verified live 2026-09-06 (route finder + entity-lineage pass)",
       "open": 156,
       "note": "Astrobotic Technology now trades as Voyager Lunar Systems inside this tenant — 34 of the 156 postings are Pittsburgh and 26 name Astrobotic or Voyager Lunar Systems in their body, but no department is tagged \"lunar\", so a department filter will not find them. Astrobotic deliberately has NO separate entry: it would duplicate this whole board."
+    },
+    "star-catcher": {
+      "company": "Star Catcher",
+      "verified": "probed live 2026-10-24",
+      "open": 42,
+      "note": "added 2026-10-24 from the 2026 space-funding list"
+    },
+    "isaraerospace": {
+      "company": "Isar Aerospace",
+      "verified": "probed live 2026-10-24",
+      "open": 125,
+      "intl": true,
+      "note": "moved from Personio (that board returned 404); EU Greenhouse board"
+    },
+    "k2spacecorporation": {
+      "company": "K2 Space",
+      "verified": "probed live 2026-10-24 (resolve pass)"
+    },
+    "fortastracorporation": {
+      "company": "Fortastra",
+      "verified": "probed live 2026-10-24 (resolve pass)"
     }
   },
   "workday": [
@@ -393,6 +403,13 @@
       "verified": "verified live 2026-09-06 (route finder, 22-API pass)",
       "open": 21,
       "note": "ABL Space Systems renamed to Long Wall; the board moved to lever:longwall. El Segundo + Long Beach, CA. The rename was why every abl* token form failed."
+    },
+    {
+      "company": "Kapta Space",
+      "token": "kapta-space",
+      "verified": "probed live 2026-10-24",
+      "open": 13,
+      "note": "added 2026-10-24 from the 2026 space-funding list"
     }
   ],
   "ashby": [
@@ -502,6 +519,40 @@
       "verified": "verified live 2026-09-06 (route finder + entity-lineage pass)",
       "open": 20,
       "note": "Ashby identifier is the full web domain, dots included. The token generator strips dots, so no starpath* form could ever reach it — the same class of bug as the stripped hyphens. All 20 roles are Hawthorne, CA."
+    },
+    {
+      "company": "Cowboy Space",
+      "token": "cowboyspace",
+      "verified": "probed live 2026-10-24",
+      "open": 69,
+      "note": "added 2026-10-24 from the 2026 space-funding list"
+    },
+    {
+      "company": "Northwood Space",
+      "token": "northwoodspace",
+      "verified": "probed live 2026-10-24",
+      "open": 62,
+      "note": "added 2026-10-24 from the 2026 space-funding list"
+    },
+    {
+      "company": "Observable Space",
+      "token": "observable-space",
+      "verified": "probed live 2026-10-24",
+      "open": 26,
+      "note": "added 2026-10-24 from the 2026 space-funding list"
+    },
+    {
+      "company": "The Exploration Company",
+      "token": "the-exploration-company",
+      "verified": "probed live 2026-10-24",
+      "open": 106,
+      "intl": true,
+      "note": "moved from Personio (that board returned 404)"
+    },
+    {
+      "company": "Apex Space",
+      "token": "apex-technology-inc",
+      "verified": "probed live 2026-10-24 (resolve pass)"
     }
   ],
   "bamboohr": [
@@ -577,12 +628,6 @@
       "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
     },
     {
-      "company": "D-Orbit",
-      "token": "dorbit",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
       "company": "PLD Space",
       "token": "pldspace",
       "intl": true,
@@ -591,12 +636,6 @@
     {
       "company": "Agnikul Cosmos",
       "token": "agnikul",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Skyroot Aerospace",
-      "token": "skyroot",
       "intl": true,
       "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
     },
@@ -687,16 +726,6 @@
     {
       "company": "ClearSpace",
       "token": "clearspace",
-      "intl": true
-    },
-    {
-      "company": "Isar Aerospace",
-      "token": "isaraerospace",
-      "intl": true
-    },
-    {
-      "company": "The Exploration Company",
-      "token": "exploration",
       "intl": true
     },
     {
@@ -822,11 +851,21 @@
       "note": "In-house talent portal, confirmed 2026-09-05. Large systems-engineering and program-management employer."
     },
     {
-      "company": "K2 Space",
-      "url": "https://www.k2space.com/careers",
-      "region": "Torrance, CA",
-      "ats": "unknown",
-      "note": "Torrance, CA. Careers page confirmed 2026-09-05; ATS token unconfirmed — run heal-probe.html to resolve."
+      "company": "Starcloud",
+      "url": "https://starcloud.octbr.ai/",
+      "url_pattern": "/jobs/",
+      "region": "Redmond, WA",
+      "ats": "octbr",
+      "note": "The Greenhouse board was closed (2026-10-24); starcloud.com/careers now redirects here. Job URLs are read from the page."
+    },
+    {
+      "company": "D-Orbit",
+      "url": "https://dorbit-space.factorial.it/",
+      "url_pattern": "/job_posting/",
+      "region": "Italy",
+      "ats": "factorial",
+      "intl": true,
+      "note": "Factorial careers page (2026-10-24). Job URLs are printed in the page, not as links, so titles come from the URL slug."
     }
   ],
   "careerLinks": [
@@ -952,12 +991,6 @@
     {
       "company": "Satellogic",
       "tried": "lever:satellogic",
-      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
-      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
-    },
-    {
-      "company": "Pixxel",
-      "tried": "lever:pixxel",
       "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
       "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
     },
@@ -1090,6 +1123,42 @@
       "company": "Honeywell Aerospace",
       "tried": "workday:honeywell/Honeywell_Careers",
       "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+    },
+    {
+      "company": "Gilmour Space Technologies",
+      "tried": "public ATS APIs",
+      "probe": "greenhouse, lever, ashby, workable, smartrecruiters, recruitee, breezy, rippling, pinpoint, bamboohr, teamtailor, personio (name variants), 2026-10-24",
+      "note": "added 2026-10-24 from the 2026 space-funding list; no public job-board API found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "Xoople",
+      "tried": "public ATS APIs",
+      "probe": "greenhouse, lever, ashby, workable, smartrecruiters, recruitee, breezy, rippling, pinpoint, bamboohr, teamtailor, personio (name variants), 2026-10-24",
+      "note": "added 2026-10-24 from the 2026 space-funding list; no public job-board API found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "SWISSto12",
+      "tried": "public ATS APIs",
+      "probe": "greenhouse, lever, ashby, workable, smartrecruiters, recruitee, breezy, rippling, pinpoint, bamboohr, teamtailor, personio (name variants), 2026-10-24",
+      "note": "added 2026-10-24 from the 2026 space-funding list; no public job-board API found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "ElevationSpace",
+      "tried": "public ATS APIs",
+      "probe": "greenhouse, lever, ashby, workable, smartrecruiters, recruitee, breezy, rippling, pinpoint, bamboohr, teamtailor, personio (name variants), 2026-10-24",
+      "note": "added 2026-10-24 from the 2026 space-funding list; no public job-board API found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "UNIVITY",
+      "tried": "public ATS APIs",
+      "probe": "greenhouse, lever, ashby, workable, smartrecruiters, recruitee, breezy, rippling, pinpoint, bamboohr, teamtailor, personio (name variants), 2026-10-24",
+      "note": "added 2026-10-24 from the 2026 space-funding list; no public job-board API found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "HyImpulse",
+      "tried": "public ATS APIs",
+      "probe": "greenhouse, lever, ashby, workable, smartrecruiters, recruitee, breezy, rippling, pinpoint, bamboohr, teamtailor, personio (name variants), 2026-10-24",
+      "note": "added 2026-10-24 from the 2026 space-funding list; no public job-board API found. Needs its careers page checked by hand."
     }
   ],
   "recruitee": [
@@ -1181,6 +1250,8 @@
       "welcomekit",
       "icims",
       "eightfold",
+      "darwinbox",
+      "zohorecruit",
       "custom"
     ],
     "note": "browser_reachable buckets are fetched live by index.html (FP_COMPANIES + fpFetchBoard). action_only buckets are CORS-blocked from a browser and are fetched exclusively by the daily GitHub Action via scraper.py. Adding a bucket to companies.json does nothing until it has BOTH an fpFetchBoard branch and an fpNormalize branch in index.html.",
@@ -1190,7 +1261,27 @@
       "rippling": "api.rippling.com/platform/api/ats/v1/board/<slug>/jobs — array; each row carries an ats.rippling.com apply URL",
       "pinpoint": "<slug>.pinpointhq.com/postings.json — {data:[...]}; location is an object with name/city/province",
       "smartrecruiters": "api.smartrecruiters.com/v1/companies/<Identifier>/postings — {content:[...]}; identifiers are PascalCase and case-sensitive; list endpoint carries no description",
-      "recruitee": "<slug>.recruitee.com/api/offers/ — {offers:[...]}; per-posting URL is careers_url"
+      "recruitee": "<slug>.recruitee.com/api/offers/ — {offers:[...]}; per-posting URL is careers_url",
+      "darwinbox": "<slug>.darwinbox.in/ms/candidateapi/job?page=N&limit=50 — {message:{jobs:[...]}}; per-posting URL is /ms/candidate/careers/<id>",
+      "zohorecruit": "<host>/jobs/Careers — HTML with an HTML-escaped JSON list of records (Posting_Title, City, Country, id)"
     }
-  }
+  },
+  "darwinbox": [
+    {
+      "company": "Pixxel",
+      "token": "pixxel",
+      "intl": true,
+      "verified": "probed live 2026-10-24 (resolve pass)",
+      "note": "Darwinbox — https://pixxel.darwinbox.in/ms/candidateapi/job?page=1&limit=50 . No public description endpoint; rows score on title."
+    }
+  ],
+  "zohorecruit": [
+    {
+      "company": "Skyroot Aerospace",
+      "host": "skyroot.zohorecruit.in",
+      "intl": true,
+      "verified": "probed live 2026-10-24 (resolve pass)",
+      "note": "Zoho Recruit — records are embedded in https://skyroot.zohorecruit.in/jobs/Careers ."
+    }
+  ]
 }

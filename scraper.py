@@ -152,6 +152,8 @@ BREEZY = _COMPANIES.get("breezy", [])
 RIPPLING = _COMPANIES.get("rippling", [])
 PINPOINT = _COMPANIES.get("pinpoint", [])
 MANATAL = _COMPANIES.get("manatal", [])
+DARWINBOX = _COMPANIES.get("darwinbox", [])
+ZOHORECRUIT = _COMPANIES.get("zohorecruit", [])
 
 # Eightfold-powered portals (custom JSON API, server-side only — CORS-blocked in browser).
 # API: https://{host}/api/apply/v2/jobs?domain={domain}&start=0&num=100
@@ -1342,6 +1344,20 @@ def scrape_custom(cfg):
                         "custom", title)
         if row:
             rows.append(row)
+    if not rows and cfg.get("url_pattern"):
+        # Boards like Factorial print job URLs into the page without real <a> tags. Pull the
+        # absolute URLs matching the configured path and title them from the slug.
+        pat = re.compile(r"https?://[^\s\"'<>\\]*" + re.escape(cfg["url_pattern"]) + r"[^\s\"'<>\\]+")
+        for full in dict.fromkeys(m.group(0).rstrip("/") for m in pat.finditer(r.text)):
+            slug = full.rsplit("/", 1)[-1]
+            # trailing id: Factorial uses digits (-323963), octbr a short mixed code (-d9yjKO)
+            title = re.sub(r"-(?=[A-Za-z0-9]*\d)[A-Za-z0-9]+$", "", slug).replace("-", " ").strip().title()
+            if len(title) < 4 or re.match(r"open application|spontaneous", title, re.I):
+                continue
+            row = build_row(company, hashlib.md5(full.encode()).hexdigest()[:8], title,
+                            company + " " + region_hint, full, "custom", title)
+            if row:
+                rows.append(row)
     return rows
 
 
@@ -1653,6 +1669,68 @@ def scrape_manatal(cfg):
     return rows
 
 
+def scrape_darwinbox(cfg):
+    """Darwinbox careers JSON (Pixxel). The list carries title, location and posting date;
+    there is no description endpoint without a login, so rows score on the title."""
+    company, token = cfg["company"], cfg["token"]
+    rows, page = [], 1
+    while page <= 20:
+        r = request("GET", f"https://{token}.darwinbox.in/ms/candidateapi/job?page={page}&limit=50")
+        if r.status_code != 200:
+            raise RetryableHTTP(f"darwinbox {token} -> {r.status_code}")
+        jobs = ((r.json() or {}).get("message") or {}).get("jobs") or []
+        for j in jobs:
+            posted = j.get("job_posting_on") or j.get("created_on")
+            posted = int(posted) if str(posted).isdigit() else posted
+            row = build_row(company, j.get("id"), j.get("title") or j.get("designation_display_name"),
+                            j.get("officelocation_show_arr") or "",
+                            f"https://{token}.darwinbox.in/ms/candidate/careers/{j.get('id')}",
+                            "darwinbox", " ".join(x for x in (j.get("department"), j.get("functional_area")) if x),
+                            posted=posted)
+            if row:
+                rows.append(row)
+        if len(jobs) < 50:
+            break
+        page += 1
+    return rows
+
+
+def scrape_zohorecruit(cfg):
+    """Zoho Recruit career site (Skyroot). The job records are embedded in the page as
+    HTML-escaped JSON; there is no public JSON endpoint and no posting date."""
+    import html as _html
+    company, host = cfg["company"], cfg["host"]
+    r = request("GET", f"https://{host}/jobs/Careers", headers={"Accept": "text/html"})
+    if r.status_code != 200:
+        raise RetryableHTTP(f"zohorecruit {host} -> {r.status_code}")
+    text = _html.unescape(r.text)
+    cut = text.find('"Posting_Title"')
+    if cut < 0:
+        return []
+    records, dec = None, json.JSONDecoder()
+    for m in reversed(list(re.finditer(r"\[\{", text[:cut]))[-40:]):
+        try:
+            arr, _ = dec.raw_decode(text[m.start():])
+        except ValueError:
+            continue
+        if isinstance(arr, list) and arr and isinstance(arr[0], dict) and "Posting_Title" in arr[0]:
+            records = arr
+            break
+    rows = []
+    for j in records or []:
+        if j.get("Publish") is False:
+            continue
+        title = j.get("Posting_Title") or j.get("Job_Opening_Name")
+        loc = ", ".join(x for x in (j.get("City"), j.get("Country")) if x)
+        slug = re.sub(r"[^A-Za-z0-9]+", "-", title or "").strip("-")
+        row = build_row(company, j.get("id"), title, loc, f"https://{host}/jobs/Careers/{j.get('id')}/{slug}",
+                        "zohorecruit", " ".join(x for x in (j.get("Industry"), j.get("Job_Type")) if x),
+                        posted=j.get("Date_Opened"))
+        if row:
+            rows.append(row)
+    return rows
+
+
 # --------------------------------------------------------------------
 # Main scrub cycle
 # --------------------------------------------------------------------
@@ -1697,6 +1775,10 @@ def build_tasks():
         tasks.append((cfg["company"], "pinpoint", lambda c=cfg: scrape_pinpoint(c)))
     for cfg in MANATAL:
         tasks.append((cfg["company"], "manatal", lambda c=cfg: scrape_manatal(c)))
+    for cfg in DARWINBOX:
+        tasks.append((cfg["company"], "darwinbox", lambda c=cfg: scrape_darwinbox(c)))
+    for cfg in ZOHORECRUIT:
+        tasks.append((cfg["company"], "zohorecruit", lambda c=cfg: scrape_zohorecruit(c)))
     random.shuffle(tasks)   # spread load across domains naturally
     return tasks
 
@@ -2026,6 +2108,8 @@ def _diagnose_tasks():
                      lambda d: len(d) if isinstance(d, list) else 0),
         "pinpoint": (PINPOINT, lambda c: f"https://{c['token']}.pinpointhq.com/postings.json",
                      lambda d: len(d.get("data") or [])),
+        "darwinbox": (DARWINBOX, lambda c: f"https://{c['token']}.darwinbox.in/ms/candidateapi/job?page=1&limit=50",
+                      lambda d: len((d.get("message") or {}).get("jobs") or [])),
         "manatal": (MANATAL, lambda c: f"https://api.manatal.com/open/v3/career-page/{c['token']}/jobs/",
                     lambda d: int(d.get("count") or len(d.get("results") or []))),
     }
@@ -2065,9 +2149,20 @@ def _diagnose_tasks():
             links = [a for a in BeautifulSoup(r.text, "html.parser").select(c.get("selector", "a"))
                      if re.search(r"job|career|position|opening|role|apply", a.get("href") or "", re.I)
                      and not _NAV_LINK_TEXT_RE.match(a.get_text(" ", strip=True) or "careers")]
+            if not links and c.get("url_pattern"):
+                urls = set(re.findall(r"https?://[^\s\"'<>\\]*" + re.escape(c["url_pattern"]) + r"[^\s\"'<>\\]+", r.text))
+                return len(urls), f"job URLs matching {c['url_pattern']}"
             note = "page is likely built by JavaScript; needs an ATS route" if not links else "candidate links"
             return len(links), note
         add("custom", c["company"], cu)
+    for c in ZOHORECRUIT:
+        def zr(c=c):
+            r = SESSION.get(f"https://{c['host']}/jobs/Careers", timeout=20)
+            if r.status_code != 200:
+                raise RuntimeError(f"HTTP {r.status_code}")
+            import html as _html
+            return _html.unescape(r.text).count('"Posting_Title"'), "records on the career page"
+        add("zohorecruit", c["company"], zr)
     return tasks
 
 

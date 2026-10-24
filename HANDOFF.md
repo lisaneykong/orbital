@@ -12,6 +12,29 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-24 — 2026 space-funding list added
+
+Of the 38 startups on the user's list (raised $20M+ in 2026), 21 were already configured and working. Added, each
+verified live by its job-board API and by real titles/locations: Cowboy Space, Northwood Space, Observable Space
+(Ashby), Star Catcher (Greenhouse), Kapta Space (Lever). Moved off dead Personio boards: The Exploration Company
+(Ashby) and Isar Aerospace (EU Greenhouse). A test scrape kept 53 roles across the 7. The Greenhouse token `apex`
+belonged to a medical practice and was removed. The funding figures were not added.
+
+**Resolve pass (same day).** Found by reading each company's careers page:
+- K2 Space → `greenhouse:k2spacecorporation` (256 open), Fortastra → `greenhouse:fortastracorporation` (13),
+  Apex Space → `ashby:apex-technology-inc` (135). All three are also in FP_COMPANIES.
+- Pixxel → new `darwinbox` bucket (`scrape_darwinbox`, 32 open; no description endpoint, so it scores on title).
+- Skyroot → new `zohorecruit` bucket (`scrape_zohorecruit`, host `skyroot.zohorecruit.in`). The host worked
+  earlier on 2026-10-24 and then timed out, even to plain curl. If diagnose keeps failing it, check the host.
+- Starcloud: the Greenhouse board was closed; starcloud.com/careers now redirects to `starcloud.octbr.ai` (custom).
+- D-Orbit: Factorial page (custom). `scrape_custom` gained an optional `url_pattern`. When a page has no job `<a>`
+  tags, it reads matching absolute URLs from the HTML and titles them from the slug, which loses punctuation
+  ("Senior Fp A Analyst").
+- Stale BambooHR rows for D-Orbit and Skyroot were removed. Test scrape kept K2 31, Apex 29, Pixxel 2, D-Orbit 1,
+  Starcloud 0 and Fortastra 0 (15 and 13 read; all hands-on engineering, so the relevance filter dropped them).
+- Still no public board: Gilmour, Xoople, SWISSto12, ElevationSpace, UNIVITY, HyImpulse, Antaris, EnduroSat,
+  Interstellar. PLD Space's Odoo portal could not be reached from here. They stay in `needs_route` or BambooHR.
+
 ## 2026-10-23 — deep pass: Workday, closed postings, install
 
 - **Runtime sweep:** every view × 6 regions × 3 tracks (576 renders), 60 dossiers, every owner action and ~35 real
