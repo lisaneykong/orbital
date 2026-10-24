@@ -41,6 +41,21 @@ const ready = q.rows.filter(r => r.status === 'ready').sort((a, b) => (b.match |
 const readyNew = ready.filter(r => Date.parse(r.prepared_at) >= Date.now() - 864e5);
 const strong = fresh.filter(j => (j.match || 0) >= 75);
 
+// Attach the résumé and cover letter prepared this morning, so applying is: open the
+// email, read the draft, upload it on the posting. Capped to keep the email small.
+const ATTACH_MAX = 8;
+const attachIds = readyNew.slice(0, ATTACH_MAX).map(r => r.job_id);
+const attachments = [], attachedIds = new Set();
+if (attachIds.length) {
+  const inList = encodeURIComponent('(' + attachIds.map(id => '"' + String(id).replace(/"/g, '') + '"').join(',') + ')');
+  const { rows: files } = await sbSelect('app_queue', `select=job_id,resume_file,resume_b64,cover_file,cover_b64&job_id=in.${inList}`);
+  for (const f of files) {
+    if (f.resume_b64) attachments.push({ filename: f.resume_file || `Resume_${f.job_id}.docx`, content: f.resume_b64 });
+    if (f.cover_b64) attachments.push({ filename: f.cover_file || `CoverLetter_${f.job_id}.docx`, content: f.cover_b64 });
+    if (f.resume_b64 || f.cover_b64) attachedIds.add(f.job_id);
+  }
+}
+
 // applications = what you marked applied in the dashboard (synced) + anything marked
 // applied from the Apply Queue that has not synced yet
 const apps = new Map();
@@ -99,11 +114,11 @@ if (!scrapeOk) {
 }
 
 if (ready.length) {
-  body += section('Ready to apply', `${readyNew.length ? `${readyNew.length} prepared this morning. ` : ''}Tailored résumé and cover letter are waiting in Orbital. Read them, then apply on the company site.`);
+  body += section('Ready to apply', `${readyNew.length ? `${readyNew.length} prepared this morning${attachments.length ? '; their résumés and cover letters are attached to this email' : ''}. ` : ''}Read each draft, then apply on the company site.`);
   for (const r of ready.slice(0, 8)) {
     const hard = (r.gaps || []).filter(g => g.level === 'hard').length;
     const n = r.notes || {};
-    const facts = [ago(Date.parse(r.posted_at)), hard ? `${hard} hard gap${hard > 1 ? 's' : ''}` : 'no hard gaps', n.deadline ? `deadline ${esc(n.deadline)}` : ''].filter(Boolean).join(' &middot; ');
+    const facts = [attachedIds.has(r.job_id) ? '&#128206; attached' : '', ago(Date.parse(r.posted_at)), hard ? `${hard} hard gap${hard > 1 ? 's' : ''}` : 'no hard gaps', n.deadline ? `deadline ${esc(n.deadline)}` : ''].filter(Boolean).join(' &middot; ');
     body += `<tr><td style="padding:14px 0;border-top:1px solid ${C.line};">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
         <td valign="top" style="padding-right:14px;">
@@ -189,7 +204,7 @@ const text = [
 
 fs.mkdirSync(path.join(ROOT, 'automation', 'out'), { recursive: true });
 fs.writeFileSync(path.join(ROOT, 'automation', 'out', 'email-preview.html'), html);
-console.log(`Subject: ${subject}\nRoles: ${fresh.length} · ready: ${ready.length} · apps: ${appList.length} · html ${Math.round(html.length / 1024)} KB`);
+console.log(`Subject: ${subject}\nRoles: ${fresh.length} · ready: ${ready.length} · apps: ${appList.length} · attachments: ${attachments.length} · html ${Math.round(html.length / 1024)} KB`);
 if (PREVIEW) { console.log('::notice::Preview only — nothing was sent. The email is attached to this run as "email-preview". Run again with mode "send" to send it.'); process.exit(0); }
 
 if (!process.env.RESEND_API_KEY) {
@@ -199,7 +214,7 @@ if (!process.env.RESEND_API_KEY) {
 const r = await fetch('https://api.resend.com/emails', {
   method: 'POST',
   headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-  body: JSON.stringify({ from: FROM, to: [TO], subject, html, text }),
+  body: JSON.stringify({ from: FROM, to: [TO], subject, html, text, ...(attachments.length ? { attachments } : {}) }),
 });
 const out = await r.text();
 if (!r.ok) {
