@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, SITE, requireEnv, sbSelect, sbUpsert, loadTracking, chicagoDate, chicagoLong, chicagoTime,
-         HUB_LABEL, HUB_ORDER, postedMs, daysSince, isHot, esc } from './lib.mjs';
+         HUB_LABEL, HUB_ORDER, postedMs, daysSince, esc } from './lib.mjs';
 
 const PREVIEW = process.argv.includes('--preview');
 const FORCE = process.argv.includes('--force');
@@ -70,16 +70,22 @@ const ago = ms => { const d = daysSince(ms); return d == null ? 'posting date un
 const section = (title, sub) => `<tr><td style="padding:30px 0 4px;"><div style="font:700 11px/1 ${MONO};letter-spacing:2px;color:${C.link};text-transform:uppercase;">${esc(title)}</div>${sub ? `<div style="font:14px/1.5 ${F};color:${C.muted};padding-top:6px;">${sub}</div>` : ''}</td></tr>`;
 const button = (href, label) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${C.link}" style="border-radius:8px;"><a href="${href}" style="display:block;padding:11px 18px;font:700 14px/1 ${F};color:#fbfcfe;text-decoration:none;border-radius:8px;">${esc(label)}</a></td></tr></table>`;
 
+// Every role in the 24-hour list is within the 7-day "hot" window, so no flame here: it
+// would mark every row and tell you nothing.
+// #job=<id> opens that role's dossier in Orbital (handled after live data loads).
+const appLink = id => `${SITE}#job=${encodeURIComponent(id)}`;
+const links = items => `<div style="font:600 12px/1.6 ${F};padding-top:5px;">${items.filter(Boolean).map(([href, label]) =>
+  `<a href="${esc(href)}" style="color:${C.link};text-decoration:none;">${label}</a>`).join(`<span style="color:${C.soft};"> &nbsp;&middot;&nbsp; </span>`)}</div>`;
 const roleRow = j => {
-  const hot = isHot(j);
   const meta = [j.company, j.location].filter(Boolean).map(esc).join(' &middot; ');
   const extra = [j.is_intern || j.type === 'Internship' ? 'Internship' : '', j.salary_range ? esc(j.salary_range) : ''].filter(Boolean).join(' &middot; ');
   return `<tr><td style="padding:14px 0;border-top:1px solid ${C.line};">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
       <td valign="top" style="padding-right:14px;">
-        <a href="${esc(j.url || SITE)}" style="font:700 15px/1.35 ${F};color:${C.ink};text-decoration:none;">${hot ? '<span title="Hot">&#128293;</span> ' : ''}${esc(j.title)}</a>
+        <a href="${esc(j.url || SITE)}" style="font:700 15px/1.35 ${F};color:${C.ink};text-decoration:none;">${esc(j.title)}</a>
         <div style="font:13px/1.5 ${F};color:${C.muted};padding-top:3px;">${meta}</div>
         ${extra ? `<div style="font:12px/1.5 ${F};color:${C.muted};">${extra}</div>` : ''}
+        ${links([[appLink(j.id), 'View in Orbital'], j.url && [j.url, `Apply at ${esc(j.company || 'employer')} &#8599;`]])}
       </td>
       <td valign="top" align="right" width="62" style="width:62px;white-space:nowrap;">${pill(j.match || 0)}</td>
     </tr></table></td></tr>`;
@@ -101,9 +107,10 @@ if (ready.length) {
     body += `<tr><td style="padding:14px 0;border-top:1px solid ${C.line};">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
         <td valign="top" style="padding-right:14px;">
-          <div style="font:700 15px/1.35 ${F};color:${C.ink};">${esc(r.title)}</div>
+          <a href="${esc(appLink(r.job_id))}" style="font:700 15px/1.35 ${F};color:${C.ink};text-decoration:none;">${esc(r.title)}</a>
           <div style="font:13px/1.5 ${F};color:${C.muted};padding-top:3px;">${esc(r.company)}${r.location ? ' &middot; ' + esc(r.location) : ''}</div>
           <div style="font:12px/1.5 ${F};color:${hard ? C.hot : C.muted};">${facts}</div>
+          ${links([[appLink(r.job_id), 'Open résumé &amp; cover letter'], r.url && [r.url, 'Job posting &#8599;']])}
         </td>
         <td valign="top" align="right" width="62" style="width:62px;">${pill(r.match || 0)}</td>
       </tr></table></td></tr>`;
@@ -112,7 +119,7 @@ if (ready.length) {
 }
 
 body += section('New in the last 24 hours', fresh.length
-  ? `${fresh.length} role${fresh.length > 1 ? 's' : ''} first posted by the employer since yesterday morning, highest match first. &#128293; = hot.`
+  ? `${fresh.length} role${fresh.length > 1 ? 's' : ''} first posted by the employer since yesterday morning, highest match first.`
   : 'No roles were first posted by an employer in the last 24 hours.');
 const shown = fresh.slice(0, MAX_ROLES);
 for (const hub of [...HUB_ORDER, null]) {
@@ -129,7 +136,7 @@ if (appList.length) {
   body += `<tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${stat(week, 'applied this week')}${stat(appList.length, 'applied in total')}${stat(interviewing, 'interviewing')}${stat(offers, 'offers')}</tr></table></td></tr>`;
   if (followDue.length) {
     body += `<tr><td style="padding:12px 0 4px;font:700 13px/1.4 ${F};color:${C.ink};">Follow-ups due <span style="font-weight:400;color:${C.muted};">&middot; applied a week or more ago, no reply logged</span></td></tr>`;
-    body += followDue.slice(0, 6).map(a => `<tr><td style="padding:8px 0;border-top:1px solid ${C.line};font:13px/1.5 ${F};color:${C.ink};">${esc(a.title)}<span style="color:${C.muted};"> &middot; ${esc(a.company)} &middot; applied ${fmtDay(a.at)} (${daysSince(a.at)} days)</span></td></tr>`).join('');
+    body += followDue.slice(0, 6).map(a => `<tr><td style="padding:8px 0;border-top:1px solid ${C.line};font:13px/1.5 ${F};color:${C.ink};"><a href="${esc(appLink(a.id))}" style="color:${C.ink};">${esc(a.title)}</a><span style="color:${C.muted};"> &middot; ${esc(a.company)} &middot; applied ${fmtDay(a.at)} (${daysSince(a.at)} days)</span></td></tr>`).join('');
   }
 }
 
@@ -175,7 +182,7 @@ const text = [
   `${fresh.length} new roles · ${strong.length} at 75%+ · ${ready.length} ready to apply`, '',
   ...(ready.length ? ['READY TO APPLY', ...ready.slice(0, 8).map(r => `- ${r.title} — ${r.company} (${r.match}%)`), `Review: ${SITE}#view=apply`, ''] : []),
   'NEW IN THE LAST 24 HOURS',
-  ...(fresh.length ? shown.map(j => `- ${isHot(j) ? '[HOT] ' : ''}${j.title} — ${j.company}, ${j.location || ''} (${j.match}%) ${j.url || ''}`) : ['None.']),
+  ...(fresh.length ? shown.map(j => `- ${j.title} — ${j.company}, ${j.location || ''} (${j.match}%) ${j.url || ''}`) : ['None.']),
   '', `Applied this week: ${week} · total: ${appList.length} · interviewing: ${interviewing} · offers: ${offers} · follow-ups due: ${followDue.length}`,
   '', SITE,
 ].join('\n');
