@@ -49,13 +49,13 @@ jobs:
           echo "run=true" >> "$GITHUB_OUTPUT"
           [ "$hour" != "08" ] && echo "late=1" >> "$GITHUB_OUTPUT" || true
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         if: steps.gate.outputs.run == 'true'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         if: steps.gate.outputs.run == 'true'
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Build and send the daily brief
         if: steps.gate.outputs.run == 'true'
@@ -77,7 +77,7 @@ jobs:
 
       - name: Attach the email as it was built
         if: always() && steps.gate.outputs.run == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: email-preview
           path: automation/out/email-preview.html

@@ -146,7 +146,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25    # a healthy run is ~1 min; anything past 25 is a hang, kill it
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Check the two secrets are actually set
         env:
@@ -189,7 +189,7 @@ jobs:
           fi
           exit $fail
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -217,7 +217,7 @@ jobs:
 
       - name: Upload failure log (if any)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: failed-scrapes-log
           path: failed_scrapes_log.csv
@@ -234,7 +234,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check the API key is set
         id: key
         env:
@@ -246,10 +246,10 @@ jobs:
           else
             echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         if: steps.key.outputs.ok == 'true'
         with:
-          node-version: "20"
+          node-version: "22"
       - name: Install docx
         if: steps.key.outputs.ok == 'true'
         working-directory: automation
