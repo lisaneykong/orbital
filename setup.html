@@ -437,7 +437,14 @@ create table if not exists public.app_queue (
   error         text
 );
 create index if not exists app_queue_status_idx on public.app_queue (status, prepared_at desc);
-grant select, update on public.app_queue to anon, authenticated;
+-- The browser key is public (it is in the site's code), so it may see the queue list and
+-- mark roles applied/skipped, but never the résumé or cover-letter files or text. Those
+-- reach you only as attachments on the morning email (sent with the service_role key).
+revoke all on public.app_queue from anon, authenticated;
+grant select (job_id, company, title, location, location_hub, url, match, posted_at, salary_range,
+              is_intern, status, prepared_at, applied_at, updated_at, resume_file, cover_file,
+              gaps, notes, checks, error) on public.app_queue to anon, authenticated;
+grant update (status, applied_at, updated_at) on public.app_queue to anon, authenticated;
 grant all privileges on public.app_queue to service_role;
 alter table public.app_queue disable row level security;
 

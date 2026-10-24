@@ -7351,7 +7351,7 @@ async function loadApplyQueue(force){
   applyQueueLoading = true;
   try{
     const {data,error} = await sb.from('app_queue')
-      .select('job_id,company,title,location,location_hub,url,match,posted_at,salary_range,is_intern,status,prepared_at,applied_at,resume_file,cover_file,cover_text,gaps,notes,checks,error')
+      .select('job_id,company,title,location,location_hub,url,match,posted_at,salary_range,is_intern,status,prepared_at,applied_at,resume_file,cover_file,gaps,notes,checks,error')
       .order('prepared_at',{ascending:false}).limit(500);
     if(error) throw error;
     applyQueue = data||[]; applyQueueErr='';
@@ -7361,17 +7361,6 @@ async function loadApplyQueue(force){
   }
   applyQueueLoading = false;
   if(view==='apply' || view==='pipeline') refreshContent();
-}
-async function aqDownload(jobId, kind){
-  const col = kind==='cover' ? 'cover_b64' : 'resume_b64';
-  const {data,error} = await sb.from('app_queue').select(col+',resume_file,cover_file').eq('job_id',jobId).limit(1);
-  if(error || !data || !data[0] || !data[0][col]) return alert('That file is not available: '+(error?error.message:'not stored'));
-  const bin = atob(data[0][col]); const bytes = new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-  const blob = new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download = (kind==='cover'?data[0].cover_file:data[0].resume_file) || ('Kong_'+jobId+'.docx');
-  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 }
 async function aqSetStatus(jobId, status){
   if(!canEdit()) return guestBlock();
@@ -7470,8 +7459,7 @@ function applyQueueView(){
       ${(ck.projects||[]).length?`<div class="subtle" style="font-size:var(--fs-sm)">Projects on the résumé: ${esc(ck.projects.join('; '))}</div>`:''}
       ${warn.map(w=>`<div style="font-size:var(--fs-sm);color:var(--gold)">⚠ ${esc(w)}</div>`).join('')}
       <div style="display:flex;flex-wrap:wrap;gap:8px">
-        <button class="dbtn primary" data-aq-dl="${esc(r.job_id)}" data-kind="resume">↓ Résumé</button>
-        <button class="dbtn" data-aq-dl="${esc(r.job_id)}" data-kind="cover">↓ Cover letter</button>
+        <span class="subtle" style="font-size:var(--fs-sm);align-self:center" title="${esc((r.resume_file||'')+(r.cover_file?' · '+r.cover_file:''))}">📎 Résumé &amp; cover letter are attached to the morning email</span>
         ${r.url?`<a class="dbtn" href="${esc(r.url)}" target="_blank" rel="noopener">Open posting ↗</a>`:''}
         <button class="dbtn" data-aq-open="${esc(r.job_id)}">Dossier</button>
         <span style="flex:1"></span>
@@ -10598,7 +10586,6 @@ function rewireContent(){
 document.addEventListener('click',e=>{
   const cl=e.target.closest('[data-close]'); if(cl){ closeModal(); }
   // Apply Queue (delegated: its content is rebuilt by refreshContent)
-  const aqd=e.target.closest('[data-aq-dl]'); if(aqd){ e.stopPropagation(); aqDownload(aqd.dataset.aqDl, aqd.dataset.kind); return; }
   const aqs=e.target.closest('[data-aq-st]'); if(aqs){ e.stopPropagation(); aqSetStatus(aqs.dataset.aqSt, aqs.dataset.st); return; }
   const aqo=e.target.closest('[data-aq-open]'); if(aqo){ openDossier(aqo.dataset.aqOpen); return; }
   if(e.target.closest('#aqCsv')){ exportApplicationsCsv(); return; }
