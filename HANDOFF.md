@@ -12,6 +12,26 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-25 — dead boards resolved
+
+The health check found 51 of 152 boards returning nothing. Each lead was confirmed by reading back real titles and
+locations, not by a token match:
+- **Greenhouse:** Vast Space `vast` (moved from Ashby, 187 open), Advanced Space `advancedspace`, Quantum Space
+  `quantumspacellc`, Dawn Aerospace `dawnaerospace`, Interstellar Lab `interstellarlab`.
+- **Ashby:** Slingshot `slingshot-aerospace` (Greenhouse board closed), Astroscale US `astroscale-us`, and Elveo
+  `elveo` (lynk.world redirects to elveo.com; Lynk Global renamed).
+- **BambooHR:** ClearSpace `clearspace` and Astroscale `astroscale`, replacing the dead Personio and SmartRecruiters
+  entries. SmartRecruiters: ThrustMe `thrustme`.
+- **Workday:** Firefly `fireflyspace`/wd115/`Firefly` (116 open), replacing the hrmdirect page.
+- **New `paylocity` bucket** (`scrape_paylocity`, reads window.pageData): Agile Space Industries.
+- **Custom:** Busek and OffWorld on JazzHR (applytojob.com), Exotrail on Teamtailor.
+- `scrape_icims` takes an optional `host`. GDMS's iCIMS board refuses the scraper (HTTP 405), so GDMS is in
+  needs_route with the link. I did not change the user agent to get around it.
+- **Moved to needs_route with reasons:** 23 BambooHR guesses with no tenant (the address redirects to bamboohr.com),
+  Unseenlabs, Kinéis and Look Up Space (WelcomeKit), Morpheus, Nominal, MITRE (Phenom, no public feed), EchoStar
+  (iCIMS list built by JavaScript), and 8 custom pages with no readable jobs.
+- The health check's Palantir failure was a one-off read timeout on its large board; the board is fine.
+
 ## 2026-10-25 — audit: schedule and static data
 
 - **Schedule:** GitHub started the "6am" scrape slot 3–6 hours late every day in October, and the old gate threw

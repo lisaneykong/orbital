@@ -23,11 +23,6 @@
       "verified": "probed live 2026-09-05",
       "open": 84
     },
-    "slingshotaerospace": {
-      "company": "Slingshot Aerospace",
-      "verified": "probed live 2026-09-05",
-      "open": 3
-    },
     "andurilindustries": {
       "company": "Anduril",
       "verified": "probed live 2026-09-05",
@@ -184,6 +179,28 @@
     "fortastracorporation": {
       "company": "Fortastra",
       "verified": "probed live 2026-10-24 (resolve pass)"
+    },
+    "vast": {
+      "company": "Vast Space",
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — Long Beach, CA; moved from Ashby"
+    },
+    "advancedspace": {
+      "company": "Advanced Space",
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — Westminster, CO"
+    },
+    "quantumspacellc": {
+      "company": "Quantum Space",
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — Rockville MD / Hawthorne CA / Tulsa OK"
+    },
+    "dawnaerospace": {
+      "company": "Dawn Aerospace",
+      "intl": true,
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — Christchurch NZ / Delft NL"
+    },
+    "interstellarlab": {
+      "company": "Interstellar Lab",
+      "intl": true,
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — Paris"
     }
   },
   "workday": [
@@ -287,13 +304,6 @@
       "verified": "Workday API 2026-10-19: 2831 postings"
     },
     {
-      "company": "MITRE",
-      "tenant": "mitre",
-      "server": "wd5",
-      "board": "Mitre",
-      "verified": "Workday API 2026-10-19: board exists but lists 0 postings"
-    },
-    {
       "company": "The Aerospace Corporation",
       "tenant": "aero",
       "server": "wd5",
@@ -301,18 +311,18 @@
       "verified": "Workday API 2026-10-19: 422 postings"
     },
     {
-      "company": "EchoStar",
-      "tenant": "echostar",
-      "server": "wd501",
-      "board": "Echostar",
-      "verified": "Workday API 2026-10-19: board exists but lists 0 postings"
-    },
-    {
       "company": "Moog Space & Defense",
       "tenant": "moog",
       "server": "wd5",
       "board": "MOOG_External_Career_Site",
       "verified": "Workday API 2026-10-19: 440 postings"
+    },
+    {
+      "company": "Firefly Aerospace",
+      "tenant": "fireflyspace",
+      "server": "wd115",
+      "board": "Firefly",
+      "verified": "Workday API 2026-10-25: board returns postings (116); linked from fireflyspace.com"
     }
   ],
   "lever": [
@@ -340,12 +350,6 @@
       "intl": true,
       "verified": "probed live 2026-09-05",
       "open": 27
-    },
-    {
-      "company": "Nominal",
-      "token": "nominal",
-      "verified": "probed live 2026-09-05",
-      "open": 0
     },
     {
       "company": "Shield AI",
@@ -413,12 +417,6 @@
     }
   ],
   "ashby": [
-    {
-      "company": "Vast Space",
-      "token": "vast",
-      "verified": "probed live 2026-09-05",
-      "open": 0
-    },
     {
       "company": "Outpost Technologies",
       "token": "outpost",
@@ -553,6 +551,21 @@
       "company": "Apex Space",
       "token": "apex-technology-inc",
       "verified": "probed live 2026-10-24 (resolve pass)"
+    },
+    {
+      "company": "Slingshot Aerospace",
+      "token": "slingshot-aerospace",
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — Windsor, CO; Greenhouse board closed"
+    },
+    {
+      "company": "Astroscale US",
+      "token": "astroscale-us",
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — Denver"
+    },
+    {
+      "company": "Elveo (formerly Lynk Global)",
+      "token": "elveo",
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — lynk.world now redirects to elveo.com; Chantilly, VA"
     }
   ],
   "bamboohr": [
@@ -562,43 +575,8 @@
       "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
     },
     {
-      "company": "World View Enterprises",
-      "token": "worldview",
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Agile Space Industries",
-      "token": "agilespace",
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
       "company": "Benchmark Space Systems",
       "token": "benchmark",
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Busek Co.",
-      "token": "busek",
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Lynk Global",
-      "token": "lynk",
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Sidus Space",
-      "token": "sidusspace",
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Advanced Space",
-      "token": "advancedspace",
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "TransAstra",
-      "token": "transastra",
       "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
     },
     {
@@ -607,164 +585,26 @@
       "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
     },
     {
-      "company": "OffWorld",
-      "token": "offworld",
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "AI SpaceFactory",
-      "token": "aispacefactory",
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Quantum Space",
-      "token": "quantumspace",
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Space Forge",
-      "token": "spaceforge",
+      "company": "ClearSpace",
+      "token": "clearspace",
       "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — London / Luxembourg; moved from Personio"
     },
     {
-      "company": "PLD Space",
-      "token": "pldspace",
+      "company": "Astroscale",
+      "token": "astroscale",
       "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Agnikul Cosmos",
-      "token": "agnikul",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Interstellar Technologies",
-      "token": "interstellar",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Enpulsion",
-      "token": "enpulsion",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Pale Blue",
-      "token": "paleblue",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Dawn Aerospace",
-      "token": "dawnaespace",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Sateliot",
-      "token": "sateliot",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "EnduroSat",
-      "token": "endurosat",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "NanoAvionics",
-      "token": "nanoavionics",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "AAC Clyde Space",
-      "token": "aacclydespace",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "GomSpace",
-      "token": "gomspace",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Dhruva Space",
-      "token": "dhruvaspace",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Bellatrix Aerospace",
-      "token": "bellatrix",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "OrbitGuardians",
-      "token": "orbitguardians",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
-    },
-    {
-      "company": "Neuraspace",
-      "token": "neuraspace",
-      "intl": true,
-      "probe": "not browser-probeable (CORS); server-side only — verify from the Action log"
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — Tokyo and other offices; linked from astroscale.com"
     }
   ],
   "personio": [
-    {
-      "company": "Morpheus Space",
-      "token": "morpheusspace"
-    },
-    {
-      "company": "ClearSpace",
-      "token": "clearspace",
-      "intl": true
-    },
     {
       "company": "Atmos Space Cargo",
       "token": "atmos",
       "intl": true
     }
   ],
-  "welcomekit": [
-    {
-      "company": "Exotrail",
-      "token": "exotrail",
-      "intl": true
-    },
-    {
-      "company": "ThrustMe",
-      "token": "thrustme",
-      "intl": true
-    },
-    {
-      "company": "Unseenlabs",
-      "token": "unseenlabs",
-      "intl": true
-    },
-    {
-      "company": "Kinéis",
-      "token": "kineis",
-      "intl": true
-    },
-    {
-      "company": "Interstellar Lab",
-      "token": "interstellarlab"
-    },
-    {
-      "company": "Look Up Space",
-      "token": "lookup",
-      "intl": true
-    }
-  ],
+  "welcomekit": [],
   "icims": [],
   "workable": [
     {
@@ -792,58 +632,6 @@
       "region": "US"
     },
     {
-      "company": "General Dynamics Mission Systems",
-      "url": "https://gdmissionsystems.com/careers/search-jobs",
-      "region": "US"
-    },
-    {
-      "company": "Evolution Space",
-      "url": "https://www.evolutionspace.com/careers",
-      "region": "US"
-    },
-    {
-      "company": "Ultra Safe Nuclear Technologies",
-      "url": "https://usnc.com/careers/",
-      "region": "US"
-    },
-    {
-      "company": "Tethers Unlimited",
-      "url": "https://www.tethers.com/careers/",
-      "region": "Bothell, WA"
-    },
-    {
-      "company": "Kea Aerospace",
-      "url": "https://www.keaaerospace.com/careers",
-      "region": "New Zealand"
-    },
-    {
-      "company": "Astrix Astronautics",
-      "url": "https://www.astrix.co.nz/careers",
-      "region": "New Zealand"
-    },
-    {
-      "company": "Xerra",
-      "url": "https://www.xerra.nz/careers/",
-      "region": "New Zealand"
-    },
-    {
-      "company": "SpaceBase",
-      "url": "https://www.spacebase.co/careers",
-      "region": "New Zealand"
-    },
-    {
-      "company": "Tāwhaki Joint Venture",
-      "url": "https://www.tawhaki.co.nz/careers",
-      "region": "New Zealand"
-    },
-    {
-      "company": "Firefly Aerospace",
-      "url": "https://firefly.hrmdirect.com/employment/job-openings.php?search=true",
-      "region": "US",
-      "ats": "clearcompany",
-      "note": "ClearCompany portal, confirmed 2026-09-05. Not Greenhouse — the old fireflyaerospace token never existed."
-    },
-    {
       "company": "Sierra Nevada Corporation",
       "url": "https://www.sncorp.com/careers/",
       "region": "US",
@@ -866,6 +654,28 @@
       "ats": "factorial",
       "intl": true,
       "note": "Factorial careers page (2026-10-24). Job URLs are printed in the page, not as links, so titles come from the URL slug."
+    },
+    {
+      "company": "Busek Co.",
+      "url": "https://busek.applytojob.com/apply",
+      "region": "Natick, MA",
+      "ats": "jazzhr",
+      "note": "JazzHR board linked from busek.com (2026-10-25)."
+    },
+    {
+      "company": "OffWorld",
+      "url": "https://offworld.applytojob.com/apply",
+      "region": "Pasadena, CA",
+      "ats": "jazzhr",
+      "note": "JazzHR board linked from offworld.ai/careers (2026-10-25)."
+    },
+    {
+      "company": "Exotrail",
+      "url": "https://careers.exotrail.com/jobs",
+      "region": "France",
+      "ats": "teamtailor",
+      "intl": true,
+      "note": "Teamtailor careers site linked from exotrail.com (2026-10-25)."
     }
   ],
   "careerLinks": [
@@ -1154,6 +964,216 @@
       "tried": "public ATS APIs",
       "probe": "greenhouse, lever, ashby, workable, smartrecruiters, recruitee, breezy, rippling, pinpoint, bamboohr, teamtailor, personio (name variants), 2026-10-24",
       "note": "added 2026-10-24 from the 2026 space-funding list; no public job-board API found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "World View Enterprises",
+      "tried": "bamboohr:worldviewenterprises",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "Sidus Space",
+      "tried": "bamboohr:sidusspace",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "TransAstra",
+      "tried": "bamboohr:transastra",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "AI SpaceFactory",
+      "tried": "bamboohr:aispacefactory",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "Space Forge",
+      "tried": "bamboohr:spaceforge",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "PLD Space",
+      "tried": "bamboohr:pldspace",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "Agnikul Cosmos",
+      "tried": "bamboohr:agnikulcosmos",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "Interstellar Technologies",
+      "tried": "bamboohr:interstellartechnologies",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "Enpulsion",
+      "tried": "bamboohr:enpulsion",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "Pale Blue",
+      "tried": "bamboohr:paleblue",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "Sateliot",
+      "tried": "bamboohr:sateliot",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "EnduroSat",
+      "tried": "bamboohr:endurosat",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "NanoAvionics",
+      "tried": "bamboohr:nanoavionics",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "AAC Clyde Space",
+      "tried": "bamboohr:aacclydespace",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "GomSpace",
+      "tried": "bamboohr:gomspace",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "Dhruva Space",
+      "tried": "bamboohr:dhruvaspace",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "Bellatrix Aerospace",
+      "tried": "bamboohr:bellatrixaerospace",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "OrbitGuardians",
+      "tried": "bamboohr:orbitguardians",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "Neuraspace",
+      "tried": "bamboohr:neuraspace",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "No BambooHR tenant (the address redirects to bamboohr.com) and no other public board found. Needs its careers page checked by hand."
+    },
+    {
+      "company": "Unseenlabs",
+      "tried": "welcomekit",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "WelcomeKit/Welcome to the Jungle API returned nothing and no other public board was found."
+    },
+    {
+      "company": "Kinéis",
+      "tried": "welcomekit",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "WelcomeKit/Welcome to the Jungle API returned nothing and no other public board was found."
+    },
+    {
+      "company": "Look Up Space",
+      "tried": "welcomekit",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "WelcomeKit/Welcome to the Jungle API returned nothing and no other public board was found."
+    },
+    {
+      "company": "Evolution Space",
+      "tried": "custom careers page",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "Careers page lists no jobs a scraper can read (error, empty, or built by JavaScript)."
+    },
+    {
+      "company": "Ultra Safe Nuclear Technologies",
+      "tried": "custom careers page",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "Careers page lists no jobs a scraper can read (error, empty, or built by JavaScript)."
+    },
+    {
+      "company": "Tethers Unlimited",
+      "tried": "custom careers page",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "Careers page lists no jobs a scraper can read (error, empty, or built by JavaScript)."
+    },
+    {
+      "company": "Kea Aerospace",
+      "tried": "custom careers page",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "Careers page lists no jobs a scraper can read (error, empty, or built by JavaScript)."
+    },
+    {
+      "company": "Astrix Astronautics",
+      "tried": "custom careers page",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "Careers page lists no jobs a scraper can read (error, empty, or built by JavaScript)."
+    },
+    {
+      "company": "Xerra",
+      "tried": "custom careers page",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "Careers page lists no jobs a scraper can read (error, empty, or built by JavaScript)."
+    },
+    {
+      "company": "SpaceBase",
+      "tried": "custom careers page",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "Careers page lists no jobs a scraper can read (error, empty, or built by JavaScript)."
+    },
+    {
+      "company": "Tāwhaki Joint Venture",
+      "tried": "custom careers page",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "Careers page lists no jobs a scraper can read (error, empty, or built by JavaScript)."
+    },
+    {
+      "company": "Morpheus Space",
+      "tried": "personio:morpheus",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "Personio board gone; morpheus.space links no job board."
+    },
+    {
+      "company": "Nominal",
+      "tried": "lever:nominal",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "Lever board is empty; nominal.io/careers links no other public board."
+    },
+    {
+      "company": "MITRE",
+      "tried": "workday:mitre/MITRE",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "Workday board is empty; careers.mitre.org runs on Phenom, which has no public job feed."
+    },
+    {
+      "company": "EchoStar",
+      "tried": "workday:echostar/EchoStar",
+      "probe": "13 public job-board APIs + careers-page scan, 2026-10-25",
+      "note": "Workday board is empty; careers run on iCIMS (attract-careers1-echostar) whose list is built by JavaScript."
+    },
+    {
+      "company": "General Dynamics Mission Systems",
+      "tried": "icims:careers-gdms.icims.com",
+      "probe": "careers-page scan, 2026-10-25",
+      "note": "Real board is iCIMS (careers-gdms.icims.com, linked from gdmissionsystems.com), but it refuses the scraper's requests (HTTP 405). Check it by hand: https://careers-gdms.icims.com/jobs/search"
     }
   ],
   "recruitee": [
@@ -1167,11 +1187,10 @@
   ],
   "smartrecruiters": [
     {
-      "company": "Astroscale",
-      "token": "AstroscaleUS",
-      "verified": "confirmed 2026-09-05 — careers.smartrecruiters.com/AstroscaleUS",
-      "healed_from": "lever:astroscale",
-      "note": "Denver CO + Washington DC. On-orbit servicing / debris removal — directly relevant to the ADR capstone. SmartRecruiters tokens are PascalCase and case-sensitive: https://api.smartrecruiters.com/v1/companies/AstroscaleUS/postings"
+      "company": "ThrustMe",
+      "token": "thrustme",
+      "intl": true,
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — France"
     }
   ],
   "breezy": [
@@ -1248,6 +1267,7 @@
       "darwinbox",
       "zohorecruit",
       "successfactors",
+      "paylocity",
       "custom"
     ],
     "note": "browser_reachable buckets are fetched live by index.html (FP_COMPANIES + fpFetchBoard). action_only buckets are CORS-blocked from a browser and are fetched exclusively by the daily GitHub Action via scraper.py. Adding a bucket to companies.json does nothing until it has BOTH an fpFetchBoard branch and an fpNormalize branch in index.html.",
@@ -1260,7 +1280,8 @@
       "recruitee": "<slug>.recruitee.com/api/offers/ — {offers:[...]}; per-posting URL is careers_url",
       "darwinbox": "<slug>.darwinbox.in/ms/candidateapi/job?page=N&limit=50 — {message:{jobs:[...]}}; per-posting URL is /ms/candidate/careers/<id>",
       "zohorecruit": "<host>/jobs/Careers — HTML with an HTML-escaped JSON list of records (Posting_Title, City, Country, id)",
-      "successfactors": "<host>/search/?q=&startrow=N — HTML rows tr.data-row (a.jobTitle-link, .jobLocation, .jobDate); job page has .jobdescription"
+      "successfactors": "<host>/search/?q=&startrow=N — HTML rows tr.data-row (a.jobTitle-link, .jobLocation, .jobDate); job page has .jobdescription",
+      "paylocity": "recruiting.paylocity.com/recruiting/jobs/All/<guid>/<name> — window.pageData JSON {Jobs:[{JobId, JobTitle, LocationName, PublishedDate}]}"
     }
   },
   "darwinbox": [
@@ -1287,6 +1308,13 @@
       "host": "careers.virgingalactic.com",
       "verified": "probed live 2026-10-24 (88 open)",
       "note": "SAP SuccessFactors career site; Workday tenant is gone. /search/ is server-rendered HTML, 25 rows a page."
+    }
+  ],
+  "paylocity": [
+    {
+      "company": "Agile Space Industries",
+      "url": "https://recruiting.paylocity.com/recruiting/jobs/All/d306a0c0-96a3-47d9-8d66-1e9775aad079/Agile-Space-Industries",
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — Denver, CO; linked from agilespaceindustries.com"
     }
   ]
 }

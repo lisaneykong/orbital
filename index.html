@@ -1859,7 +1859,7 @@ const ATS_BOARD={
   'Rocket Lab':'https://job-boards.greenhouse.io/rocketlab',
   'Planet Labs':'https://job-boards.greenhouse.io/planetlabs',
   'Astranis':'https://job-boards.greenhouse.io/astranis',
-  'Slingshot Aerospace':'https://job-boards.greenhouse.io/slingshotaerospace',
+  'Slingshot Aerospace':'https://jobs.ashbyhq.com/slingshot-aerospace',
   'Anduril':'https://job-boards.greenhouse.io/andurilindustries',
   'Stratolaunch':'https://job-boards.greenhouse.io/stratolaunch',
   'Albedo':'https://job-boards.greenhouse.io/albedo',
@@ -1889,7 +1889,6 @@ const ATS_BOARD={
   'E-Space':'https://jobs.lever.co/espace',
   'Hermeus':'https://jobs.lever.co/hermeus',
   'Kepler Communications':'https://jobs.lever.co/kepler',
-  'Nominal':'https://jobs.lever.co/nominal',
   'Shield AI':'https://jobs.lever.co/shieldai',
   'Palantir':'https://jobs.lever.co/palantir',
   'Velo3D':'https://jobs.lever.co/velo3d',
@@ -1913,7 +1912,8 @@ const ATS_BOARD={
   'Base Power':'https://jobs.ashbyhq.com/base-power',
   'Array Labs':'https://job-boards.greenhouse.io/array',
   'Aetherflux':'https://aetherflux.recruitee.com/',
-  'Astroscale':'https://careers.smartrecruiters.com/AstroscaleUS',
+  'Astroscale':'https://astroscale.bamboohr.com/careers',
+  'Astroscale US':'https://jobs.ashbyhq.com/astroscale-us',
   'CesiumAstro':'https://jobs.lever.co/CesiumAstro',
   // --- 2026-09-06 route pass
   'IonQ (Capella Space)':'https://job-boards.greenhouse.io/ionq',
@@ -1930,7 +1930,7 @@ const ATS_BOARD={
   // --- Workable
   'Xplore':'https://apply.workable.com/xplore-inc/',
   // --- Confirmed careers portals with no public JSON API (server-side / manual)
-  'Firefly Aerospace':'https://firefly.hrmdirect.com/employment/job-openings.php?search=true',
+  'Firefly Aerospace':'https://fireflyspace.wd115.myworkdayjobs.com/Firefly',
   'Sierra Nevada Corporation':'https://www.sncorp.com/careers/',
   'Virgin Galactic':'https://careers.virgingalactic.com/',
   // --- Workday external sites (tenant.server.myworkdayjobs.com/en-US/<board>)
@@ -9376,7 +9376,7 @@ const FP_COMPANIES=[
   ['Rocket Lab','rocketlab','greenhouse'],   // 456 open
   ['Planet Labs','planetlabs','greenhouse'],   // 118 open
   ['Astranis','astranis','greenhouse'],   // 84 open
-  ['Slingshot Aerospace','slingshotaerospace','greenhouse'],   // 3 open
+  ['Slingshot Aerospace','slingshot-aerospace','ashby'],   // 11 open
   ['Anduril','andurilindustries','greenhouse'],   // 2213 open
   ['Stratolaunch','stratolaunch','greenhouse'],   // 58 open
   ['Albedo','albedo','greenhouse'],   // 10 open
@@ -9413,7 +9413,6 @@ const FP_COMPANIES=[
   ['E-Space','espace','lever'],   // 142 open
   ['Hermeus','hermeus','lever'],   // 85 open
   ['Kepler Communications','kepler','lever'],   // 27 open
-  ['Nominal','nominal','lever'],   // 0 open
   ['Shield AI','shieldai','lever'],   // 439 open
   ['Palantir','palantir','lever'],   // 310 open
   ['Velo3D','velo3d','lever'],   // 38 open
@@ -9421,7 +9420,13 @@ const FP_COMPANIES=[
   ['Orbital Sidekick','orbitalsidekick','lever'],   // 2 open
   ['Venus Aerospace','venusaero','lever'],   // 25 open
   // --- Ashby
-  ['Vast Space','vast','ashby'],   // 0 open
+  ['Vast Space','vast','greenhouse'],   // 187 open
+  ['Advanced Space','advancedspace','greenhouse'],   // 20 open
+  ['Quantum Space','quantumspacellc','greenhouse'],   // 19 open
+  ['Dawn Aerospace','dawnaerospace','greenhouse'],   // 22 open
+  ['Interstellar Lab','interstellarlab','greenhouse'],   // 8 open
+  ['Astroscale US','astroscale-us','ashby'],   // 2 open
+  ['Elveo (formerly Lynk Global)','elveo','ashby'],   // 20 open
   ['Outpost Technologies','outpost','ashby'],   // 9 open
   ['Turion Space','turion-space','ashby'],   // 8 open
   ['Reflect Orbital','reflect-orbital','ashby'],   // 24 open
@@ -9442,7 +9447,7 @@ const FP_COMPANIES=[
   ['IonQ (Capella Space)','ionq','greenhouse'],   // 102 open — Capella Space was acquired by IonQ
   ['Long Wall (formerly ABL Space Systems)','longwall','lever'],   // 21 open — El Segundo + Long Beach CA
   ['Xona Space Systems','xona-space','ashby'],   // 59 open — Burlingame CA
-  ['Astroscale','AstroscaleUS','smartrecruiters'],   // PascalCase and case-sensitive
+  ['ThrustMe','thrustme','smartrecruiters'],
   ['Aetherflux','aetherflux','recruitee'],   // 6 open — San Carlos CA
   ['Zeno Power','zeno-power','breezy'],   // 19 open — Seattle-heavy board
   ['HEO','heo','breezy'],   // 9 open — Sydney NSW + Arlington VA
@@ -9482,11 +9487,10 @@ const FP_COMPANIES=[
   ['KBR','kbr|wd5|KBR_Careers','workday'],
   ['Amentum','amentum|wd1|Amentum','workday'],
   ['Jacobs','jacobs|wd1|Jacobs_Careers','workday'],
-  ['MITRE','mitre|wd5|MITRE_Careers','workday'],
+  ['Firefly Aerospace','fireflyspace|wd115|Firefly','workday'],
   ['The Aerospace Corporation','aerospace|wd1|External','workday'],
   ['Viasat','viasat|wd1|Viasat_Careers','workday'],
   ['Iridium','iridium|wd1|Iridium','workday'],
-  ['EchoStar','echostar|wd1|EchoStar_Careers','workday'],
   ['Intelsat','intelsat|wd1|Intelsat_Careers','workday'],
   ['SES Space & Defense','ses|wd3|SES_Careers','workday'],
   ['Kratos Defense','kratosdefense|wd1|Kratos_Careers','workday'],

@@ -155,6 +155,7 @@ MANATAL = _COMPANIES.get("manatal", [])
 DARWINBOX = _COMPANIES.get("darwinbox", [])
 ZOHORECRUIT = _COMPANIES.get("zohorecruit", [])
 SUCCESSFACTORS = _COMPANIES.get("successfactors", [])
+PAYLOCITY = _COMPANIES.get("paylocity", [])
 
 # Eightfold-powered portals (custom JSON API, server-side only — CORS-blocked in browser).
 # API: https://{host}/api/apply/v2/jobs?domain={domain}&start=0&num=100
@@ -1522,17 +1523,18 @@ def scrape_icims(cfg):
     titles and URLs are reliable, location often needs the detail page, so rows without a
     parseable location fall through the hub gate and are dropped rather than guessed at."""
     company, token = cfg["company"], cfg["token"]
+    host = cfg.get("host") or f"careers-{token}.icims.com"   # most tenants are careers-<token>
     rows = []
-    api = f"https://careers-{token}.icims.com/jobs/search?ss=1&in_iframe=1"
+    api = f"https://{host}/jobs/search?ss=1&in_iframe=1"
     r = request("GET", api)
     if r.status_code != 200:
-        raise RetryableHTTP(f"icims {token} -> {r.status_code}")
+        raise RetryableHTTP(f"icims {host} -> {r.status_code}")
     html = r.text
     for m in re.finditer(r'href="(/jobs/(\d+)/[^"]+)"[^>]*>\s*(?:<[^>]+>\s*)*([^<]{4,140})', html):
         href, jid, title = m.group(1), m.group(2), clean_text(m.group(3))
         seg = re.search(r'title="([^"]*(?:, [A-Z]{2}|United States)[^"]*)"', html[m.end():m.end() + 400])
         row = build_row(company, jid, title, seg.group(1) if seg else "",
-                        f"https://careers-{token}.icims.com{href}", "custom")
+                        f"https://{host}{href}", "custom")
         if row:
             rows.append(row)
     return rows
@@ -1749,6 +1751,32 @@ def scrape_successfactors(cfg):
     return rows
 
 
+def scrape_paylocity(cfg):
+    """Paylocity careers page (Agile Space Industries). The page carries every posting as
+    JSON in window.pageData; the list's Description is only a short teaser."""
+    company, url = cfg["company"], cfg["url"]
+    r = request("GET", url, headers={"Accept": "text/html"})
+    if r.status_code != 200:
+        raise RetryableHTTP(f"paylocity {company} -> {r.status_code}")
+    m = re.search(r"window\.pageData\s*=\s*(\{.*?\});\s*\n", r.text, re.S)
+    if not m:
+        raise RetryableHTTP(f"paylocity {company}: no pageData on the page")
+    rows = []
+    for j in json.loads(m.group(1)).get("Jobs") or []:
+        if j.get("IsInternal"):
+            continue
+        loc = j.get("LocationName") or ""
+        if j.get("IsRemote") and "remote" not in loc.lower():
+            loc = (loc + "; Remote").strip("; ")
+        row = build_row(company, j.get("JobId"), j.get("JobTitle"), loc,
+                        f"https://recruiting.paylocity.com/Recruiting/Jobs/Details/{j.get('JobId')}",
+                        "paylocity", " ".join(x for x in (j.get("HiringDepartment"), j.get("Description")) if x),
+                        posted=j.get("PublishedDate"))
+        if row:
+            rows.append(row)
+    return rows
+
+
 def scrape_zohorecruit(cfg):
     """Zoho Recruit career site (Skyroot). The job records are embedded in the page as
     HTML-escaped JSON; there is no public JSON endpoint and no posting date."""
@@ -1835,6 +1863,8 @@ def build_tasks():
         tasks.append((cfg["company"], "zohorecruit", lambda c=cfg: scrape_zohorecruit(c)))
     for cfg in SUCCESSFACTORS:
         tasks.append((cfg["company"], "successfactors", lambda c=cfg: scrape_successfactors(c)))
+    for cfg in PAYLOCITY:
+        tasks.append((cfg["company"], "paylocity", lambda c=cfg: scrape_paylocity(c)))
     random.shuffle(tasks)   # spread load across domains naturally
     return tasks
 
@@ -2227,6 +2257,24 @@ def _diagnose_tasks():
             m = re.search(r"Results\s*<b>[^<]*</b>\s*of\s*<b>(\d+)", r.text)
             return (int(m.group(1)) if m else r.text.count('class="data-row"')), "results on the search page"
         add("successfactors", c["company"], sf)
+    for c in PAYLOCITY:
+        def pl(c=c):
+            r = SESSION.get(c["url"], timeout=20)
+            if r.status_code != 200:
+                raise RuntimeError(f"HTTP {r.status_code}")
+            m = re.search(r"window\.pageData\s*=\s*(\{.*?\});\s*\n", r.text, re.S)
+            if not m:
+                raise RuntimeError("no pageData on the page")
+            return len(json.loads(m.group(1)).get("Jobs") or []), "postings in pageData"
+        add("paylocity", c["company"], pl)
+    for c in ICIMS:
+        def ic(c=c):
+            host = c.get("host") or f"careers-{c['token']}.icims.com"
+            r = SESSION.get(f"https://{host}/jobs/search?ss=1&in_iframe=1", timeout=20)
+            if r.status_code != 200:
+                raise RuntimeError(f"HTTP {r.status_code}")
+            return len(set(re.findall(r'href="(?:https://[^"]*)?/jobs/(\d+)/', r.text))), "job links on page 1"
+        add("icims", c["company"], ic)
     return tasks
 
 
