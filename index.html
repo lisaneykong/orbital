@@ -1703,25 +1703,6 @@ button,a,select,.hchip,.minibtn,.savebtn{touch-action:manipulation;-webkit-tap-h
 .acct-t b{font-family:'JetBrains Mono',monospace;color:var(--gold)}
 .acct-a{display:flex;gap:8px;flex:none}
 @media(max-width:720px){.acct{padding:10px 12px}.acct-a{width:100%}.acct-a .dbtn{flex:1;justify-content:center}}
-
-/* ---- v14: static verified intern board ---- */
-.sib-row{display:flex;gap:14px;align-items:center;padding:12px 2px;border-top:1px solid var(--line);flex-wrap:wrap}
-.sib-row:first-of-type{border-top:0}
-.sib-row.sib-star{background:linear-gradient(90deg,color-mix(in srgb,var(--a3) 7%,transparent),transparent 70%);border-radius:var(--rs);padding-left:10px;margin-left:-10px}
-.sib-main{flex:1;min-width:230px;display:flex;flex-direction:column;gap:3px}
-.sib-main b{color:var(--text);font-weight:600;font-size:var(--fs-md)}
-.sib-main>span{font-size:var(--fs-xs);color:var(--dim)}
-.sib-note{color:var(--muted) !important;line-height:1.5}
-.sib-side{flex:none;display:flex;flex-direction:column;gap:7px;align-items:flex-end}
-.sib-pay{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);font-weight:700;color:var(--text);white-space:nowrap}
-.sib-pay i{font-style:normal;font-weight:500;color:var(--dim);font-size:var(--fs-2xs)}
-.sib-pay.posted{color:var(--good)}
-.sib-pay.none{color:var(--dim);font-weight:500}
-.sib-apply{text-decoration:none;min-height:34px}
-@media(max-width:720px){
-  .sib-side{flex-direction:row;width:100%;justify-content:space-between;align-items:center}
-  .sib-apply{min-height:40px}
-}
 .subtabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px;padding:4px;border:1px solid rgba(140,180,255,.18);border-radius:999px;background:rgba(10,16,28,.45);width:max-content;max-width:100%}
 .subtab{font:inherit;font-size:var(--fs-sm);color:var(--muted);background:none;border:0;padding:7px 14px;border-radius:999px;cursor:pointer;transition:color .15s,background .15s}
 .subtab:hover{color:var(--text)}
@@ -2123,11 +2104,6 @@ function statsForRegion(){
   ];
 }
 // Skills are the master résumé's. Nothing here may claim more than that document does.
-const CANDIDATE = {
-  name:'Lisaney Kong', title:'Program Management · Technical Program Management · Systems Engineering',
-  photo:'assets/headshot.png',
-  skills:['Program Management','Technical Project Management','Schedule Management','Risk Management','Stakeholder Management','Cross-functional Leadership','Systems Engineering','P&L Ownership','+16'],
-};
 
 /* ---------------- city culture & happenings (4 boxes/region, positive only) ---------------- */
 const CULTURE = {
@@ -5169,15 +5145,8 @@ function matchColor(p){ return p>=85?'#37e0a0':p>=70?'#37d6e6':p>=55?'#f5c560':'
 // vision deficiency): ✓ strong fit, ● decent, ⚠ marginal, ✕ weak.
 function matchIcon(p){ return p>=85?'✓':p>=70?'●':p>=55?'⚠':'✕'; }
 /* strategic role-tag engine — computable signal chips for advantage */
-const COMPANY_TIER={
-  'SpaceX':'Late-stage','Blue Origin':'Bezos-backed','Rocket Lab':'Public','Boeing':'Prime','Amazon':'Public',
-  'Relativity Space':'Series F','Impulse Space':'Series B','Vast Space':'Founder-backed','Stoke Space':'Series B',
-  'Riot Games':'Public','Snap Inc.':'Public','Xero':'Public','Datacom':'Private','Anduril':'Late-stage',
-};
 function roleTags(j){
   const t=(j.title||'').toLowerCase(), co=j.company||'', tags=[];
-  const tier=COMPANY_TIER[co];
-  if(tier) tags.push({k:tier, c:'#9d6bff', tip:'Funding / company stage'});
   if(/integrat|mission|program|s&op|operations|supply/.test(t)) tags.push({k:'Integration', c:'#37d6e6', tip:'Cross-functional / supply-chain leverage — your wheelhouse'});
   if(/defense|avionics|guidance|propuls|payload|gnc|structures/.test(t)) tags.push({k:'Regulated', c:'#f5c560', tip:'ITAR / FAA / FCC exposure — clearance or compliance edge'});
   if(['SpaceX','Rocket Lab','Relativity Space','Impulse Space','Stoke Space','Blue Origin'].includes(co)) tags.push({k:'SpaaS', c:'#37e0a0', tip:'Space-as-a-service / launch cadence company'});
@@ -5525,7 +5494,9 @@ function culturePanel(){
 
 /* global: candidate card — the four counts are your own tracking, never fixed numbers */
 function candidatePanel(){
-  const c=CANDIDATE, st=appStatusMap(), applied=[...appliedJobs];
+  const sk=OWNER.skills||[];
+  const c={name:OWNER.name, title:OWNER.title, photo:OWNER.photo, skills: sk.length>8 ? sk.slice(0,8).concat('+'+(sk.length-8)) : sk};
+  const st=appStatusMap(), applied=[...appliedJobs];
   const inStatus=s=>applied.filter(id=>st[id]===s).length;
   return `<div class="panel cand">
       <div class="ph"><h3>My Profile</h3><span class="va" data-nav="candidates" style="cursor:pointer">Open ↗</span></div>
@@ -6192,62 +6163,6 @@ function internPipelinePanel(internIds){
 }
 
 /* =========================================================================
-   STATIC VERIFIED INTERN BOARD — hand-verified postings from a live web scan
-   on Jul 14, 2026. Every row is a real posting or official program page;
-   pay is labeled: [posted] = on the listing (CA/WA transparency laws),
-   [reported] = crowd-sourced (levels.fyi/Glassdoor), or "not posted".
-   This board does NOT auto-update — the scraper + directory stay the live layer.
-   ========================================================================= */
-const STATIC_INTERNS_DATE='Jul 14, 2026';
-const STATIC_INTERNS=[
-  {co:'Rocket Lab',title:'Space Operations Internship — Fall 2026',loc:'Long Beach, CA',
-   pay:'~$25/hr',payKind:'reported',url:'https://rocketlabcorp.com/careers/',
-   note:'Python · Linux · Git · spacecraft ops — the closest public match to an MSO profile. US person · 12 wks · GPA 3.0+',star:1},
-  {co:'Rocket Lab',title:'Systems Engineering Intern — Fall 2026',loc:'Long Beach, CA',
-   pay:'~$25/hr',payKind:'reported',url:'https://rocketlabcorp.com/careers/',
-   note:'Pairs directly with the SysE graduate certificate. US person · 12 wks'},
-  {co:'Rocket Lab',title:'Manufacturing Engineering Intern — Fall 2026',loc:'Long Beach, CA',
-   pay:'~$25/hr',payKind:'reported',url:'https://rocketlabcorp.com/careers/',note:'US person · 12 wks'},
-  {co:'Rocket Lab',title:'Mechanical Engineering Intern — Fall 2026',loc:'Long Beach, CA',
-   pay:'~$25/hr',payKind:'reported',url:'https://rocketlabcorp.com/careers/',note:'US person · 12 wks'},
-  {co:'SpaceX',title:'Engineering Intern — Fall 2026',loc:'Hawthorne CA · Redmond WA · Vandenberg · Starbase + more',
-   pay:'$28–$42/hr',payKind:'posted',url:'https://job-boards.greenhouse.io/spacex/jobs/8403206002',
-   note:'Site placement by team. ITAR US person · 12+ wks · starts Aug/Sep 2026'},
-  {co:'SpaceX',title:'Software Engineering Intern — Fall 2026',loc:'Hawthorne CA · Redmond WA (Starlink)',
-   pay:'$28–$42/hr',payKind:'posted',url:'https://job-boards.greenhouse.io/spacex/jobs/8403219002',
-   note:'Starlink ground/ops software teams hire from this req. ITAR US person · 12+ wks'},
-  {co:'SpaceX',title:'Business Operations Intern — Fall 2026',loc:'Hawthorne, CA',
-   pay:'$21–$26/hr',payKind:'posted',url:'https://job-boards.greenhouse.io/spacex/jobs/8403205002',
-   note:'Ops-side entry without a hard-engineering screen. ITAR US person · 12+ wks'},
-  {co:'Blue Origin',title:'Internship Program (Fall/Summer cycles)',loc:'Kent, WA + other sites',
-   pay:'~$32/hr + ~$3k/mo housing',payKind:'reported',url:'https://www.blueorigin.com/careers/internships',
-   note:'Paid + housing/relocation assistance per official program page. US person · 12–14 wks'},
-];
-function staticInternBoardPanel(){
-  const payTag=r=> r.payKind==='posted' ? `<span class="sib-pay posted">${esc(r.pay)} <i>posted</i></span>`
-    : r.payKind==='reported' ? `<span class="sib-pay">${esc(r.pay)} <i>reported</i></span>`
-    : `<span class="sib-pay none">pay not posted</span>`;
-  const rows=STATIC_INTERNS.map(r=>`<div class="sib-row ${r.star?'sib-star':''}">
-      <div class="sib-main">
-        <b>${r.star?'★ ':''}${esc(r.title)}</b>
-        <span>${esc(r.co)} · ${esc(r.loc)}</span>
-        <span class="sib-note">${esc(r.note)}</span>
-      </div>
-      <div class="sib-side">${payTag(r)}
-        <a class="dbtn primary sib-apply" href="${esc(r.url)}" target="_blank" rel="noopener">Apply ↗</a>
-      </div>
-    </div>`).join('');
-  return `<div class="panel"><div class="ph"><h3>${cic('sat')} Verified Intern Board</h3>
-      <span class="va">static snapshot · hand-verified ${STATIC_INTERNS_DATE}</span></div>
-    <div class="pb">
-      <p class="subtle" style="margin:0 0 12px">Every row below is a real posting or official program page found in a live scan —
-        who, what, where, how to apply, and pay. <b>[posted]</b> = on the listing itself; <b>[reported]</b> = crowd-sourced
-        (levels.fyi / Glassdoor), so verify on the call. This board is frozen at the scan date; the list above and the
-        directory below are the live, auto-updating layer.</p>
-      ${rows}
-    </div></div>`;
-}
-/* =========================================================================
    ERAU CREDENTIAL GUIDANCE — three blocks that answer, per role: does my degree
    apply, am I eligible to apply as a Worldwide grad student, and what do I do before
    I hit submit. Nothing here asserts an ERAU policy number: the panel says what
@@ -6477,7 +6392,6 @@ function internshipsView(){
     ${erauEligibilityPanel(jobs)}
     ${internCycleCalendarPanel()}
     ${conversionPanel()}
-    ${staticInternBoardPanel()}
     ${strategicMatrixPanel(season)}
     ${internDirectoryPanel()}
     ${fellowshipsPanel()}`;
@@ -7081,105 +6995,9 @@ function alumniPanel(){
    and sync with the rest of your tracking.
    ========================================================================= */
 const EVENT_CHECKED='2026-09-11';
-const EVENT_SEED=[
-  {id:'sf-vcf1', title:'National Space Intern Program — Virtual Career Fair 1', org:'Space Foundation', kind:'virtual',
-   date:'2026-10-01', deadline:null,
-   deadlineNote:'None published — one free registration covers all four fairs in the series.',
-   cost:'Free',
-   req:['Students and early-career professionals across the space industry','Register once for the National Space Intern Program to get access to every fair in the series'],
-   why:'The most directly space-specific virtual fair on the calendar, and the registration carries across all four dates.',
-   src:'spacefoundation.org', url:'https://www.spacefoundation.org/national-space-interns/'},
-  {id:'sf-vcf2', title:'National Space Intern Program — Virtual Career Fair 2', org:'Space Foundation', kind:'virtual',
-   date:'2026-12-10', deadline:null, deadlineNote:'Covered by the same one-time registration.', cost:'Free',
-   req:['Same series registration as Fair 1'],
-   why:'December timing lines up with spring-start internship and new-grad reqs.',
-   src:'spacefoundation.org', url:'https://www.spacefoundation.org/national-space-interns/'},
-  {id:'sf-vcf3', title:'National Space Intern Program — Virtual Career Fair 3', org:'Space Foundation', kind:'virtual',
-   date:'2027-01-28', deadline:null, deadlineNote:'Covered by the same one-time registration.', cost:'Free',
-   req:['Same series registration as Fair 1'],
-   why:'January fair — the heaviest hiring window for summer internships.',
-   src:'spacefoundation.org', url:'https://www.spacefoundation.org/national-space-interns/'},
-  {id:'sf-vcf4', title:'National Space Intern Program — Virtual Career Fair 4', org:'Space Foundation', kind:'virtual',
-   date:'2027-03-18', deadline:null, deadlineNote:'Covered by the same one-time registration.', cost:'Free',
-   req:['Same series registration as Fair 1'],
-   why:'Last of the series before the summer intake closes.',
-   src:'spacefoundation.org', url:'https://www.spacefoundation.org/national-space-interns/'},
-  {id:'ieee-global', title:'IEEE Global Virtual Career Fair', org:'IEEE', kind:'virtual',
-   date:'2026-09-23', dateEnd:'2026-09-24', deadline:null,
-   deadlineNote:'None published — registration was open as of ' + '11 Sep 2026.', cost:'Free',
-   req:['Open registration','Aerospace is one of the named fields, alongside semiconductors, AI, software, energy and robotics'],
-   why:'Two-day global fair feeding off IEEE regional events — broad STEM employer list rather than space-only.',
-   src:'careerfair.ieee.org', url:'https://careerfair.ieee.org/'},
-  {id:'cj-hub', title:'ClearanceJobs career events — rolling calendar', org:'ClearanceJobs', kind:'both',
-   date:null, deadline:null,
-   deadlineNote:'Per-event registration; no series deadline.', cost:'Free to candidates',
-   req:['⚠ Aimed at cleared candidates. Eligibility varies per event and is not stated on the calendar — check each one before registering.','You do not hold a clearance, so treat these as defence-sector market intelligence unless an event says otherwise'],
-   why:'A steady mix of virtual and in-person defence-sector fairs, most weeks. Useful for seeing which primes are actively hiring.',
-   src:'about.clearancejobs.com', url:'https://about.clearancejobs.com/candidates/career-events',
-   note:'Individual dates run roughly weekly — the calendar is the source of truth.'},
-  {id:'sf-web1', title:'National Space Intern Program — Webinar Series 1', org:'Space Foundation', kind:'webinar',
-   date:'2026-11-19', deadline:null, deadlineNote:'Covered by the same one-time registration.', cost:'Free',
-   req:['Same series registration as the virtual fairs'],
-   why:'Lower stakes than a fair — a way to get on the Space Foundation radar between fair dates.',
-   src:'spacefoundation.org', url:'https://www.spacefoundation.org/national-space-interns/'},
-  {id:'sf-web2', title:'National Space Intern Program — Webinar Series 2', org:'Space Foundation', kind:'webinar',
-   date:'2027-02-18', deadline:null, deadlineNote:'Covered by the same one-time registration.', cost:'Free',
-   req:['Same series registration as the virtual fairs'], why:'Sits between the January and March fairs.',
-   src:'spacefoundation.org', url:'https://www.spacefoundation.org/national-space-interns/'},
-  {id:'sf-web3', title:'National Space Intern Program — Webinar Series 3', org:'Space Foundation', kind:'webinar',
-   date:'2027-05-20', deadline:null, deadlineNote:'Covered by the same one-time registration.', cost:'Free',
-   req:['Same series registration as the virtual fairs'], why:'After the summer intake closes — useful for the following cycle.',
-   src:'spacefoundation.org', url:'https://www.spacefoundation.org/national-space-interns/'},
-  {id:'bgj-hub', title:'BillGoldenJobs — upcoming US job fairs', org:'BillGoldenJobs', kind:'both',
-   date:null, deadline:null, deadlineNote:'Per-event; the calendar links each registration.', cost:'Free to candidates',
-   req:['Open to the public, with cleared-only events marked on the listing'],
-   why:'The one aggregator that actually lists company-run hiring events by date — Blue Origin, Northrop Grumman, Raytheon, V2X and others appear here individually rather than buried on a careers page.',
-   src:'billgoldenjobs.com', url:'https://billgoldenjobs.com/job-fairs-usa/',
-   note:'Dates are coded YYMMDD at the start of each line. Updated continuously, so check it weekly rather than trusting a snapshot.'},
-  {id:'erau-spring', title:'Spring Career FAIR — Daytona Beach and Prescott', org:'Embry-Riddle Career Services', kind:'onsite', erau:true,
-   date:null, deadline:null, deadlineNote:'Student registration runs through Handshake.', cost:'Free to students and alumni',
-   req:['Open to ERAU students and returning alumni','Held each Spring at both campuses'],
-   why:'The spring counterpart to the Fall EXPO. Same employer pool, smaller crowd.',
-   src:'careerservices.erau.edu', url:'https://careerservices.erau.edu/for-employers',
-   note:'Runs every Spring. The 2027 date is not published yet — confirm in Handshake.'},
-  {id:'erau-ww', title:'Worldwide Virtual Career EXPO', org:'Embry-Riddle Career Services', kind:'virtual', erau:true,
-   date:null, deadline:null,
-   deadlineNote:'Not published on the public page — Handshake carries the student-side dates.', cost:'Free to students and alumni',
-   req:['Open to Embry-Riddle students from first-year through graduate level, recent graduates and alumni','Access through Handshake with your ERAU login'],
-   why:'The ERAU event actually built for Worldwide students — no travel, and alumni keep access for life.',
-   src:'careerservices.erau.edu', url:'https://careerservices.erau.edu/for-employers/events-and-services/virtual-expo',
-   note:'A Fall 2026 edition is named on the Career Services site, but the student-facing date is not published there. Confirm in Handshake.'},
-  {id:'erau-daytona', title:'Fall Career EXPO — Daytona Beach campus', org:'Embry-Riddle Career Services', kind:'onsite', erau:true,
-   date:null, deadline:null, deadlineNote:'Student registration runs through Handshake.', cost:'Free to students and alumni',
-   req:['Open to ERAU students and returning alumni','Held in the ICI Center, Henderson Welcome Center and Student Union'],
-   why:'The largest ERAU expo. Worth the flight only if several target employers confirm they are exhibiting — check the employer list first.',
-   src:'careerservices.erau.edu', url:'https://careerservices.erau.edu/for-employers/events-and-services/daytona-beach-expo',
-   note:'Runs every Fall, with a Spring Career FAIR to match. The exact 2026 student date is not on the public page.'},
-  {id:'erau-prescott', title:'Fall Career Fair — Prescott campus', org:'Embry-Riddle Career Services', kind:'onsite', erau:true,
-   date:'2026-10-01', deadline:null, deadlineNote:'Student registration runs through Handshake.', cost:'Free to students and alumni',
-   req:['Open to ERAU students and returning alumni','10:00 AM – 3:00 PM local (Phoenix time, no DST)'],
-   why:'Smaller than Daytona and closer to the western hubs you are targeting.',
-   src:'third-party exhibitor listing', url:'https://careerservices.erau.edu/for-employers',
-   unverified:true,
-   note:'This date comes from an exhibiting organisation\'s own calendar, not from ERAU. Confirm in Handshake before booking anything.'},
-];
-// ClearanceJobs publishes its calendar as dates + format only, so that is all that is
-// claimed here. Every one is flagged cleared:true — they are aimed at cleared candidates
-// and he holds no clearance, so the "Open to me" filter hides them by default intent.
-const CJ_EVENTS=[
-  ['2026-09-16','virtual','12:00–15:00 EDT'],['2026-09-23','virtual','12:00–15:00 EDT · private event'],
-  ['2026-10-01','onsite','08:30–17:00 MDT'],['2026-10-14','virtual','15:00–18:00 EDT'],
-  ['2026-10-21','onsite','12:00–15:00 EDT'],['2026-11-05','webinar','16:00–19:00 CDT'],
-  ['2026-11-11','virtual','12:00–15:00 EDT'],['2026-11-18','onsite','13:00–16:00 EDT'],
-  ['2026-11-19','onsite','13:00–16:00 EDT'],['2026-12-09','virtual','13:00–16:00 EDT'],
-];
-CJ_EVENTS.forEach(([d,k,t],i)=>EVENT_SEED.push({
-  id:'cj'+i, title:(k==='onsite'?'In-person career fair':k==='webinar'?'Career webinar':'Virtual career fair'),
-  org:'ClearanceJobs', kind:k, date:d, deadline:null, deadlineNote:'Register per event on the calendar.',
-  cost:'Free to candidates', cleared:true,
-  req:['⚠ Aimed at cleared candidates — you hold no clearance, so confirm eligibility before registering','Location and employer list are published per event on the calendar'],
-  why:'Defence-sector hiring signal: which primes are actively recruiting, and where.',
-  src:'clearancejobs.com', url:'https://about.clearancejobs.com/candidates/career-events', note:t}));
+// No built-in event dates: a fixed list goes stale and nothing can refresh it daily.
+// The Event Radar lists events you add, plus the live calendars and company hubs below.
+const EVENT_SEED=[];
 const COMPANY_EVENT_HUBS=[
   {n:'Blue Origin', hub:'https://www.blueorigin.com/careers',
    note:'Runs its own virtual info sessions, including military-community sessions, through its careers portal. Registration links usually surface via university career centres and the BillGoldenJobs calendar.'},
@@ -7304,7 +7122,7 @@ function eventsView(){
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px">'
         +chip('all','All')+chip('open','Open to me')+chip('virtual','Virtual')+chip('onsite','On-site')+chip('erau','Embry-Riddle')+chip('mine','Mine')+chip('registered','Registered')
       +'</div>'
-      +'<div class="evlist">'+(rows.length?rows.map(e=>eventRow(e,!!store.reg[e.id])).join(''):'<p class="subtle" style="margin:0">Nothing matches that filter.</p>')+'</div>'
+      +'<div class="evlist">'+(rows.length?rows.map(e=>eventRow(e,!!store.reg[e.id])).join(''):'<p class="subtle" style="margin:0">'+(all.length?'Nothing matches that filter.':'No events added yet. Find one in the live calendars below, then add it here to track the date and registration.')+'</p>')+'</div>'
       +'</div></div>'
     +'<div class="panel"><div class="ph"><h3>'+cic('radar')+' Add an event</h3><span class="va">saved and synced</span></div>'
       +'<div class="pb">'

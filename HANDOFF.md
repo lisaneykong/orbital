@@ -12,6 +12,20 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-25 — audit: schedule and static data
+
+- **Schedule:** GitHub started the "6am" scrape slot 3–6 hours late every day in October, and the old gate threw
+  away any slot that wasn't exactly 6am. So every daily scrape was the ~2pm catch-up, after the 8am email. Scrape
+  slots now start ~3am Chicago on off-peak minutes (08:17, 09:47, 11:17 UTC, plus catch-ups at 15:13, 19:13 and
+  23:13). Each slot runs only if Supabase has no completed scrape for the Chicago day. Email slots moved off the hour
+  as well (13:23, 14:23, 15:53, 17:53 UTC; it sends from 8am, and email_log blocks doubles).
+- **Static data removed:** the hand-copied July internship board (`STATIC_INTERNS`), the hardcoded event dates
+  (`EVENT_SEED`, `CJ_EVENTS`; Events now lists your own events plus the live calendars), the funding-stage tags
+  (`COMPANY_TIER`), and the fixed profile-card copy (`CANDIDATE`; the card now reads `OWNER`).
+- **Kept on purpose (reference, not feeds):** directories and program windows (`INTERN_DIRECTORY`, `FELLOWSHIPS`,
+  `INTERN_CYCLES`), relocation figures in `REGIONS` (cost-of-living index, rent, moving costs), essay prompts,
+  culture links, daily motivation lines.
+
 ## 2026-10-25 — landing chart and navigation
 
 - **Landing:** the app opens on the Dashboard (Today is now a tab beside it). On All Regions, the salary chart

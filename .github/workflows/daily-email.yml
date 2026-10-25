@@ -18,10 +18,13 @@ name: Orbital daily email
 
 on:
   schedule:
-    # 8am America/Chicago is 13:00 UTC in summer (CDT) and 14:00 UTC in winter (CST).
-    # Both fire; the gate lets through only the one that is really 8am in Chicago.
-    - cron: "0 13 * * *"
-    - cron: "0 14 * * *"
+    # Off the hour, because GitHub starts on-the-hour schedules hours late. The first slot
+    # that starts at or after 8am Chicago sends; email_log stops any second send that day.
+    # (UTC 13:23 is 8:23am CDT; 14:23 is 8:23am CST; the others are fallbacks.)
+    - cron: "23 13 * * *"
+    - cron: "23 14 * * *"
+    - cron: "53 15 * * *"
+    - cron: "53 17 * * *"
   workflow_dispatch:
     inputs:
       mode:

@@ -8,13 +8,14 @@ name: Orbital daily scrape
 #   2. Repo -> Settings -> Secrets and variables -> Actions -> New repository secret:
 #        SUPABASE_URL                = https://<your-ref>.supabase.co
 #        SUPABASE_SERVICE_ROLE_KEY   = <your service_role key>
-#   3. That's it. It runs at 6am Central every day, and you can also trigger it from
+#   3. That's it. It runs early every morning (from ~3am Central), and you can also trigger it from
 #      the dashboard's "Refresh roles" button or by hand
 #      (Actions tab -> "Orbital daily scrape" -> Run workflow).
 #
-# SELF-HEALING: if the 6am run writes nothing — rate limit, quota, network blip — the
-# catch-up slots at ~10am, 2pm and 6pm Chicago retry on their own. Nobody has to notice
-# or press anything. Once a run completes, the remaining slots see it and no-op.
+# SELF-HEALING: every slot asks Supabase whether a scrape already finished today (Chicago
+# day). The first slot GitHub actually starts does the scrape; the rest see it and stop in
+# seconds. If a run writes nothing — rate limit, quota, network blip — the next slot retries.
+# Nobody has to notice or press anything.
 #
 # If a run fails, open it and read the FIRST red step — the preflight below names a
 # missing or malformed secret in plain English instead of letting the scraper die on
@@ -22,19 +23,19 @@ name: Orbital daily scrape
 
 on:
   schedule:
-    # GitHub only schedules in UTC, and 6am America/Chicago is 11:00 UTC in summer
-    # (CDT) but 12:00 UTC in winter (CST). Both slots fire; the gate job below lets
-    # exactly ONE of them through — whichever one is actually 6am in Chicago today.
-    - cron: "0 11 * * *"
-    - cron: "0 12 * * *"
-    # Catch-up slots (~10am, 2pm, 6pm Chicago). On a normal day these cost a few
-    # seconds and stop: the gate sees the morning run already finished and exits.
-    # They exist so a scrape killed by a rate limit, a quota or a network blip
-    # resumes BY ITSELF later the same day, instead of leaving the board frozen
-    # until tomorrow at 6am and waiting on somebody to press a button.
-    - cron: "0 15 * * *"
-    - cron: "0 19 * * *"
-    - cron: "0 23 * * *"
+    # GitHub starts scheduled runs late — the old 6am slot (11:00 UTC) routinely began
+    # 3 to 6 hours late in October 2026, after the 8am email — and it is worst on the hour.
+    # So the morning slots start ~3am Chicago on off-peak minutes; the first one that
+    # GitHub starts scrapes, which has the data in well before 8am even on a slow day.
+    # (UTC: 08:17 is 3:17am CDT / 2:17am CST.)
+    - cron: "17 8 * * *"
+    - cron: "47 9 * * *"
+    - cron: "17 11 * * *"
+    # Catch-up slots (~10am, 2pm, 6pm Chicago) for a day when every morning slot failed.
+    # On a normal day each costs a few seconds and stops.
+    - cron: "13 15 * * *"
+    - cron: "13 19 * * *"
+    - cron: "13 23 * * *"
   workflow_dispatch:        # manual "Run workflow" button + the dashboard's Refresh roles
     inputs:
       mode:
@@ -83,26 +84,12 @@ jobs:
           echo "Local time in America/Chicago: $(TZ=America/Chicago date '+%Y-%m-%d %H:%M %Z')"
 
           slot=catchup
-          case "${{ github.event.schedule }}" in
-            "0 11 * * *"|"0 12 * * *")
-              # The DST pair. One of them is 6am in Chicago today. GitHub often starts
-              # scheduled runs late, so a slot that lands after 6am acts as a catch-up
-              # instead of being thrown away; one that lands before 6am (winter) skips.
-              if [ "$hour" = "06" ]; then
-                echo "kind=schedule" >> "$GITHUB_OUTPUT"
-                echo "run=true" >> "$GITHUB_OUTPUT"
-                exit 0
-              elif [ "$hour" \< "06" ]; then
-                echo "Before 6am in Chicago (hour=$hour) — the other DST slot. Skipping."
-                echo "run=false" >> "$GITHUB_OUTPUT"
-                exit 0
-              fi
-              ;;
-          esac
+          if [ "$hour" \< "07" ]; then slot=schedule; fi
           case "$slot" in
             *)
-              # A catch-up slot. Run only if nothing succeeded yet today (Chicago day).
-              echo "kind=catchup" >> "$GITHUB_OUTPUT"
+              # Every slot: run only if nothing succeeded yet today (Chicago day). Morning
+              # slots are recorded as "schedule", later ones as "catchup".
+              echo "kind=$slot" >> "$GITHUB_OUTPUT"
               day=$(TZ=America/Chicago date +%F)
               since=$(TZ=America/Chicago date -d "$day 00:00" -u +%Y-%m-%dT%H:%M:%SZ)
               echo "Looking for a completed scrape since $since (start of $day in Chicago)."
