@@ -612,13 +612,23 @@
       "token": "xplore-inc",
       "verified": "probed live 2026-09-05",
       "open": 4
+    },
+    {
+      "company": "Umbra",
+      "token": "umbra-1",
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — Santa Barbara, CA / Arlington, VA; linked from umbra.space (49 open)"
     }
   ],
   "eightfold": [],
   "amazon": [
     {
-      "company": "Project Kuiper (Amazon)",
-      "query": "kuiper"
+      "company": "Project Kuiper (Amazon Leo)",
+      "query": "kuiper",
+      "queries": [
+        "kuiper",
+        "amazon leo"
+      ],
+      "note": "Kuiper is now posted as \"Amazon Leo\"; both searches run and duplicates are dropped."
     },
     {
       "company": "AWS Aerospace & Satellite",
@@ -750,12 +760,6 @@
       "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
     },
     {
-      "company": "Umbra Space",
-      "tried": "greenhouse:umbra",
-      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
-      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
-    },
-    {
       "company": "SpinLaunch",
       "tried": "greenhouse:spinlaunch",
       "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
@@ -776,12 +780,6 @@
     {
       "company": "Rogue Space Systems",
       "tried": "greenhouse:rogue",
-      "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
-      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
-    },
-    {
-      "company": "Karman Space & Defense",
-      "tried": "greenhouse:karman",
       "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
       "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
     },
@@ -814,7 +812,7 @@
       "company": "Astro Digital",
       "tried": "lever:astrodigital",
       "probe": "no public board: 23 ATS APIs tried (greenhouse, lever, ashby, workable, smartrecruiters, recruitee, rippling, breezy, personio, teamtailor, keka, jobvite, jobscore, hirehive, pinpoint, homerun, jazzhr, manatal, trakstar, workable-hosted, ashby-embed and two careers-page shapes) across hyphenated, flattened, suffixed and PascalCase token forms plus post-acquisition trading names — route finder, 2026-09-06",
-      "note": "Needs a server-side route (Workday / iCIMS / Eightfold / Paycom / Dayforce / custom HTML). Do NOT re-guess API tokens — the token space is exhausted; what is missing is a platform with no browser-reachable JSON."
+      "note": "No public job board found on astrodigital.com, 2026-10-25."
     },
     {
       "company": "Chandra Industries",
@@ -847,12 +845,7 @@
     {
       "company": "Lockheed Martin Space",
       "tried": "workday:lockheedmartin/LockheedMartin",
-      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
-    },
-    {
-      "company": "L3Harris Technologies",
-      "tried": "workday:l3harris/L3Harris",
-      "note": "Not on Workday: the tenant answered 422 on all 12 data centers and no myworkdayjobs.com board was found for it (2026-10-19). Find its real ATS before adding it back."
+      "note": "Careers run on Eightfold (lockheedmartin.eightfold.ai), which refuses outside requests (HTTP 403), 2026-10-25. Check by hand: https://www.lockheedmartinjobs.com/"
     },
     {
       "company": "United Launch Alliance",
@@ -1174,6 +1167,24 @@
       "tried": "icims:careers-gdms.icims.com",
       "probe": "careers-page scan, 2026-10-25",
       "note": "Real board is iCIMS (careers-gdms.icims.com, linked from gdmissionsystems.com), but it refuses the scraper's requests (HTTP 405). Check it by hand: https://careers-gdms.icims.com/jobs/search"
+    },
+    {
+      "company": "Bastion Technologies",
+      "tried": "careers page + 13 public job-board APIs",
+      "probe": "2026-10-25",
+      "note": "No public job board found on bastiontechnologies.com, 2026-10-25 (the Ashby \"bastion\" board belongs to a different company)."
+    },
+    {
+      "company": "SEOPS",
+      "tried": "careers page + 13 public job-board APIs",
+      "probe": "2026-10-25",
+      "note": "No public job board found on seops.space, 2026-10-25."
+    },
+    {
+      "company": "Millennium Space Systems",
+      "tried": "careers page + 13 public job-board APIs",
+      "probe": "2026-10-25",
+      "note": "Covered: posts on Boeing's Workday board (boeing/wd1/EXTERNAL_CAREERS), which the scraper already reads; its roles appear under The Boeing Company."
     }
   ],
   "recruitee": [
@@ -1268,6 +1279,8 @@
       "zohorecruit",
       "successfactors",
       "paylocity",
+      "adp",
+      "radancy",
       "custom"
     ],
     "note": "browser_reachable buckets are fetched live by index.html (FP_COMPANIES + fpFetchBoard). action_only buckets are CORS-blocked from a browser and are fetched exclusively by the daily GitHub Action via scraper.py. Adding a bucket to companies.json does nothing until it has BOTH an fpFetchBoard branch and an fpNormalize branch in index.html.",
@@ -1281,7 +1294,9 @@
       "darwinbox": "<slug>.darwinbox.in/ms/candidateapi/job?page=N&limit=50 — {message:{jobs:[...]}}; per-posting URL is /ms/candidate/careers/<id>",
       "zohorecruit": "<host>/jobs/Careers — HTML with an HTML-escaped JSON list of records (Posting_Title, City, Country, id)",
       "successfactors": "<host>/search/?q=&startrow=N — HTML rows tr.data-row (a.jobTitle-link, .jobLocation, .jobDate); job page has .jobdescription",
-      "paylocity": "recruiting.paylocity.com/recruiting/jobs/All/<guid>/<name> — window.pageData JSON {Jobs:[{JobId, JobTitle, LocationName, PublishedDate}]}"
+      "paylocity": "recruiting.paylocity.com/recruiting/jobs/All/<guid>/<name> — window.pageData JSON {Jobs:[{JobId, JobTitle, LocationName, PublishedDate}]}",
+      "adp": "workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions?cid=<cid>&$top=100&$skip=N — {jobRequisitions:[{itemID, requisitionTitle, requisitionLocations, postDate}]}",
+      "radancy": "<host>/en/search-jobs/results?CurrentPage=N&RecordsPerPage=50&SearchType=5... (X-Requested-With) — JSON {results: HTML list}; data-total-results gives the total"
     }
   },
   "darwinbox": [
@@ -1315,6 +1330,20 @@
       "company": "Agile Space Industries",
       "url": "https://recruiting.paylocity.com/recruiting/jobs/All/d306a0c0-96a3-47d9-8d66-1e9775aad079/Agile-Space-Industries",
       "verified": "verified live 2026-10-25 (real titles/locations read back) — Denver, CO; linked from agilespaceindustries.com"
+    }
+  ],
+  "adp": [
+    {
+      "company": "Karman Space & Defense",
+      "cid": "82153303-7d5a-4833-b767-9cb13d965e09",
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — ADP Workforce Now career center linked from karman-sd.com (264 open)"
+    }
+  ],
+  "radancy": [
+    {
+      "company": "L3Harris Technologies",
+      "host": "careers.l3harris.com",
+      "verified": "verified live 2026-10-25 (real titles/locations read back) — Radancy career site (2,239 open); includes Aerojet Rocketdyne roles"
     }
   ]
 }

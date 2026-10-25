@@ -156,6 +156,8 @@ DARWINBOX = _COMPANIES.get("darwinbox", [])
 ZOHORECRUIT = _COMPANIES.get("zohorecruit", [])
 SUCCESSFACTORS = _COMPANIES.get("successfactors", [])
 PAYLOCITY = _COMPANIES.get("paylocity", [])
+ADP = _COMPANIES.get("adp", [])
+RADANCY = _COMPANIES.get("radancy", [])
 
 # Eightfold-powered portals (custom JSON API, server-side only — CORS-blocked in browser).
 # API: https://{host}/api/apply/v2/jobs?domain={domain}&start=0&num=100
@@ -1279,31 +1281,40 @@ def scrape_ashby(cfg):
 
 
 def scrape_amazon(cfg):
-    company, query = cfg["company"], cfg["query"]
-    rows, offset = [], 0
-    while True:
-        url = (f"https://www.amazon.jobs/en/search.json?base_query={query}"
-               f"&offset={offset}&result_limit=100")
-        r = request("GET", url)
-        if r.status_code != 200:
-            raise RetryableHTTP(f"amazon -> {r.status_code}")
-        data = r.json()
-        jobs = data.get("jobs", [])
-        if not jobs:
-            break
-        for j in jobs:
-            jid = j.get("id_icims") or j.get("id")
-            loc = j.get("normalized_location") or j.get("location", "")
-            apply_url = "https://www.amazon.jobs" + (j.get("job_path") or "")
-            row = build_row(company, jid, j.get("title"), loc, apply_url, "amazon",
-                            j.get("description") or j.get("description_short", ""),
-                            posted=j.get("posted_date"))
-            if row:
-                rows.append(row)
-        offset += 100
-        if offset >= int(data.get("hits", 0)) or offset >= 500:
-            break
-        time.sleep(0.4 + random.random())
+    """amazon.jobs search. An entry can list several "queries" (Project Kuiper is now posted
+    as "Amazon Leo"); a posting found by more than one query is kept once."""
+    company = cfg["company"]
+    queries = cfg.get("queries") or [cfg["query"]]
+    rows, seen = [], set()
+    for query in queries:
+        offset = 0
+        while True:
+            url = (f"https://www.amazon.jobs/en/search.json?base_query={urllib.parse.quote(query)}"
+                   f"&offset={offset}&result_limit=100")
+            r = request("GET", url)
+            if r.status_code != 200:
+                raise RetryableHTTP(f"amazon -> {r.status_code}")
+            data = r.json()
+            jobs = data.get("jobs", [])
+            if not jobs:
+                break
+            for j in jobs:
+                jid = j.get("id_icims") or j.get("id")
+                if jid in seen:
+                    continue
+                seen.add(jid)
+                loc = j.get("normalized_location") or j.get("location", "")
+                apply_url = "https://www.amazon.jobs" + (j.get("job_path") or "")
+                row = build_row(company, jid, j.get("title"), loc, apply_url, "amazon",
+                                j.get("description") or j.get("description_short", ""),
+                                posted=j.get("posted_date"))
+                if row:
+                    rows.append(row)
+            offset += 100
+            # Amazon Leo alone lists ~950; 1,200 covers it with room.
+            if offset >= int(data.get("hits", 0)) or offset >= 1200:
+                break
+            time.sleep(0.4 + random.random())
     return rows
 
 
@@ -1777,6 +1788,97 @@ def scrape_paylocity(cfg):
     return rows
 
 
+ADP_API = "https://workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions"
+
+
+def scrape_adp(cfg):
+    """ADP Workforce Now career center (Karman Space & Defense). Public JSON, paged with
+    $top/$skip; the list has title, location and posting date but no description."""
+    company, cid = cfg["company"], cfg["cid"]
+    rows, skip = [], 0
+    while skip < 2000:
+        # ADP returns at most 20 per page whatever $top asks for, so page by what came back.
+        r = request("GET", f"{ADP_API}?cid={cid}&lang=en_US&locale=en_US&$top=100&$skip={skip}")
+        if r.status_code != 200:
+            raise RetryableHTTP(f"adp {company} -> {r.status_code}")
+        data = r.json()
+        reqs = data.get("jobRequisitions") or []
+        total = int((data.get("meta") or {}).get("totalNumber") or 0)
+        for j in reqs:
+            locs = []
+            for l in j.get("requisitionLocations") or []:
+                a = l.get("address") or {}
+                locs.append(", ".join(x for x in (a.get("cityName"), (a.get("countrySubdivisionLevel1") or {}).get("codeValue")) if x)
+                            or (l.get("nameCode") or {}).get("shortName", ""))
+            jid = j.get("itemID")
+            row = build_row(company, jid, j.get("requisitionTitle"), "; ".join(x for x in locs if x),
+                            f"https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid={cid}&jobId={jid}&lang=en_US",
+                            "adp", j.get("requisitionTitle") or "", posted=j.get("postDate"))
+            if row:
+                rows.append(row)
+        skip += len(reqs)
+        if not reqs or skip >= total:
+            break
+        time.sleep(0.2 + random.random() / 3)
+    return rows
+
+
+RADANCY_QUERY = {"ActiveFacetID": 0, "RecordsPerPage": 50, "Distance": 50, "RadiusUnitType": 0, "Keywords": "",
+                 "Location": "", "ShowRadius": "False", "IsPagination": "False", "FacetType": 0,
+                 "SearchResultsModuleName": "Search Results", "SearchFiltersModuleName": "Search Filters",
+                 "SortCriteria": 0, "SortDirection": 0, "SearchType": 5}
+
+
+def scrape_radancy(cfg):
+    """Radancy / TalentBrew career sites (L3Harris, which includes Aerojet Rocketdyne). The
+    results endpoint returns JSON wrapping an HTML list of 50; only titles that can qualify
+    get a detail request, where the description and posting date live."""
+    company, host = cfg["company"], cfg["host"]
+    lang = cfg.get("lang", "en")
+    if not _HAS_BS4:
+        log_failure(company, host, "beautifulsoup4 not installed")
+        return []
+    rows, page, total = [], 1, None
+    while page <= 80:
+        r = request("GET", f"https://{host}/{lang}/search-jobs/results",
+                    params=dict(RADANCY_QUERY, CurrentPage=page),
+                    headers={"Accept": "application/json", "X-Requested-With": "XMLHttpRequest"})
+        if r.status_code != 200:
+            raise RetryableHTTP(f"radancy {host} -> {r.status_code}")
+        html = r.json().get("results") or ""
+        if total is None:
+            m = re.search(r'data-total-results="(\d+)"', html)
+            total = int(m.group(1)) if m else 0
+        items = BeautifulSoup(html, "html.parser").select("#search-results-list li a[href]")
+        for a in items:
+            title = (a.select_one("h2") or a).get_text(" ", strip=True)
+            loc_el = a.select_one(".job-location")
+            loc = loc_el.get_text(" ", strip=True) if loc_el else ""
+            hub = determine_location_hub(loc)
+            if not hub or not _title_worth_detail(title, hub, (total or 0) > 400):
+                continue
+            url = urllib.parse.urljoin(f"https://{host}/", a["href"])
+            desc, posted = "", None
+            try:
+                d = request("GET", url, headers={"Accept": "text/html"})
+                if d.status_code == 200:
+                    el = BeautifulSoup(d.text, "html.parser").select_one(".ats-description, .job-description")
+                    desc = el.get_text(" ", strip=True) if el else ""
+                    m = re.search(r'"datePosted"\s*:\s*"([^"]+)"', d.text)
+                    posted = m.group(1) if m else None
+            except Exception:
+                pass
+            row = build_row(company, a.get("data-job-id") or a["href"].rstrip("/").rsplit("/", 1)[-1], title, loc,
+                            url, "radancy", desc or title, posted=posted)
+            if row:
+                rows.append(row)
+        if not items or page * 50 >= (total or 0):
+            break
+        page += 1
+        time.sleep(0.3 + random.random() / 2)
+    return rows
+
+
 def scrape_zohorecruit(cfg):
     """Zoho Recruit career site (Skyroot). The job records are embedded in the page as
     HTML-escaped JSON; there is no public JSON endpoint and no posting date."""
@@ -1865,6 +1967,10 @@ def build_tasks():
         tasks.append((cfg["company"], "successfactors", lambda c=cfg: scrape_successfactors(c)))
     for cfg in PAYLOCITY:
         tasks.append((cfg["company"], "paylocity", lambda c=cfg: scrape_paylocity(c)))
+    for cfg in ADP:
+        tasks.append((cfg["company"], "adp", lambda c=cfg: scrape_adp(c)))
+    for cfg in RADANCY:
+        tasks.append((cfg["company"], "radancy", lambda c=cfg: scrape_radancy(c)))
     random.shuffle(tasks)   # spread load across domains naturally
     return tasks
 
@@ -2267,6 +2373,17 @@ def _diagnose_tasks():
                 raise RuntimeError("no pageData on the page")
             return len(json.loads(m.group(1)).get("Jobs") or []), "postings in pageData"
         add("paylocity", c["company"], pl)
+    for c in ADP:
+        add("adp", c["company"], lambda c=c: (int((_get_json(f"{ADP_API}?cid={c['cid']}&lang=en_US&locale=en_US&$top=20&$skip=0").get("meta") or {}).get("totalNumber") or 0), "requisitions listed"))
+    for c in RADANCY:
+        def rd(c=c):
+            r = SESSION.get(f"https://{c['host']}/{c.get('lang', 'en')}/search-jobs/results", params=dict(RADANCY_QUERY, CurrentPage=1),
+                            headers={"Accept": "application/json", "X-Requested-With": "XMLHttpRequest"}, timeout=20)
+            if r.status_code != 200:
+                raise RuntimeError(f"HTTP {r.status_code}")
+            m = re.search(r'data-total-results="(\d+)"', r.json().get("results") or "")
+            return (int(m.group(1)) if m else 0), "results on the career site"
+        add("radancy", c["company"], rd)
     for c in ICIMS:
         def ic(c=c):
             host = c.get("host") or f"careers-{c['token']}.icims.com"

@@ -131,7 +131,7 @@ jobs:
     needs: gate
     if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 25    # a healthy run is ~1 min; anything past 25 is a hang, kill it
+    timeout-minutes: 25    # a healthy run takes ~10 min (Oct 2026); anything past 25 is a hang, kill it
     steps:
       - uses: actions/checkout@v5
 

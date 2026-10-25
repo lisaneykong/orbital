@@ -12,6 +12,21 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-25 — LinkedIn suggestion companies
+
+The user's 28 LinkedIn-suggested companies: 20 were already configured and working. Added:
+- **Umbra:** Workable `umbra-1` (49 open).
+- **Karman Space & Defense:** new `adp` bucket (`scrape_adp`, ADP Workforce Now public career-center JSON). ADP
+  caps pages at 20 whatever `$top` says, so it pages by the count returned. 264 open; a test kept 35, 26 of them in
+  Mukilteo, WA.
+- **L3Harris Technologies, including Aerojet Rocketdyne:** new `radancy` bucket (`scrape_radancy`, the Radancy/
+  TalentBrew results endpoint). 2,239 open; a test kept 433.
+- **Amazon:** the Kuiper entry is now "Project Kuiper (Amazon Leo)" and searches both "kuiper" and "amazon leo"
+  (`queries`), dropping duplicates. The cap is raised from 500 to 1,200 per search. A test kept 183, 124 in Seattle.
+- **Not resolvable:** Lockheed Martin (Eightfold refuses outside requests with 403, left alone), Bastion Technologies,
+  SEOPS and Astro Digital (no public board). Millennium Space Systems posts on Boeing's Workday board, already
+  scraped as The Boeing Company.
+
 ## 2026-10-25 — dead boards resolved
 
 The health check found 51 of 152 boards returning nothing. Each lead was confirmed by reading back real titles and
