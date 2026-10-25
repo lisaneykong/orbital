@@ -2837,7 +2837,7 @@ const SYNC_LS_KEYS=[
   'orbital.saved','orbital.dismissed','orbital.applied',
   'orbital.savedMeta','orbital.dismissedMeta','orbital.appliedMeta','orbital.appliedDates',
   'orbital.appStatus','orbital.followups','orbital.appHistory','orbital.roleNotes',
-  'orbital.alumni','orbital.jobDesc','orbital.coverLetters','orbital.notMatchLog',
+  'orbital.alumni','orbital.recruiters','orbital.jobDesc','orbital.coverLetters','orbital.notMatchLog',
   'orbital.reqOverrides','orbital.masterResume','orbital.profile','orbital.skills','orbital.resumeLibrary',
   'orbital.searches','orbital.targetGross','orbital.linkedinUrl',
 ];
@@ -7903,6 +7903,80 @@ function matchBreakdownBlock(j){
     ${flags}
   </div>`;
 }
+/* =====================================================================================
+   RECRUITER FINDER — free and accurate. No posting names its recruiter outright, and
+   LinkedIn blocks scraping, so nothing here guesses a person or an email. It shows only:
+   (1) recruiting contacts the posting itself prints (EEO / accommodation inboxes skipped),
+   (2) recruiter initials from LinkedIn's "#LI-XX" posting tags, (3) LinkedIn people searches
+   aimed at this company's recruiters for this kind of role and at the likely hiring manager,
+   and (4) the recruiter you pick, saved to this role (synced; visible to the owner only).
+   ===================================================================================== */
+const CONTACT_NOT_RECRUITING=/eeo|compliance|accommodat|disabilit|privacy|legal|benefit|payroll|no-?reply|abuse|security|ethics|fraud|press|media|invest|^contact@|^info@|^hello@|^support@/;
+const RECRUIT_COMPANY_ALIAS={'Project Kuiper (Amazon Leo)':'Amazon','Project Kuiper (Amazon)':'Amazon','Northrop Grumman Space':'Northrop Grumman','The Boeing Company':'Boeing',
+  'Lockheed Martin Space':'Lockheed Martin','RTX Corporation':'RTX','AWS Aerospace & Satellite':'Amazon Web Services'};
+function recruitCompany(c){ return RECRUIT_COMPANY_ALIAS[c] || String(c||'').replace(/\s*\([^)]*\)\s*/g,' ').trim(); }
+function postingContacts(j){
+  const text=(j.description||'')+' '+(j.requirements||'');
+  const emails=[...new Set((text.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z]{2,}/g)||[]).map(e=>e.toLowerCase().replace(/[.,;:)]+$/,'')))];
+  const contacts=[];
+  emails.forEach(e=>{
+    const local=e.split('@')[0];
+    if(/recruit|talent|career|jobs?\b|hiring|staffing|apply|coordinator|(^|[._-])hr($|[._-])|people/.test(local)) contacts.push({email:e, kind:'Recruiting inbox'});
+    else if(CONTACT_NOT_RECRUITING.test(e)) return;
+    else if(/^[a-z]+[._-][a-z]+\d*$/.test(local)) contacts.push({email:e, kind:'Named in the posting'});
+  });
+  // "#LI-JD1" = the recruiter's initials, which LinkedIn Recruiter adds to postings it syndicates.
+  const initials=[...new Set([...text.matchAll(/#LI-([A-Z]{2,3})\d*(?![A-Za-z])/g)].map(m=>m[1]).filter(t=>t!=='DNI'))];
+  return {contacts, initials};
+}
+function roleFamily(title){
+  const t=(title||'').toLowerCase();
+  if(/\bintern|co-?op|university|new grad|early career/.test(t)) return 'university';
+  if(/program|project|pmo|schedul|planner|portfolio/.test(t)) return 'program management';
+  if(/capture|proposal|business development|\bbd\b|sales/.test(t)) return 'business development';
+  if(/supply|procure|sourc|buyer|subcontract/.test(t)) return 'supply chain';
+  if(/mission|operations|ground|flight ops/.test(t)) return 'operations';
+  if(/engineer|integration|test|mbse|systems/.test(t)) return 'engineering';
+  return 'technical';
+}
+function linkedinPeople(q){ return 'https://www.linkedin.com/search/results/people/?keywords='+encodeURIComponent(q); }
+function savedRecruiters(){ try{ return JSON.parse(localStorage.getItem('orbital.recruiters')||'{}'); }catch(e){ return {}; } }
+function saveRecruiter(id, rec){
+  if(!canEdit()) return guestBlock();
+  const m=savedRecruiters();
+  if(rec && (rec.name||rec.linkedin||rec.email)) m[id]={...rec, ts:Date.now()}; else delete m[id];
+  localStorage.setItem('orbital.recruiters', JSON.stringify(m)); pushTracking();
+}
+function recruiterDossierBlock(j){
+  const co=recruitCompany(j.company), fam=roleFamily(j.title), pc=postingContacts(j);
+  const saved=role==='owner' ? savedRecruiters()[j.id] : null;
+  const searches=[
+    [`Recruiters at ${co} for ${fam} roles`, `"${co}" recruiter ${fam==='university'?'university':fam}`],
+    [`Talent acquisition at ${co}`, `"${co}" "talent acquisition"`],
+    [`Likely hiring managers at ${co}`, `"${co}" manager ${fam==='university'?'engineering':fam}`],
+  ];
+  const contactRows = pc.contacts.length
+    ? pc.contacts.map(c=>`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="chip">${esc(c.kind)}</span><a href="mailto:${esc(c.email)}" style="color:var(--a3)">${esc(c.email)}</a></div>`).join('')
+    : `<p class="subtle" style="margin:0">This posting prints no recruiting contact${(j.description||'').length<200?' (its description was not available to the scraper)':''}.</p>`;
+  const initials = pc.initials.length
+    ? `<p style="margin:8px 0 0;font-size:var(--fs-rg)">LinkedIn tag on this posting: recruiter initials <b style="color:var(--gold)">${pc.initials.map(esc).join(', ')}</b> — look for a recruiter with those initials in the first search below.</p>` : '';
+  const savedHTML = saved
+    ? `<div class="dblock" style="margin:10px 0 0;padding:10px 12px;border-color:rgba(0,230,162,.35)"><b>${esc(saved.name||'Recruiter')}</b>${saved.title?` · <span class="subtle">${esc(saved.title)}</span>`:''}
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">${saved.linkedin?`<a href="${esc(saved.linkedin)}" target="_blank" rel="noreferrer" style="color:var(--a3)">LinkedIn profile ↗</a>`:''}${saved.email?`<a href="mailto:${esc(saved.email)}" style="color:var(--a3)">${esc(saved.email)}</a>`:''}</div></div>` : '';
+  const form = role==='owner' ? `<details style="margin-top:10px"${saved?'':' open'}><summary class="subtle" style="cursor:pointer">${saved?'Edit the saved recruiter':'Save the recruiter you find'}</summary>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:8px">
+        <input class="tinput" data-rec="name" placeholder="Name" value="${esc((saved||{}).name||'')}">
+        <input class="tinput" data-rec="title" placeholder="Exact title (e.g. Senior Technical Recruiter)" value="${esc((saved||{}).title||'')}">
+        <input class="tinput" data-rec="linkedin" placeholder="LinkedIn profile URL" value="${esc((saved||{}).linkedin||'')}">
+        <input class="tinput" data-rec="email" placeholder="Email, if they share it" value="${esc((saved||{}).email||'')}">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px"><button class="dbtn primary" data-saverec="${esc(j.id)}">Save recruiter</button>${saved?`<button class="dbtn" data-clearrec="${esc(j.id)}">Remove</button>`:''}</div></details>` : '';
+  return `<div class="dblock" style="border-color:rgba(91,140,255,.3)"><h4>🧲 Recruiter for this role</h4>
+    <p class="subtle" style="margin:0 0 10px">No posting names its recruiter and LinkedIn can't be scraped, so this shows only what is real: contacts the posting prints, and searches you run on LinkedIn.</p>
+    <div style="display:flex;flex-direction:column;gap:6px">${contactRows}</div>${initials}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${searches.map(([label,q])=>`<a class="dbtn" href="${linkedinPeople(q)}" target="_blank" rel="noreferrer" style="text-decoration:none">🔎 ${esc(label)} →</a>`).join('')}</div>
+    ${savedHTML}${form}</div>`;
+}
 function alumniDossierWidget(j){
   const matches=alumniForCompany(j.company);
   if(!matches.length) return `<div class="dblock" style="border-color:rgba(55,214,230,.25)"><h4>🎓 Alumni Network</h4>
@@ -9098,6 +9172,7 @@ function dossierHTML(j){
   <div class="dbody">
     <div class="dblock"><h4>🛰️ Role Summary</h4><p style="margin:0;font-size:var(--fs-lg);color:#cfdcec;line-height:1.6">${esc(det.summary)}</p></div>
     ${alumniDossierWidget(j)}
+    ${recruiterDossierBlock(j)}
     ${matchBreakdownBlock(j)}
     ${erauFitBlock(j)}
     ${internPrepBlock(j)}
@@ -10554,6 +10629,13 @@ document.addEventListener('click',e=>{
       if(navigator.share){ navigator.share({title:'Space role: '+j.title, text, url}).catch(()=>{}); }
       else { navigator.clipboard.writeText(text+'\n'+url); ns.textContent='Copied — paste into a text ✓'; }
     } }
+  const sr=e.target.closest('[data-saverec]'); if(sr){
+    const box=sr.closest('.dblock'); const v=k=>((box.querySelector(`[data-rec="${k}"]`)||{}).value||'').trim();
+    const li=v('linkedin');
+    if(li && !/^https:\/\/([a-z]+\.)?linkedin\.com\//i.test(li)){ alert('That LinkedIn URL should start with https://www.linkedin.com/'); return; }
+    saveRecruiter(sr.dataset.saverec, {name:v('name'), title:v('title'), linkedin:li, email:v('email')});
+    if(canEdit()){ $('#modal').innerHTML=dossierHTML(findJob(sr.dataset.saverec)); } return; }
+  const cr=e.target.closest('[data-clearrec]'); if(cr){ saveRecruiter(cr.dataset.clearrec, null); if(canEdit()) $('#modal').innerHTML=dossierHTML(findJob(cr.dataset.clearrec)); return; }
   const sn=e.target.closest('[data-savenote]'); if(sn){
     const ta=document.querySelector(`[data-noteid="${sn.dataset.savenote}"]`);
     if(ta){ saveRoleNote(sn.dataset.savenote, ta.value); sn.textContent='Saved ✓'; setTimeout(()=>sn.textContent='Save note',1400); } }

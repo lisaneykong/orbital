@@ -12,6 +12,21 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-25 — recruiter finder (dossier)
+
+Every dossier has a "Recruiter for this role" block (`recruiterDossierBlock`). No posting in the database names its
+recruiter. About a third print an email, but almost all are EEO or accommodation inboxes, and LinkedIn can't be
+scraped. So it shows only real things:
+- Recruiting contacts the posting prints (`postingContacts`, which skips EEO, accommodation and generic inboxes).
+- Recruiter initials from LinkedIn's `#LI-XX` posting tags.
+- Three LinkedIn people searches: this company's recruiters for the role's family (`roleFamily`), its talent
+  acquisition team, and likely hiring managers. `RECRUIT_COMPANY_ALIAS` maps e.g. Kuiper to Amazon.
+- A form to save the recruiter you pick (name, exact title, LinkedIn URL, email) to the role, in
+  `orbital.recruiters`, which syncs. Only the owner sees saved recruiters.
+
+The user chose this over a paid contact-data service (Apollo or Hunter), which would still only guess. Note that
+`user_state` is readable with the public key (the known trade-off), so saved recruiter details sit there too.
+
 ## 2026-10-25 — LinkedIn suggestion companies
 
 The user's 28 LinkedIn-suggested companies: 20 were already configured and working. Added:
