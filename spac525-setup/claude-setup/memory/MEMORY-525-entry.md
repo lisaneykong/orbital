@@ -1,0 +1,1 @@
+- [The 525 rule](the-525-rule.md): SPAC 525 Space Law and Policy, Professor Will Ford. "525 rule" or any SPAC 525 writing means use the spac-525-writing skill, not lisaney-humanizer. Lisaney is he/him.
