@@ -12,6 +12,20 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-25 — landing chart and navigation
+
+- **Landing:** the app opens on the Dashboard (Today is now a tab beside it). On All Regions, the salary chart
+  shows only roles first posted in the last 7 days, colored by region, with one dotted cost-of-living line per
+  region (`colStandard`). The list under it is "Posted This Week". Points are spread sideways within each day so
+  they don't stack; the tooltip keeps the real day count.
+- **Region pages:** the chart and the role list cover the last 30 days (`REGION_CHART_DAYS`). 🔥 marks roles posted
+  in the last 7 days, and there is one dotted line for that region's standard.
+- **Standards:** $125K (`US_COL_STANDARD`) for US Other, New Zealand and International. Seattle and LA scale it by
+  the midpoint of their `REGIONS[...].reloc.col` index: Seattle $188K, LA $189K. Lines within $5K share one line
+  and one label.
+- **Nav:** 5 buttons (`NAV_GROUPS`): Home, Jobs, Apply, Insights, Me. Related pages show as tabs (`subTabs()`).
+  `NAV` stays the full page list for deep links and the command palette. The Settings tab opens the drawer.
+
 ## 2026-10-24 — profile update, Virgin Galactic back
 
 - **Profile:** M.S. Space Systems now ends September 2027, not August (OWNER.education, the résumé JSON,
