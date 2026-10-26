@@ -50,6 +50,7 @@ jobs:
             [ -f "$f" ] && cp "$f" _publish/ && echo "  + $f"
           done
           [ -d assets ] && cp -r assets _publish/ || true
+          [ -d geo ] && cp -r geo _publish/ || true      # place lookup for the job heat maps (GeoNames)
           if [ ! -f .htaccess ]; then
             echo "::warning::.htaccess is missing from the repo, so the no-cache rules cannot be published and browsers will keep serving a cached index.html. Add it with GitHub > Add file > Create new file and type .htaccess as the filename."
           fi

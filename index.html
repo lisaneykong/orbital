@@ -513,6 +513,15 @@ a{color:inherit;text-decoration:none}
 @media (prefers-reduced-motion:reduce){.heat.h5 i.on{animation:none}}
 .jrow,.agefade{opacity:var(--fade,1);transition:opacity .25s ease}
 .jrow:hover,.jrow:focus-within,.agefade:hover,.agefade:focus-within{opacity:1}
+.heatmapbox{height:var(--hmh,440px);border-radius:12px;overflow:hidden;background:#0b0f17;border:1px solid var(--line)}
+@media (max-width:720px){.heatmapbox{height:calc(var(--hmh,440px) * .72)}}
+.heatmapbox .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.78) contrast(.92) saturate(.55)}
+.heatmapbox .leaflet-control-attribution{background:rgba(11,15,23,.75);color:#8fa0b8;font-size:10px}
+.heatmapbox .leaflet-control-attribution a{color:#9fc0ff}
+.hmtop{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;font-size:var(--fs-sm)}
+.hmchip{font:inherit;font-size:var(--fs-xs);color:var(--text);background:rgba(120,160,255,.10);border:1px solid rgba(140,180,255,.25);border-radius:999px;padding:4px 10px;cursor:pointer}
+.hmchip b{color:var(--a3);margin-left:4px}
+.hmchip:hover{border-color:rgba(140,180,255,.55)}
 .heatlegend{display:inline-flex;flex-wrap:wrap;gap:4px 12px;vertical-align:middle}
 .heatlegend>span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .hot{cursor:help}
@@ -5866,6 +5875,7 @@ function dashboardView(){
   if(region==='global'){
     return `${guestStrip()}${deployStrip()}${pushStrip()}
       ${statCards()}
+      <div class="fullwidth">${heatMapPanel()}</div>
       <div class="dashgrid">
         <div class="col-main">
           ${missionPanel()}
@@ -5882,6 +5892,7 @@ function dashboardView(){
   }
   return `${guestStrip()}${deployStrip()}${pushStrip()}
     ${statCards()}
+    <div class="fullwidth">${heatMapPanel()}</div>
     <div class="dashgrid">
       <div class="col-main">
         ${missionPanel()}
@@ -7466,6 +7477,7 @@ function render(){
   ${gateHTML()}`;
   wire();
   drawCharts();
+  drawHeatMap();
   startClock();
   initBudget();
   startCountdown();
@@ -7478,6 +7490,22 @@ function render(){
    ========================================================================= */
 let charts={};
 function destroyCharts(){ Object.values(charts).forEach(c=>{try{c.destroy()}catch(e){}}); charts={}; }
+// Every role on the board for the current region, both tracks, ignoring the match floor and
+// the search box: the charts and the heat map are a picture of the market, not of filters.
+function marketPool(){
+  const savedTrack=track, savedFloor=settings.matchFloor, savedCo=companyFilter, savedQ=query;
+  const seen={}, out=[];
+  try{
+    settings.matchFloor=0; companyFilter=''; query='';
+    ['fulltime','intern'].forEach(t=>{
+      track=t;
+      try{ jobsForRegion().forEach(j=>{ if(!seen[j.id]){ seen[j.id]=1; out.push(j); } }); }catch(e){}
+    });
+  } finally {
+    track=savedTrack; settings.matchFloor=savedFloor; companyFilter=savedCo; query=savedQ;
+  }
+  return out;
+}
 function drawCharts(){
   destroyCharts();
   const R=REGIONS[region];
@@ -7490,20 +7518,7 @@ function drawCharts(){
   if(sc){
     // The chart is a picture of the market, not of the current filters: pool BOTH tracks
     // and ignore the match floor, so every role inside the live window is plotted.
-    const src = (()=>{
-      const savedTrack=track, savedFloor=settings.matchFloor, savedCo=companyFilter, savedQ=query;
-      const seen={}, out=[];
-      try{
-        settings.matchFloor=0; companyFilter=''; query='';
-        ['fulltime','intern'].forEach(t=>{
-          track=t;
-          try{ jobsForRegion().forEach(j=>{ if(!seen[j.id]){ seen[j.id]=1; out.push(j); } }); }catch(e){}
-        });
-      } finally {
-        track=savedTrack; settings.matchFloor=savedFloor; companyFilter=savedCo; query=savedQ;
-      }
-      return out.length ? out : ((region==='global'? JOBS : jobs)||[]);
-    })();
+    const src = marketPool();
     const win=chartWindowDays(), isGlobal=region==='global';
     // Hot on this chart = posted in the last 7 days. On the all-regions view every point is
     // hot, so points keep their region color there instead of all turning into flames.
@@ -7589,6 +7604,209 @@ function drawCharts(){
       options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
         scales:{x:{grid:{color:gridc},ticks:{color:tickc}},y:{grid:{display:false},ticks:{color:'#cdd9ec'}}}}});
   }
+}
+
+/* =========================================================================
+   JOB HEAT MAPS — where the roles cluster, one map per tab. Locations are free text, so
+   geo/places.json (GeoNames towns of 5,000+, CC BY 4.0) turns "Long Beach, California,
+   United States" or "US-OH-Kent" into coordinates in the browser. Remote and state-only
+   postings have no point and are left off; the panel says how many were mapped.
+   ========================================================================= */
+const MAP_VIEW={
+  global:{label:'World',         bounds:[[-48,-160],[68,175]], radius:14},
+  seattle:{label:'Washington',   bounds:[[45.5,-124.9],[49.1,-116.9]], radius:18, local:true, h:400},
+  la:{label:'California',        bounds:[[32.4,-124.5],[42.1,-114.1]], radius:18, local:true, h:600},
+  nz:{label:'New Zealand',       bounds:[[-47.4,166.3],[-34.3,178.7]], radius:20, local:true, h:560},
+  us:{label:'United States',     bounds:[[24.3,-125],[49.5,-66.9]], radius:15, local:true},
+  intl:{label:'World',           bounds:[[-48,-160],[68,175]], radius:14},
+};
+const GEO_COUNTRY={'united states':'US','united states of america':'US','usa':'US','us':'US','u s':'US','america':'US',
+  'new zealand':'NZ','nz':'NZ','aotearoa':'NZ','india':'IN','united kingdom':'GB','uk':'GB','great britain':'GB','england':'GB',
+  'scotland':'GB','wales':'GB','northern ireland':'GB','ireland':'IE','france':'FR','germany':'DE','deutschland':'DE','italy':'IT',
+  'italia':'IT','spain':'ES','espana':'ES','portugal':'PT','netherlands':'NL','the netherlands':'NL','belgium':'BE','luxembourg':'LU',
+  'switzerland':'CH','austria':'AT','denmark':'DK','sweden':'SE','norway':'NO','finland':'FI','poland':'PL','czech republic':'CZ',
+  'czechia':'CZ','slovakia':'SK','estonia':'EE','lithuania':'LT','latvia':'LV','romania':'RO','bulgaria':'BG','greece':'GR',
+  'hungary':'HU','slovenia':'SI','croatia':'HR','australia':'AU','japan':'JP','south korea':'KR','korea':'KR','israel':'IL',
+  'united arab emirates':'AE','uae':'AE','saudi arabia':'SA','qatar':'QA','singapore':'SG','taiwan':'TW','canada':'CA',
+  'mexico':'MX','brazil':'BR','argentina':'AR','chile':'CL'};
+const HUB_CC={SEATTLE:'US',GREATER_LA:'US',US_OTHER:'US',NEW_ZEALAND:'NZ'};
+let PLACES=null, placesLoad=null, leafletLoad=null, heatMap=null;
+const GEO_CACHE=new Map();
+function geoNorm(x){ return String(x||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[-.]/g,' ').replace(/\s+/g,' ').trim(); }
+function loadPlaces(){ return placesLoad || (placesLoad=fetch('geo/places.json').then(r=>{ if(!r.ok) throw new Error('places '+r.status); return r.json(); }).then(d=>PLACES=d)); }
+function loadLeaflet(){
+  if(window.L && L.heatLayer) return Promise.resolve();
+  return leafletLoad || (leafletLoad=new Promise((res,rej)=>{
+    const css=document.createElement('link'); css.rel='stylesheet'; css.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(css);
+    const add=(src,next)=>{ const sc=document.createElement('script'); sc.src=src; sc.onload=next; sc.onerror=()=>rej(new Error('could not load '+src)); document.head.appendChild(sc); };
+    add('https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js', ()=>add('https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js', res));
+  }));
+}
+// Space and defense sites too small for (or named differently in) GeoNames. Coordinates are
+// approximate, hand-placed to about a kilometer, which is plenty for a heat map.
+const GEO_EXTRA={
+  'starbase':[25.997,-97.155,'US','TX'],'space coast':[28.39,-80.70,'US','FL'],'mojave':[35.05,-118.17,'US','CA'],
+  'dulles':[38.96,-77.45,'US','VA'],'wallops island':[37.94,-75.46,'US','VA'],'annapolis junction':[39.12,-76.78,'US','MD'],
+  'aberdeen proving ground':[39.47,-76.13,'US','MD'],'stennis space center':[30.36,-89.60,'US','MS'],'briggs':[30.88,-97.92,'US','TX'],
+  'schriever afb':[38.80,-104.53,'US','CO'],'schriever sfb':[38.80,-104.53,'US','CO'],'corinne':[41.55,-112.11,'US','UT'],
+  'los angeles afb':[33.92,-118.38,'US','CA'],'tinker afb':[35.42,-97.39,'US','OK'],'malabar':[27.99,-80.58,'US','FL'],
+  'playa vista':[33.97,-118.43,'US','CA'],'parsdorf':[48.15,11.79,'DE',''],'ashville':[39.72,-82.95,'US','OH'],
+  'northern va':[38.88,-77.30,'US','VA'],'northern virginia':[38.88,-77.30,'US','VA'],'kennedy space center':[28.57,-80.65,'US','FL'],
+  'cape canaveral space force station':[28.49,-80.58,'US','FL'],'vandenberg sfb':[34.74,-120.57,'US','CA'],'vandenberg afb':[34.74,-120.57,'US','CA'],
+  'vandenberg space force base':[34.74,-120.57,'US','CA'],'mahia':[-39.26,177.86,'NZ',''],'white sands':[32.38,-106.48,'US','NM'],
+  'spaceport america':[32.99,-106.97,'US','NM'],'peterson sfb':[38.82,-104.70,'US','CO'],'buckley sfb':[39.70,-104.75,'US','CO'],
+  'patrick sfb':[28.23,-80.60,'US','FL'],'redstone arsenal':[34.68,-86.65,'US','AL'],'edwards afb':[34.91,-117.88,'US','CA'],
+  'kirtland afb':[35.04,-106.55,'US','NM'],'wright patterson afb':[39.83,-84.05,'US','OH'],'hanscom afb':[42.46,-71.29,'US','MA'],
+  'eglin afb':[30.46,-86.55,'US','FL'],'dahlgren':[38.33,-77.04,'US','VA'],'van horn':[31.04,-104.83,'US','TX'],
+  'vandenberg':[34.74,-120.57,'US','CA'],'langley afb':[37.08,-76.36,'US','VA'],'quonset':[41.59,-71.42,'US','RI'],
+  'national harbor':[38.78,-77.02,'US','MD'],'whiteman afb':[38.73,-93.55,'US','MO'],'andenes':[69.31,16.12,'NO',''],
+  'andoya':[69.29,16.02,'NO',''],'rocket center':[39.56,-78.84,'US','WV'],'beavercreek township':[39.72,-84.06,'US','OH'],'truth or consequences':[33.13,-107.25,'US','NM'],
+};
+const GEO_ALIAS={'new york':'new york city','nyc':'new york city','munchen':'munich','koln':'cologne','bangalore':'bengaluru',
+  'al khobar':'al khubar','sea tac':'seatac','st louis':'saint louis','st paul':'saint paul','ft worth':'fort worth','ft wayne':'fort wayne',
+  'ft collins':'fort collins','ft lauderdale':'fort lauderdale','mt laurel':'mount laurel'};
+const GEO_ISO3={USA:'US',GBR:'GB',AUS:'AU',CAN:'CA',DEU:'DE',FRA:'FR',NZL:'NZ',IND:'IN',JPN:'JP',ITA:'IT',ESP:'ES',NLD:'NL',
+  ISR:'IL',ARE:'AE',SGP:'SG',KOR:'KR',POL:'PL',SWE:'SE',NOR:'NO',CHE:'CH',BEL:'BE',LUX:'LU',IRL:'IE',PRT:'PT',AUT:'AT',DNK:'DK',FIN:'FI'};
+// A bare two-letter code is read as a country only where it cannot be a US state: "Chicago, IL"
+// is Illinois, not Israel. Dash-coded sites ("CA-QC-Longueuil", "UK-Bristol") lead with the country.
+function geoCC(x, leading){ const k=geoNorm(x), u=String(x||'').trim().toUpperCase();
+  if(GEO_COUNTRY[k] && !(u.length===2 && !leading && PLACES.a1.US[k])) return GEO_COUNTRY[k];
+  if(GEO_ISO3[u]) return GEO_ISO3[u];
+  if(u.length===2 && PLACES.a1[u] && (leading || !PLACES.a1.US[k])) return u;
+  return null; }
+function geoFind(k, cc, a1){
+  const ex=GEO_EXTRA[k]; if(ex && (!cc||ex[2]===cc)) return [ex];
+  let c=PLACES.p[GEO_ALIAS[k]||k]; if(!c) return null;
+  if(cc){ c=c.filter(r=>r[2]===cc); if(!c.length) return null; }
+  // A named US state is binding ("McHenry, Mississippi" is not McHenry, Illinois). Other
+  // countries' region names vary too much between postings and GeoNames to be strict.
+  if(a1){ const f=c.filter(r=>r[3]===a1); if(f.length) c=f; else if(cc==='US') return null; }
+  return c;
+}
+// One place string → {lat,lon,label} or null. Context (country, state) comes from the other
+// parts of the string, else from the row's hub; the largest matching town wins a tie.
+function geoOne(raw, hubCC){
+  let t=String(raw||'').split('~')[0].replace(/\([^)]*\)/g,' ').replace(/[·•|].*$/,' ').trim();
+  let cc=null;
+  const pre=t.match(/^([A-Z]{3})\s+-\s+(.+)$/);                  // "USA - El Segundo, CA"
+  if(pre && GEO_ISO3[pre[1]]){ cc=GEO_ISO3[pre[1]]; t=pre[2]; }
+  t=t.replace(/\b(remote|hybrid|on-?site|teleworker|telework|office|area|metro|greater|hq|headquarters|campus|location)\b/gi,' ').replace(/\s+/g,' ').trim();
+  if(!t || /^[\s,/-]*$/.test(t)) return null;
+  if(/washington,?\s*d\.?\s*c\b|district of columbia/i.test(t)) return {lat:38.895,lon:-77.036,label:'Washington, DC'};
+  let parts=t.split(',').map(x=>x.trim()).filter(Boolean);
+  // Dash-coded sites: "United States-California-Redondo Beach", "US-AZ-TUCSON-805", "OC-AUS-Canberra".
+  if(parts.length===1 && /-/.test(parts[0]) && ((parts[0].match(/-/g)||[]).length>=2 || geoCC(parts[0].split('-')[0],true))){
+    let seg=parts[0].split('-').map(x=>x.trim()).filter(x=>x && !/\d/.test(x));
+    if(seg.length>=3 && !geoCC(seg[0],true) && geoCC(seg[1],true)) seg=seg.slice(1);   // leading region code (OC-AUS-…)
+    if(seg.length>=2 && geoCC(seg[0],true)){
+      const c0=geoCC(seg[0],true);
+      parts = seg.length>=3 ? [seg[2], seg[1], seg[0]] : [seg[1], seg[0]];
+      cc=cc||c0;
+    }
+  }
+  for(const x of parts){ const c=geoCC(x); if(c) cc=c; }
+  cc=cc||hubCC||null;
+  const admins=(PLACES.a1[cc||'US'])||{};
+  let a1=null;
+  for(const x of parts.slice(1)){ const a=admins[geoNorm(x)]; if(a){ a1=a; break; } }
+  for(let i=0;i<parts.length;i++){
+    const k=geoNorm(parts[i]);
+    if(!k) continue;
+    const isCountry=!!geoCC(parts[i]);
+    // A lone city-state ("Luxembourg", "Singapore") is a place; any other country or state name is not.
+    if(isCountry && !(parts.length===1 && /^(luxembourg|singapore)$/.test(k))) continue;
+    if(i>0 && admins[k]) continue;
+    let c=geoFind(k, isCountry?null:cc, a1), name=parts[i];
+    if(!c && !isCountry){
+      const w=parts[i].split(/\s+/);
+      for(let n=w.length-1;n>=1 && !c;n--){ const tail=w.slice(-n).join(' '); c=geoFind(geoNorm(tail), cc, a1); if(c) name=tail; }
+    }
+    if(!c) continue;
+    const r=c[0];
+    const nice=name.toLowerCase().split(/\s+/).map((x,i)=>i>0&&/^(or|of|de|la|le|du|del|des|on|upon)$/.test(x)?x:x.charAt(0).toUpperCase()+x.slice(1)).join(' ');
+    return {lat:r[0], lon:r[1], label:nice+(r[2]==='US'&&r[3]?', '+r[3]:r[2]!=='US'&&r[2]!==(hubCC||'')?', '+r[2]:'')};
+  }
+  return null;
+}
+// A posting can list several sites ("Rockville, MD or Hawthorne, CA"); each gets a share.
+function geoJob(j){
+  const key=(j.location||'')+'|'+(j.location_hub||j.region||'');
+  if(GEO_CACHE.has(key)) return GEO_CACHE.get(key);
+  const hubCC=HUB_CC[(j.location_hub||'').toUpperCase()] || ({seattle:'US',la:'US',us:'US',nz:'NZ'})[j.region] || null;
+  const loc=String(j.location||'').replace(/truth or consequences/ig,'Truth_or_Consequences');   // a town, not two choices
+  const pts=loc.split(/;|\s+or\s+|\s+\/\s+|\s+&\s+|\n/i).map(x=>geoOne(x.replace(/Truth_or_Consequences/g,'Truth or Consequences'),hubCC)).filter(Boolean).slice(0,6);
+  GEO_CACHE.set(key,pts); return pts;
+}
+function heatMapPanel(){
+  const V=MAP_VIEW[region]||MAP_VIEW.global;
+  return `<div class="panel"><div class="ph"><h3>${cic("map")} Where the jobs are · ${esc(V.label)}</h3><span class="va" id="hmStat">loading…</span></div>
+    <div class="pb"><div id="jobHeatMap" class="heatmapbox" style="--hmh:${V.h||440}px" role="img" aria-label="Heat map of where open roles are concentrated in ${esc(V.label)}"></div>
+      <div id="hmTop" class="hmtop"></div>
+      <p class="subtle" style="margin:8px 2px 0;font-size:var(--fs-xs)">Brighter = more open roles. Remote and state-only postings have no map point and are left off. Places: GeoNames (CC BY 4.0).</p></div></div>`;
+}
+// The page re-renders often (live weather, data refresh), and each render replaces the DOM.
+// The Leaflet map lives in its own host element that is moved into the new panel, so tiles are
+// fetched once per tab, not on every render (OpenStreetMap's fair-use policy asks for that).
+// It is rebuilt only when the tab or the job data changes. heatGen drops a stale build.
+let heatHost=null, heatKey='', heatInfo=null, heatGen=0;
+function paintHeatInfo(){
+  const stat=document.getElementById('hmStat'), top=document.getElementById('hmTop');
+  if(!heatInfo) return;
+  if(stat) stat.textContent=heatInfo.stat;
+  if(top){
+    top.innerHTML=heatInfo.chips;
+    top.querySelectorAll('[data-hmlat]').forEach(b=>b.onclick=()=>heatMap&&heatMap.setView([+b.dataset.hmlat,+b.dataset.hmlon],9));
+  }
+}
+async function drawHeatMap(){
+  const slot=document.getElementById('jobHeatMap'); if(!slot) return;
+  const gen=++heatGen;
+  try{ await Promise.all([loadLeaflet(), loadPlaces()]); }
+  catch(e){ const st=document.getElementById('hmStat'); if(st) st.textContent='map unavailable';
+    slot.innerHTML=`<div class="empty"><div class="big">Map unavailable</div><div>${esc(e.message)}</div></div>`; return; }
+  if(gen!==heatGen || !document.body.contains(slot)) return;   // a newer render took over
+  const V=MAP_VIEW[region]||MAP_VIEW.global, jobs=marketPool();
+  const key=region+'|'+jobs.length+'|'+(Array.isArray(liveJobs)?liveJobs.length:0);
+  if(heatMap && heatHost && key===heatKey){
+    slot.appendChild(heatHost); heatMap.invalidateSize(); paintHeatInfo(); return;
+  }
+  if(heatMap){ try{ heatMap.remove(); }catch(e){} heatMap=null; }
+  heatHost=document.createElement('div'); heatHost.style.cssText='width:100%;height:100%';
+  slot.appendChild(heatHost);
+  const cells=new Map(), towns=new Map(); let mapped=0;
+  // State and country maps count only the sites inside them: a Seattle posting that also lists
+  // Denver adds to Seattle's heat, not a Denver chip on the Washington map.
+  const [[s0,w0],[n0,e0]]=V.bounds, pad=1.5;
+  const inView=p=>!V.local || (p.lat>=s0-pad && p.lat<=n0+pad && p.lon>=w0-pad && p.lon<=e0+pad);
+  jobs.forEach(j=>{
+    const pts=geoJob(j).filter(inView); if(!pts.length) return; mapped++;
+    const w=1/pts.length;
+    pts.forEach(p=>{
+      const ck=p.lat.toFixed(2)+','+p.lon.toFixed(2);
+      cells.set(ck,(cells.get(ck)||0)+w);
+      const t=towns.get(p.label)||{n:0,lat:p.lat,lon:p.lon}; t.n+=w; towns.set(p.label,t);
+    });
+  });
+  const pts=[...cells].map(([k,n])=>{ const [a,b]=k.split(',').map(Number); return [a,b,n]; });
+  const sorted=pts.map(p=>p[2]).sort((a,b)=>a-b);
+  // Calibrated per map: the top 2% of places reach red, so a small market (New Zealand) is as
+  // readable as a big one. Heat is not dimmed at the opening zoom (maxZoom = fitted zoom).
+  const maxI=Math.max(1, sorted[Math.min(sorted.length-1, Math.floor(sorted.length*0.98))]||1);
+  heatMap=L.map(heatHost,{zoomControl:true, scrollWheelZoom:false, attributionControl:true, worldCopyJump:true});
+  // OpenStreetMap's standard tiles (free with attribution for light use; CARTO's dark tiles now need a key),
+  // darkened in CSS (.heatmapbox .leaflet-tile-pane) so the heat colors stay true.
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:12,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · Places: <a href="https://www.geonames.org/">GeoNames</a>'}).addTo(heatMap);
+  heatMap.fitBounds(V.bounds);
+  // The panel may still be settling when the map is created; measure again on the next frame.
+  requestAnimationFrame(()=>{ if(heatMap){ heatMap.invalidateSize(); heatMap.fitBounds(V.bounds); } });
+  L.heatLayer(pts,{radius:V.radius, blur:Math.round(V.radius*0.8), max:maxI, minOpacity:0.35, maxZoom:heatMap.getBoundsZoom(V.bounds),
+    gradient:{0.15:'#1d4ed8',0.35:'#22d3ee',0.55:'#a3e635',0.75:'#facc15',0.9:'#fb923c',1:'#ef4444'}}).addTo(heatMap);
+  const best=[...towns].sort((a,b)=>b[1].n-a[1].n).slice(0,8);
+  heatKey=key;
+  heatInfo={ stat:`${mapped.toLocaleString()} of ${jobs.length.toLocaleString()} roles mapped`,
+    chips: best.length?`<span class="subtle">Biggest clusters:</span> `+best.map(([lab,t])=>`<button class="hmchip" data-hmlat="${t.lat}" data-hmlon="${t.lon}" title="Zoom to ${esc(lab)}">${esc(lab)} <b>${Math.round(t.n)}</b></button>`).join(''):'' };
+  paintHeatInfo();
 }
 
 /* =========================================================================

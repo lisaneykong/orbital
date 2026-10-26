@@ -12,6 +12,24 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-26 — job heat maps
+
+- Every tab's dashboard has a "Where the jobs are" heat map (`heatMapPanel`, `drawHeatMap`): Global and
+  International show the world, Seattle shows Washington, LA Metro shows California, US Other shows the United
+  States, and New Zealand shows New Zealand (`MAP_VIEW`). Leaflet 1.9.4 and leaflet.heat 0.2.0 (jsDelivr) load only
+  when a map is on screen. Tiles are OpenStreetMap standard, darkened in CSS. CARTO's dark tiles now need an API key
+  and return a warning image.
+- **Geocoding:** in the browser. `geo/places.json` is built from GeoNames cities5000 (CC BY 4.0) by a one-off script
+  (towns of 5,000+ in the job-market countries, 50,000+ elsewhere). It's 2.2 MB, or 0.7 MB with the .htaccess
+  DEFLATE. `geoOne` reads "City, State, Country", Workday "United States-California-X", RTX "US-AZ-TUCSON-805 ~ …",
+  "USA - X, CA", and multi-site lists. Two-letter state codes win over country codes (IL is Illinois), and a named US
+  state is binding. `GEO_EXTRA` hand-places launch sites and bases too small for the dataset. 96% of roles map;
+  remote and state-only postings are left off and counted in the panel.
+- State and country maps count only the sites inside their bounds. Heat is calibrated per map (98th percentile
+  reaches red). The Leaflet map lives in a host element moved between renders, so tiles load once per tab, not on
+  every re-render (OSM fair use).
+- `deploy.yml` now publishes `geo/`.
+
 ## 2026-10-26 — heat levels, age fade, un-skip
 
 - **Hot:** a role is hot if it was posted in the last 7 days (`isHot`). The old 10% match floor is gone, in
