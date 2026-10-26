@@ -87,12 +87,11 @@ export function chicagoTime(d) {
 
 export const HUB_LABEL = { SEATTLE: 'Seattle', GREATER_LA: 'Greater Los Angeles', NEW_ZEALAND: 'New Zealand', US_OTHER: 'US — Other', INTERNATIONAL: 'International' };
 export const HUB_ORDER = ['SEATTLE', 'GREATER_LA', 'US_OTHER', 'NEW_ZEALAND', 'INTERNATIONAL'];
-export const HOT_DAYS = 7;
-export const HOT_MATCH_FLOOR = 10;
+export const HOT_DAYS = 7;   // hot = posted in the last 7 days (same rule as index.html isHot)
 
 export function postedMs(j) { const t = Date.parse(j.timestamp || ''); return isNaN(t) ? null : t; }
 export function daysSince(ms) { return ms == null ? null : Math.max(0, Math.floor((Date.now() - ms) / 864e5)); }
-export function isHot(j) { const d = daysSince(postedMs(j)); return d != null && d <= HOT_DAYS && (j.match || 0) >= HOT_MATCH_FLOOR; }
+export function isHot(j) { const d = daysSince(postedMs(j)); return d != null && d <= HOT_DAYS; }
 
 // Pull the résumé + cover-letter engine straight out of index.html, so the documents the
 // morning job builds are byte-for-byte the same as the browser's Tailored Résumé button:

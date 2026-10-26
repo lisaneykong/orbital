@@ -12,6 +12,20 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-26 — heat levels, age fade, un-skip
+
+- **Hot:** a role is hot if it was posted in the last 7 days (`isHot`). The old 10% match floor is gone, in
+  `automation/lib.mjs` too. `heatLevel()` grades hot roles 1–5: 1, plus 1/2/3 for a 55/75/90%+ match, plus 1 if
+  posted within a day, capped at 5. Colors follow the Super Saiyan forms (`HEAT_FORMS`): gold, gold with blue glow,
+  amber, crimson, then pulsing cyan (still under prefers-reduced-motion). `heatFlames()` replaces the single 🔥 in
+  `tempBadge`, the Apply Queue cards and the region-chart points. The legend is `heatLegendHTML()`, shown in the
+  chart note and Settings.
+- **Age fade:** past day 7, job rows (`.jrow`, `tr.agefade`) fade linearly with `ageFade()`, from full strength to
+  0.1 at `ROLE_WINDOW_DAYS`. Hovering a row restores it. Internships and undated roles don't fade.
+  `ROLE_WINDOW_DAYS` is now 45 (was 60), the user's 45-day cycle.
+- **Un-skip:** the Apply Queue has a Skipped section with Restore (`aqSetStatus(id,'ready')`, which also removes
+  the role from the dismissed list). Settings → Removed roles links to it.
+
 ## 2026-10-25 — recruiter finder (dossier)
 
 Every dossier has a "Recruiter for this role" block (`recruiterDossierBlock`). No posting in the database names its
