@@ -12,6 +12,56 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-26 — worldwide metro scan: 28 boards, Teamtailor reader
+
+About 200 space employers in the target metros were probed: Seattle, LA, San Diego, the Bay Area, Portland,
+Boston, Chicago, Denver–Boulder, Toronto/Ottawa, Munich and Germany, Helsinki, the UK, Spain, France,
+Luxembourg, Australia and New Zealand, plus the Asia list. Each board below was read back with real titles and
+locations, then test-scraped through `scraper.py` before it was added.
+
+- **US:** Outpost Space, Katalyst Space Technologies, GITAI (LA), Interlune, SEAKR Engineering, NASA JPL (Workday
+  `citjpl`), Draper (Workday), Loft Federal (Loft Orbital's US government arm, a separate Greenhouse board).
+- **Canada:** Telesat, NorthStar Earth & Space, Mission Control Space Services.
+- **Europe:**
+  - Thales Alenia Space, ArianeGroup, constellr, Hemeria, Exotrail.
+  - Yuri, OKAPI:Orbits, OroraTech, Vyoma, LiveEO, Dcubed (Munich/Germany).
+  - Kreios Space, Xoople (Spain); Oxford Space Systems (UK); ReOrbit (Helsinki).
+- **Asia:** ispace (Tokyo/Luxembourg/Colorado), Synspective (Tokyo).
+
+New scraper options:
+- **`scrape_teamtailor()`** (bucket `teamtailor`, keyed by `host`). Reads the public `jobs.rss`, which carries the
+  description, publish date and office. Many European start-ups use Teamtailor, and its keyed API was why
+  earlier passes listed it as "tried".
+- **Workday `loc_alias`.** JPL posts every role as "JPL Campus", which the hub classifier dropped; the alias maps it
+  to Pasadena.
+- **Workday `search`.** Scopes a group-wide tenant: Thales has 2,000+ postings, and "Thales Alenia Space" narrows
+  them to ~317.
+
+Fixes:
+- **Outpost:** the old Ashby `outpost` entry was a freight-logistics company named Outpost, not Outpost Space. It is
+  replaced by Greenhouse `outpostspace`. Two freight rows from 2026-09-21 remain in the database and age out of the
+  45-day window by 2026-11-05.
+- **Exotrail** moved from the custom-HTML reader (2 garbled titles) to Teamtailor (7 clean roles).
+
+Rejected:
+- **Name collisions:** Mercury (a bank), Rubicon (Sarajevo), "mda" on BambooHR, Reflex (Austin), Dark, Latitude
+  (automotive), "magellan" (French IT consultancy), "myriota" on BambooHR (European roles), Pale Blue, Pangea.
+- **Tested and dropped:** AeroVironment/BlueHalo kept 85 drone and EW rows in 222 s. Cubic and Epirus are not space
+  employers.
+
+68 companies with no readable board are in `needs_route` with the reason and careers URL. Examples:
+- Kymeta (Jobvite) and Aurora Flight Sciences (Taleo).
+- Inovor (SEEK, whose terms bar collection).
+- ArkEdge (Japanese-only HERP board).
+- Most of Australia, which posts on in-house pages.
+
+**Run time:** the four new Workday boards add ~8 min of serial work, about one extra minute with 8 workers. A
+healthy run stays near 11 min, against the 25-min timeout.
+
+**Diagnose after the change:** 141 of 146 boards listed postings. The 5 misses were transient: Workable rate
+limits (429) during the burst, and Anduril, Loft Orbital and Booz Allen, which all answered on a recheck minutes
+later.
+
 ## 2026-10-26 — new region tabs, render speed
 
 - **Four new tabs:** Europe, Canada, Asia and Australia (`REGIONS`, `REGION_ORDER`), each with a scenic header

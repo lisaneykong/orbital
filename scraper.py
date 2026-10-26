@@ -158,6 +158,7 @@ SUCCESSFACTORS = _COMPANIES.get("successfactors", [])
 PAYLOCITY = _COMPANIES.get("paylocity", [])
 ADP = _COMPANIES.get("adp", [])
 RADANCY = _COMPANIES.get("radancy", [])
+TEAMTAILOR = _COMPANIES.get("teamtailor", [])
 
 # Eightfold-powered portals (custom JSON API, server-side only — CORS-blocked in browser).
 # API: https://{host}/api/apply/v2/jobs?domain={domain}&start=0&num=100
@@ -1166,12 +1167,19 @@ def scrape_workday(cfg):
     base, board = resolve_workday(company, tenant, server, board)
     cxs = f"{base}/wday/cxs/{tenant}/{board}/jobs"
     rows, offset, total = [], 0, None
+    # Some tenants post a site name instead of a place ("JPL Campus"); loc_alias in
+    # companies.json maps it to the real city so the hub classifier can place the role.
+    alias = cfg.get("loc_alias") or {}
     while True:
         # No searchText filter: we're already querying THIS company's own tenant, so an
         # extra keyword filter only risks silently excluding postings (internships in
         # particular are often titled generically — "Summer Intern", "Co-op Program" —
         # with no literal "space" in the title) that would otherwise qualify downstream.
         payload = {"limit": 20, "offset": offset, "appliedFacets": {}}
+        # Exception: a group-wide tenant (Thales holds 2,000+ postings across every
+        # division) takes a "search" in companies.json that scopes it to the space unit.
+        if cfg.get("search"):
+            payload["searchText"] = cfg["search"]
         r = request("POST", cxs, headers=headers, data=json.dumps(payload))
         if r.status_code != 200:
             if rows:
@@ -1188,6 +1196,7 @@ def scrape_workday(cfg):
         for p in postings:
             ext = p.get("externalPath", "") or ""
             loc = (p.get("locationsText") or "").strip()
+            loc = alias.get(loc, loc)
             title = p.get("title") or ""
             multi_site = bool(re.match(r"^\d+\s+locations?$", loc, re.I))
             hub = None if multi_site else determine_location_hub(loc)
@@ -1199,7 +1208,7 @@ def scrape_workday(cfg):
                 continue
             info = _workday_detail(base, tenant, board, ext)
             if multi_site:
-                loc = "; ".join(x for x in [info.get("location")] + list(info.get("additionalLocations") or []) if x)
+                loc = "; ".join(alias.get(x, x) for x in [info.get("location")] + list(info.get("additionalLocations") or []) if x)
                 if not determine_location_hub(loc):
                     continue
             m = re.search(r"_(R[-\d]+)\b", ext) or re.search(r"_(\w+\d+)$", ext)
@@ -1485,6 +1494,43 @@ def scrape_personio(cfg):
         row = build_row(company, jid, g("name"), loc,
                         f"https://{token}.jobs.personio.de/job/{jid}", "custom",
                         desc, posted=g("createdAt") or None)
+        if row:
+            rows.append(row)
+    return rows
+
+
+def scrape_teamtailor(cfg):
+    """Teamtailor career site (common with European space start-ups). Its public RSS feed
+    carries every listed job with the full description, a publish date and the office."""
+    import xml.etree.ElementTree as ET
+    from email.utils import parsedate_to_datetime
+    company, host = cfg["company"], cfg["host"]
+    r = request("GET", f"https://{host}/jobs.rss")
+    if r.status_code != 200:
+        raise RetryableHTTP(f"teamtailor {host} -> {r.status_code}")
+    try:
+        root = ET.fromstring(r.content)
+    except ET.ParseError as exc:
+        raise RetryableHTTP(f"teamtailor {host} bad rss: {exc}")
+    tt = "{https://teamtailor.com/locations}"
+    rows = []
+    for item in root.iter("item"):
+        link = (item.findtext("link") or "").strip()
+        places = []
+        for loc in item.iter(tt + "location"):
+            place = ", ".join(x for x in (loc.findtext(tt + "city"), loc.findtext(tt + "country")) if x)
+            if place and place not in places:
+                places.append(place)
+        if (item.findtext("remoteStatus") or "") == "fully":
+            places.append("Remote")
+        try:
+            posted = parsedate_to_datetime(item.findtext("pubDate")).isoformat()
+        except Exception:
+            posted = None
+        m = re.search(r"/jobs/(\d+)", link)
+        desc = re.sub(r"<[^>]+>", " ", item.findtext("description") or "")
+        row = build_row(company, m.group(1) if m else item.findtext("guid"), item.findtext("title"),
+                        "; ".join(places), link, "teamtailor", desc, posted=posted)
         if row:
             rows.append(row)
     return rows
@@ -1971,6 +2017,8 @@ def build_tasks():
         tasks.append((cfg["company"], "adp", lambda c=cfg: scrape_adp(c)))
     for cfg in RADANCY:
         tasks.append((cfg["company"], "radancy", lambda c=cfg: scrape_radancy(c)))
+    for cfg in TEAMTAILOR:
+        tasks.append((cfg["company"], "teamtailor", lambda c=cfg: scrape_teamtailor(c)))
     random.shuffle(tasks)   # spread load across domains naturally
     return tasks
 
@@ -2347,6 +2395,13 @@ def _diagnose_tasks():
             note = "page is likely built by JavaScript; needs an ATS route" if not links else "candidate links"
             return len(links), note
         add("custom", c["company"], cu)
+    for c in TEAMTAILOR:
+        def tt(c=c):
+            r = SESSION.get(f"https://{c['host']}/jobs.rss", timeout=20)
+            if r.status_code != 200:
+                raise RuntimeError(f"HTTP {r.status_code}")
+            return r.text.count("<item>"), "jobs in the RSS feed"
+        add("teamtailor", c["company"], tt)
     for c in ZOHORECRUIT:
         def zr(c=c):
             r = SESSION.get(f"https://{c['host']}/jobs/Careers", timeout=20)

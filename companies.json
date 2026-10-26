@@ -201,6 +201,36 @@
       "company": "Interstellar Lab",
       "intl": true,
       "verified": "verified live 2026-10-25 (real titles/locations read back) — Paris"
+    },
+    "outpostspace": {
+      "company": "Outpost Space",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 16,
+      "note": "Los Angeles CA — reusable return-to-Earth satellites"
+    },
+    "katalyst": {
+      "company": "Katalyst Space Technologies",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 31,
+      "note": "Broomfield CO — spacecraft avionics, in-space servicing"
+    },
+    "gitai": {
+      "company": "GITAI",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 19,
+      "note": "Los Angeles CA — space robotics (Tokyo-founded)"
+    },
+    "constellrgmbh": {
+      "company": "constellr",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 28,
+      "note": "Munich + Berlin — thermal-infrared Earth observation"
+    },
+    "loftfederal": {
+      "company": "Loft Federal",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 15,
+      "note": "Arvada + Golden CO — Loft Orbital's US government arm (separate board, linked from loftorbital.com/careers)"
     }
   },
   "workday": [
@@ -323,6 +353,46 @@
       "server": "wd115",
       "board": "Firefly",
       "verified": "Workday API 2026-10-25: board returns postings (116); linked from fireflyspace.com"
+    },
+    {
+      "company": "NASA JPL / Caltech",
+      "tenant": "citjpl",
+      "server": "wd5",
+      "board": "Jobs",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 126,
+      "note": "Pasadena CA — JPL posts its roles as \"JPL Campus\"; loc_alias maps that to Pasadena",
+      "loc_alias": {
+        "JPL Campus": "Pasadena, California"
+      }
+    },
+    {
+      "company": "Draper",
+      "tenant": "draper",
+      "server": "wd5",
+      "board": "Draper_Careers",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 219,
+      "note": "Cambridge MA — guidance, navigation and space systems"
+    },
+    {
+      "company": "ArianeGroup",
+      "tenant": "arianegroup",
+      "server": "wd3",
+      "board": "ExternalAll",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 272,
+      "note": "Les Mureaux, Bordeaux, Paris — Ariane 6; most titles are in French"
+    },
+    {
+      "company": "Thales Alenia Space",
+      "tenant": "thales",
+      "server": "wd3",
+      "board": "Careers",
+      "search": "Thales Alenia Space",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 317,
+      "note": "Thales group tenant (2,000+ postings); the search scopes it to Thales Alenia Space — Rome, Cannes, Toulouse, Madrid, Zürich, Charleroi"
     }
   ],
   "lever": [
@@ -414,15 +484,23 @@
       "verified": "probed live 2026-10-24",
       "open": 13,
       "note": "added 2026-10-24 from the 2026 space-funding list"
+    },
+    {
+      "company": "Telesat",
+      "token": "telesat",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 53,
+      "note": "Ottawa ON + London — Lightspeed LEO constellation"
+    },
+    {
+      "company": "ispace",
+      "token": "ispace-inc",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 62,
+      "note": "Tokyo + Luxembourg + Englewood CO — lunar landers"
     }
   ],
   "ashby": [
-    {
-      "company": "Outpost Technologies",
-      "token": "outpost",
-      "verified": "probed live 2026-09-05",
-      "open": 9
-    },
     {
       "company": "Turion Space",
       "token": "turion-space",
@@ -595,6 +673,20 @@
       "token": "astroscale",
       "intl": true,
       "verified": "verified live 2026-10-25 (real titles/locations read back) — Tokyo and other offices; linked from astroscale.com"
+    },
+    {
+      "company": "NorthStar Earth & Space",
+      "token": "northstarearthandspace",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 7,
+      "note": "Montréal + Luxembourg — space situational awareness"
+    },
+    {
+      "company": "Mission Control Space Services",
+      "token": "mcss",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 7,
+      "note": "Ottawa — lunar rover autonomy, mission operations software"
     }
   ],
   "personio": [
@@ -602,6 +694,48 @@
       "company": "Atmos Space Cargo",
       "token": "atmos",
       "intl": true
+    },
+    {
+      "company": "Yuri",
+      "token": "yuri",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 4,
+      "note": "Meckenbeuren, Germany — microgravity payloads"
+    },
+    {
+      "company": "OKAPI:Orbits",
+      "token": "okapiorbits",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 17,
+      "note": "Munich + Braunschweig — space traffic / SSA"
+    },
+    {
+      "company": "OroraTech",
+      "token": "ororatech",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 1,
+      "note": "Munich — wildfire-monitoring satellites"
+    },
+    {
+      "company": "Vyoma",
+      "token": "vyoma-gmbh",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 2,
+      "note": "Munich — space situational awareness"
+    },
+    {
+      "company": "LiveEO",
+      "token": "liveeo-gmbh",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 22,
+      "note": "Berlin + remote — satellite analytics for infrastructure"
+    },
+    {
+      "company": "Kreios Space",
+      "token": "kreiosspace",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 18,
+      "note": "Nigrán (Vigo), Spain — very-low-Earth-orbit satellites"
     }
   ],
   "welcomekit": [],
@@ -678,14 +812,6 @@
       "region": "Pasadena, CA",
       "ats": "jazzhr",
       "note": "JazzHR board linked from offworld.ai/careers (2026-10-25)."
-    },
-    {
-      "company": "Exotrail",
-      "url": "https://careers.exotrail.com/jobs",
-      "region": "France",
-      "ats": "teamtailor",
-      "intl": true,
-      "note": "Teamtailor careers site linked from exotrail.com (2026-10-25)."
     }
   ],
   "careerLinks": [
@@ -695,18 +821,8 @@
       "note": "USAJOBS — federal application flow, no ATS API"
     },
     {
-      "company": "NASA JPL / Caltech",
-      "url": "https://www.jpl.nasa.gov/careers/",
-      "note": "Caltech in-house ATS"
-    },
-    {
       "company": "Johns Hopkins APL",
       "url": "https://www.jhuapl.edu/careers",
-      "note": "In-house ATS"
-    },
-    {
-      "company": "Draper",
-      "url": "https://www.draper.com/careers",
       "note": "In-house ATS"
     },
     {
@@ -924,12 +1040,6 @@
     },
     {
       "company": "Gilmour Space Technologies",
-      "tried": "public ATS APIs",
-      "probe": "greenhouse, lever, ashby, workable, smartrecruiters, recruitee, breezy, rippling, pinpoint, bamboohr, teamtailor, personio (name variants), 2026-10-24",
-      "note": "added 2026-10-24 from the 2026 space-funding list; no public job-board API found. Needs its careers page checked by hand."
-    },
-    {
-      "company": "Xoople",
       "tried": "public ATS APIs",
       "probe": "greenhouse, lever, ashby, workable, smartrecruiters, recruitee, breezy, rippling, pinpoint, bamboohr, teamtailor, personio (name variants), 2026-10-24",
       "note": "added 2026-10-24 from the 2026 space-funding list; no public job-board API found. Needs its careers page checked by hand."
@@ -1185,6 +1295,540 @@
       "tried": "careers page + 13 public job-board APIs",
       "probe": "2026-10-25",
       "note": "Covered: posts on Boeing's Workday board (boeing/wd1/EXTERNAL_CAREERS), which the scraper already reads; its roles appear under The Boeing Company."
+    },
+    {
+      "company": "Kymeta",
+      "metro": "Seattle",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "Jobvite board (jobs.jobvite.com/kymetacorp); Orbital has no Jobvite reader yet.",
+      "careers": "https://jobs.jobvite.com/kymetacorp"
+    },
+    {
+      "company": "Radian Aerospace",
+      "metro": "Seattle",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.radianaerospace.com/"
+    },
+    {
+      "company": "Electric Sky",
+      "metro": "Seattle",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan)."
+    },
+    {
+      "company": "Spaceflight Inc",
+      "metro": "Seattle",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "Company wound down its rideshare business; No public job board found (2026-10-26 worldwide metro scan)."
+    },
+    {
+      "company": "Arkisys",
+      "metro": "Los Angeles",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.arkisys.com/"
+    },
+    {
+      "company": "Firehawk Aerospace",
+      "metro": "Los Angeles",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://firehawkdefense.com/"
+    },
+    {
+      "company": "General Atomics",
+      "metro": "San Diego",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "In-house careers site; no Workday tenant (ga/gat/generalatomics) and no public API found.",
+      "careers": "https://www.ga.com/careers"
+    },
+    {
+      "company": "Teledyne",
+      "metro": "San Diego",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "Group careers site; no Workday tenant found and no public API.",
+      "careers": "https://www.teledyne.com/careers"
+    },
+    {
+      "company": "Mangata Networks",
+      "metro": "SF Bay Area",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan)."
+    },
+    {
+      "company": "Lux Aeterna",
+      "metro": "SF Bay Area",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan)."
+    },
+    {
+      "company": "Cognitive Space",
+      "metro": "SF Bay Area",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.cognitivespace.com/"
+    },
+    {
+      "company": "Hydrosat",
+      "metro": "SF Bay Area",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://hydrosat.com/"
+    },
+    {
+      "company": "Aethero",
+      "metro": "SF Bay Area",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.aethero.com/"
+    },
+    {
+      "company": "Aurora Flight Sciences",
+      "metro": "Boston",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "Boeing company; postings on Taleo (tbe.taleo.net), which Orbital cannot read. Some roles may also appear on Boeing's Workday board, which is tracked.",
+      "careers": "https://www.aurora.aero/careers/"
+    },
+    {
+      "company": "MIT Lincoln Laboratory",
+      "metro": "Boston",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "In-house careers site; no public API found.",
+      "careers": "https://www.ll.mit.edu/careers"
+    },
+    {
+      "company": "Accion Systems",
+      "metro": "Boston",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan)."
+    },
+    {
+      "company": "Atlas Space Operations",
+      "metro": "Boston",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://atlasspace.com/"
+    },
+    {
+      "company": "Orbital Composites",
+      "metro": "Boston",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.orbitalcomposites.com/"
+    },
+    {
+      "company": "Kayhan Space",
+      "metro": "Denver-Boulder",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "Site links a Breezy board, but kayhan.breezy.hr/json returns 404 (no published roles).",
+      "careers": "https://kayhan.breezy.hr/"
+    },
+    {
+      "company": "LASP (CU Boulder)",
+      "metro": "Denver-Boulder",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "University of Colorado jobs portal; no public API found.",
+      "careers": "https://lasp.colorado.edu/"
+    },
+    {
+      "company": "Hypergiant",
+      "metro": "Chicago",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.hypergiant.com/careers/"
+    },
+    {
+      "company": "MDA Space",
+      "metro": "Toronto & Ottawa",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No Workday tenant (mda/mdaspace) and no public API found; the bamboohr 'mda' board belongs to another company.",
+      "careers": "https://mda.space/careers"
+    },
+    {
+      "company": "Calian",
+      "metro": "Toronto & Ottawa",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "Calian's own careers search; platform not identified.",
+      "careers": "https://careers.calian.com/"
+    },
+    {
+      "company": "Xiphos",
+      "metro": "Toronto & Ottawa",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://xiphos.com/"
+    },
+    {
+      "company": "Canadensys Aerospace",
+      "metro": "Toronto & Ottawa",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan)."
+    },
+    {
+      "company": "Galaxia Mission Systems",
+      "metro": "Toronto & Ottawa",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan)."
+    },
+    {
+      "company": "C-CORE",
+      "metro": "Toronto & Ottawa",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://c-core.ca/"
+    },
+    {
+      "company": "Magellan Aerospace",
+      "metro": "Toronto & Ottawa",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public API found; the SmartRecruiters 'magellan' board is a French IT consultancy.",
+      "careers": "https://magellan.aero/careers/"
+    },
+    {
+      "company": "OHB",
+      "metro": "Munich & Germany",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No Workday tenant and no public API found.",
+      "careers": "https://www.ohb.de/en/career"
+    },
+    {
+      "company": "Rocket Factory Augsburg",
+      "metro": "Munich & Germany",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.rfa.space/"
+    },
+    {
+      "company": "Polaris Raumflugzeuge",
+      "metro": "Munich & Germany",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.polaris-raumflugzeuge.de/"
+    },
+    {
+      "company": "Berlin Space Technologies",
+      "metro": "Munich & Germany",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.berlin-space-tech.com/"
+    },
+    {
+      "company": "Kuva Space",
+      "metro": "Helsinki",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://kuvaspace.com/en"
+    },
+    {
+      "company": "Aurora Propulsion Technologies",
+      "metro": "Helsinki",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://aurorapt.space/"
+    },
+    {
+      "company": "Open Cosmos",
+      "metro": "UK",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.open-cosmos.com/"
+    },
+    {
+      "company": "Surrey Satellite Technology",
+      "metro": "UK",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "Airbus company; no SSTL Workday board found. Some roles may surface on Airbus's tracked board.",
+      "careers": "https://www.sstl.co.uk/"
+    },
+    {
+      "company": "Eutelsat OneWeb",
+      "metro": "UK",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No Workday tenant and no public API found.",
+      "careers": "https://www.eutelsat.com/"
+    },
+    {
+      "company": "Lumi Space",
+      "metro": "UK",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "Site links jobs.lever.co/lumispace, but the Lever API returns 404 (board closed).",
+      "careers": "https://www.lumi.space/"
+    },
+    {
+      "company": "Orbex",
+      "metro": "UK",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan)."
+    },
+    {
+      "company": "Magdrive",
+      "metro": "UK",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://magdrive.space/"
+    },
+    {
+      "company": "Skyrora",
+      "metro": "UK",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://skyrora.com/"
+    },
+    {
+      "company": "Alba Orbital",
+      "metro": "UK",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.albaorbital.com/"
+    },
+    {
+      "company": "Satellite Applications Catapult",
+      "metro": "UK",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://sa.catapult.org.uk/"
+    },
+    {
+      "company": "In-Space Missions",
+      "metro": "UK",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan)."
+    },
+    {
+      "company": "GMV",
+      "metro": "Barcelona & Spain",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "In-house careers site; no Workday tenant and no public API found.",
+      "careers": "https://www.gmv.com/en/careers"
+    },
+    {
+      "company": "Sener",
+      "metro": "Barcelona & Spain",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.group.sener/"
+    },
+    {
+      "company": "Satlantis",
+      "metro": "Barcelona & Spain",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.satlantis.com/"
+    },
+    {
+      "company": "Pangea Aerospace",
+      "metro": "Barcelona & Spain",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.pangeapropulsion.com/"
+    },
+    {
+      "company": "Aerospacelab",
+      "metro": "Paris & Toulouse",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.aerospacelab.com/"
+    },
+    {
+      "company": "Leanspace",
+      "metro": "Paris & Toulouse",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://leanspace.io/"
+    },
+    {
+      "company": "Sodern",
+      "metro": "Paris & Toulouse",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://sodern.com/"
+    },
+    {
+      "company": "U-Space",
+      "metro": "Paris & Toulouse",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.u-space.fr/"
+    },
+    {
+      "company": "CLS (Collecte Localisation Satellites)",
+      "metro": "Paris & Toulouse",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan)."
+    },
+    {
+      "company": "Infinite Orbits",
+      "metro": "Paris & Toulouse",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.infiniteorbits.io/"
+    },
+    {
+      "company": "OQ Technology",
+      "metro": "Luxembourg",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.oqtec.space/"
+    },
+    {
+      "company": "LuxSpace",
+      "metro": "Luxembourg",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://luxspace.lu/"
+    },
+    {
+      "company": "Fleet Space",
+      "metro": "Australia",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://fleetspace.com/"
+    },
+    {
+      "company": "Quasar Satellite Technologies",
+      "metro": "Australia",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://quasarsat.com/"
+    },
+    {
+      "company": "Space Machines Company",
+      "metro": "Australia",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://spacemachines.com/"
+    },
+    {
+      "company": "Inovor Technologies",
+      "metro": "Australia",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "Posts on SEEK, whose terms do not allow automated collection.",
+      "careers": "https://www.inovor.com.au/careers"
+    },
+    {
+      "company": "Saber Astronautics",
+      "metro": "Australia",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://saberastro.com/"
+    },
+    {
+      "company": "EOS Space Systems",
+      "metro": "Australia",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.eos-aus.com/"
+    },
+    {
+      "company": "Myriota",
+      "metro": "Australia",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No board found; the bamboohr 'myriota' account lists London/Berlin/Marseille roles and is another company.",
+      "careers": "https://myriota.com/"
+    },
+    {
+      "company": "Neumann Space",
+      "metro": "Australia",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://neumannspace.com/"
+    },
+    {
+      "company": "Spiral Blue",
+      "metro": "Australia",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://spiralblue.space/"
+    },
+    {
+      "company": "Skykraft",
+      "metro": "Australia",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://skykraft.com.au/"
+    },
+    {
+      "company": "Zenith Tecnica",
+      "metro": "New Zealand",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "No public job board found (2026-10-26 worldwide metro scan).",
+      "careers": "https://www.zenithtecnica.com/"
+    },
+    {
+      "company": "ArkEdge Space",
+      "metro": "Asia",
+      "tried": "careers page scanned for ATS links; Greenhouse, Lever (US+EU), Ashby, Workable, Recruitee, BambooHR, Breezy, Personio (.de/.com), SmartRecruiters, Teamtailor RSS and Welcome to the Jungle APIs tried by name",
+      "probe": "2026-10-26",
+      "note": "HERP board, all postings in Japanese (no English titles for the title filter); browse by hand.",
+      "careers": "https://herp.careers/v1/arkedgespace"
     }
   ],
   "recruitee": [
@@ -1194,6 +1838,20 @@
       "verified": "verified live 2026-09-05 (route finder)",
       "open": 6,
       "note": "Recruitee — https://aetherflux.recruitee.com/api/offers/ . Browser-reachable; add a scrape_recruitee() branch to scraper.py for the daily Action."
+    },
+    {
+      "company": "Synspective",
+      "token": "synspective",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 48,
+      "note": "Tokyo + Kanagawa — SAR satellite constellation"
+    },
+    {
+      "company": "Hemeria",
+      "token": "hemeriagroup",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 26,
+      "note": "Toulouse + Paris area — small satellites and space equipment"
     }
   ],
   "smartrecruiters": [
@@ -1202,6 +1860,13 @@
       "token": "thrustme",
       "intl": true,
       "verified": "verified live 2026-10-25 (real titles/locations read back) — France"
+    },
+    {
+      "company": "SEAKR Engineering",
+      "token": "SeakrEngineering",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 14,
+      "note": "Centennial CO — space electronics (RTX)"
     }
   ],
   "breezy": [
@@ -1218,6 +1883,13 @@
       "verified": "verified live 2026-09-06 (route finder, 22-API pass)",
       "open": 9,
       "note": "Breezy HR — https://heo.breezy.hr/json . HEO Robotics, Sydney NSW + Arlington VA. Confirmed by job locations, not token guess."
+    },
+    {
+      "company": "Interlune",
+      "token": "interlune",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 3,
+      "note": "Seattle WA + Houston TX — lunar helium-3"
     }
   ],
   "rippling": [
@@ -1281,6 +1953,7 @@
       "paylocity",
       "adp",
       "radancy",
+      "teamtailor",
       "custom"
     ],
     "note": "browser_reachable buckets are fetched live by index.html (FP_COMPANIES + fpFetchBoard). action_only buckets are CORS-blocked from a browser and are fetched exclusively by the daily GitHub Action via scraper.py. Adding a bucket to companies.json does nothing until it has BOTH an fpFetchBoard branch and an fpNormalize branch in index.html.",
@@ -1315,6 +1988,13 @@
       "intl": true,
       "verified": "probed live 2026-10-24 (resolve pass)",
       "note": "Zoho Recruit — records are embedded in https://skyroot.zohorecruit.in/jobs/Careers ."
+    },
+    {
+      "company": "Oxford Space Systems",
+      "host": "oxford.zohorecruit.eu",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 2,
+      "note": "Harwell, UK — deployable antennas"
     }
   ],
   "successfactors": [
@@ -1344,6 +2024,36 @@
       "company": "L3Harris Technologies",
       "host": "careers.l3harris.com",
       "verified": "verified live 2026-10-25 (real titles/locations read back) — Radancy career site (2,239 open); includes Aerojet Rocketdyne roles"
+    }
+  ],
+  "teamtailor": [
+    {
+      "company": "Dcubed",
+      "host": "dcubed.teamtailor.com",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 10,
+      "note": "Germering (Munich) — deployable solar arrays and mechanisms"
+    },
+    {
+      "company": "ReOrbit",
+      "host": "reorbit.teamtailor.com",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 30,
+      "note": "Helsinki + Bengaluru — sovereign satellites"
+    },
+    {
+      "company": "Exotrail",
+      "host": "exotrail.teamtailor.com",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 45,
+      "note": "Massy (Paris) + Toulouse — orbital transfer vehicles, electric propulsion (replaces the 2026-10-25 custom-HTML entry for careers.exotrail.com, which read only 2 garbled titles)"
+    },
+    {
+      "company": "Xoople",
+      "host": "xoople.teamtailor.com",
+      "verified": "verified live 2026-10-26 (worldwide metro scan; real titles/locations read back)",
+      "open": 4,
+      "note": "Tres Cantos (Madrid) + London + Colorado — Earth-observation constellation"
     }
   ]
 }
