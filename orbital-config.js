@@ -9,7 +9,7 @@
      • anonKey = your Supabase  anon public  key  (the READ-only one)
 
    Both are safe to ship publicly — the anon key can only READ jobs,
-   and editing is still gated behind your owner PIN (1725).
+   and editing is still gated behind your owner PIN.
    Do NOT put the service_role key here.
 
    After filling these in, re-deploy (push to GitHub → auto-publish).

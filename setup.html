@@ -602,7 +602,9 @@ NOTIFY pgrst, 'reload schema';</pre>
 <script>
 const $=id=>document.getElementById(id);
 const URL_RE=/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i;
-const OWNER_PIN='1725';
+// Owner PIN checked by salted SHA-256 (same fingerprint as index.html); the PIN itself is not in the page.
+const PIN_SALT='orbital-vault-2026:', OWNER_PIN_HASH='3a8fa7793cca680b63b83e6be960130bae8e8edc7ff1f91f7831a4b93e74edf4';
+async function pinOk(pin){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(PIN_SALT+pin)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')===OWNER_PIN_HASH; }
 
 /* ======================= SCHEMA MATCH CHECK ======================= */
 // The exact columns the dashboard + scraper read/write. If the live table is
@@ -695,15 +697,14 @@ function pinPress(k){
   if(k==='back'){ pinBuf=pinBuf.slice(0,-1); err.textContent=''; paintDots(); return; }
   if(pinBuf.length>=4) return;
   pinBuf+=k; paintDots();
-  if(pinBuf.length===4){
-    if(pinBuf===OWNER_PIN){
-      try{ localStorage.setItem('orbital.role','owner'); }catch(e){}
+  if(pinBuf.length===4){ pinOk(pinBuf).then(ok=>{
+    if(ok){
       setTimeout(()=>{ $('vault').classList.add('hidden'); $('setupBody').classList.remove('hidden'); $('url').focus(); }, 180);
     } else {
       const dots=$('dots'); dots.classList.add('bad'); err.textContent='Wrong PIN — try again.';
       setTimeout(()=>{ dots.classList.remove('bad'); pinBuf=''; paintDots(); }, 480);
     }
-  }
+  }); }
 }
 $('keypad').addEventListener('click',e=>{ const b=e.target.closest('.key'); if(b) pinPress(b.dataset.k); });
 document.addEventListener('keydown',e=>{

@@ -154,7 +154,7 @@
   <div class="promise">
     <div class="p"><div class="pi">🛰️</div><div class="pt"><b>Real space jobs</b><br>pulled automatically</div></div>
     <div class="p"><div class="pi">🔁</div><div class="pt"><b>Refreshes daily</b><br>on its own, free</div></div>
-    <div class="p"><div class="pi">🔒</div><div class="pt"><b>Only you</b><br>can edit (PIN 1725)</div></div>
+    <div class="p"><div class="pi">🔒</div><div class="pt"><b>Only you</b><br>can edit (owner PIN)</div></div>
   </div>
 
   <div class="note">
@@ -454,7 +454,7 @@ jobs:
         <span class="hint">Optional fourth: <b>IONOS_REMOTE_PATH</b> — only needed if the SFTP login does not land in the folder the website is served from. The workflow prints that folder in its log and tells you when to set this.</span>
       </li>
       <li><b>Publish it.</b> Repo → <b>Actions</b> tab → <i>“Publish website to IONOS”</i> → <b>Run workflow</b>. The last step checks the live site itself: it passes only when <a class="lnk" href="https://jobs.lisaney.com/build.txt" target="_blank">jobs.lisaney.com/build.txt</a> shows the commit it just pushed. A red X there means the upload landed somewhere the web server does not serve — the log names the folder to put in IONOS_REMOTE_PATH. (From then on it re-publishes on every push.)</li>
-      <li><b>Open <a class="lnk" href="https://jobs.lisaney.com/setup.html" target="_blank">jobs.lisaney.com/setup.html</a></b>, paste your Supabase <b>Project URL</b> + <b>anon key</b> from Step 1, run the first fetch, and finish the GitHub gate. Log in with PIN <b>1725</b> to edit.</li>
+      <li><b>Open <a class="lnk" href="https://jobs.lisaney.com/setup.html" target="_blank">jobs.lisaney.com/setup.html</a></b>, paste your Supabase <b>Project URL</b> + <b>anon key</b> from Step 1, run the first fetch, and finish the GitHub gate. Log in with your owner PIN to edit.</li>
     </ol>
     <div class="note good" style="border-width:2px">
       <span class="ni">✅</span>
@@ -501,7 +501,7 @@ jobs:
     </details>
     <details>
       <summary>I forgot my login</summary>
-      <div class="body">The owner PIN is <b>1725</b>. Anyone without it just sees a read-only view — they can look but not change anything.</div>
+      <div class="body">The owner PIN unlocks everything; a second, read-only PIN shows a stripped-down view — they can look but not change anything.</div>
     </details>
     <details>
       <summary>Do I have to do this every time?</summary>

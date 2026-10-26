@@ -84,7 +84,7 @@ live data, not placeholder content.
 **Why:** a command console should tell the truth. Nothing on this screen
 should be decoration.
 
-### 8. The Vault (PIN 1725)
+### 8. The Vault (PIN pad)
 A single owner login gates editing; anyone else who opens the link gets a
 read-only guest view. Simple, and yours alone.
 

@@ -369,7 +369,9 @@ INSTALL ORDER (full details inside START-HERE.html)
    key sitting in a browser is readable by anyone using that
    device.
 
-Owner login PIN: 1725   (everyone else gets a read-only view)
+Two PINs open the PIN pad: the owner PIN (full access) and a read-only PIN
+(no outreach templates, essays, applications, profile, or downloads). Only salted
+hashes are in the code. The pad returns after 90 seconds without activity.
 
 To fill the console with jobs right away: open setup.html and click
 "Fetch real jobs" — watch the dial climb to 100%.

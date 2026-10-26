@@ -264,7 +264,7 @@
       <dd>The 6am run happens on its own. But if you want <b>Refresh roles</b> to kick off a fresh scrape on demand, something has to ask GitHub to start one — and that request needs a GitHub token. This small function holds that token inside Supabase, so it never has to sit in your browser.</dd>
       <dt>What you run, once</dt>
     </dl>
-    <div class="looks">npm i -g supabase<br>supabase login<br>supabase link --project-ref &lt;your-ref&gt;<br>supabase secrets set GITHUB_TOKEN=… GITHUB_REPO=you/orbital ORBITAL_PIN=1725<br>supabase functions deploy trigger-scrape</div>
+    <div class="looks">npm i -g supabase<br>supabase login<br>supabase link --project-ref &lt;your-ref&gt;<br>supabase secrets set GITHUB_TOKEN=… GITHUB_REPO=you/orbital ORBITAL_PIN=&lt;a PIN of your choice&gt;<br>supabase functions deploy trigger-scrape</div>
     <dl class="qa">
       <dt>The GitHub token it needs</dt>
       <dd>A <b>fine-grained</b> token scoped to this one repository, with a single permission: <b>Actions → Read and write</b>. Nothing else. Make it at <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener">github.com/settings/personal-access-tokens</a>.</dd>

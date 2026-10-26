@@ -1506,6 +1506,7 @@ button.notmatch:hover{background:rgba(255,122,138,.12) !important}
 .gate{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:24px;
   background:rgba(3,5,10,.86);backdrop-filter:blur(10px)}
 .gate.open{display:flex}
+body.locked .app,body.locked .modal-bg,body.locked .drawer{visibility:hidden}
 .gatecard{width:min(440px,100%);border:1px solid rgba(120,160,235,.2);border-radius:var(--r2);overflow:hidden;
   background:linear-gradient(180deg,rgba(16,24,40,.96),rgba(7,11,19,.96));box-shadow:0 40px 120px rgba(0,0,0,.7);text-align:center}
 .gatecard .gtop{padding:30px 28px 20px;position:relative;overflow:hidden}
@@ -2657,10 +2658,13 @@ function ensureWeatherLoaded(region){
 }
 
 /* ---------------- auth + router state ---------------- */
-let role = localStorage.getItem('orbital.role') || '';      // owner | guest | ''
+let role = '';      // owner | guest (read-only PIN) | '' (locked). Never stored: every visit starts at the PIN pad.
+try{ localStorage.removeItem('orbital.role'); }catch(e){}
 let userEmail = localStorage.getItem('orbital.email') || '';
 let view = 'dashboard';    // the Dashboard (this week's roles by region) is the landing view; Today is its tab
 const canEdit = () => role==='owner';
+const canDownload = () => role==='owner';          // the read-only PIN cannot download anything
+const isReadOnly = () => role!=='owner';
 let savedJobs = new Set(JSON.parse(localStorage.getItem('orbital.saved')||'[]'));
 let dismissedJobs = new Set(JSON.parse(localStorage.getItem('orbital.dismissed')||'[]'));
 let appliedJobs = new Set(JSON.parse(localStorage.getItem('orbital.applied')||'[]'));
@@ -2690,7 +2694,7 @@ function toggleApplied(id){
   }
   localStorage.setItem('orbital.applied',JSON.stringify([...appliedJobs])); if(appliedJobs.has(id)) logProgress(id,'applied'); pushTracking(); routeRender();
 }
-function guestBlock(){ alert('Guest mode is read-only. Sign in as the owner to save, edit, or change settings.'); }
+function guestBlock(){ alert('This PIN is read-only. Use the owner PIN to save, edit, download, or change settings.'); }
 
 /* =========================================================================
    NOT A MATCH — rejection log + learned fit
@@ -4693,10 +4697,13 @@ const NAV_GROUPS=[
   ['Insights','chart',['insights','strategy','reports','events','relocation']],
   ['Me','users',['candidates','settings']],
 ];
+// Pages the read-only PIN never sees: your applications, outreach, essays and profile.
+const READONLY_HIDDEN=['apply','pipeline','outreach','essays','candidates'];
+function navVisible(k){ return !(isReadOnly() && READONLY_HIDDEN.includes(k)); }
 function navGroupOf(v){ return NAV_GROUPS.find(g=>g[2].includes(v)); }
 function subTabs(){
   const g=navGroupOf(view); if(!g) return '';
-  const tabs=g[2].map(k=>NAV.find(n=>n[2]===k)).filter(Boolean);
+  const tabs=g[2].filter(navVisible).map(k=>NAV.find(n=>n[2]===k)).filter(Boolean);
   if(tabs.length<2) return '';
   return `<div class="subtabs" role="tablist">${tabs.map(([name,,key])=>`<button class="subtab${key===view?' on':''}" role="tab" aria-selected="${key===view}" data-nav="${key}">${esc(name)}</button>`).join('')}</div>`;
 }
@@ -4752,7 +4759,9 @@ function sidebar(){
   let nav='';
   const cur=navGroupOf(view);
   NAV_GROUPS.forEach(g=>{
-    const [name,ic,keys]=g;
+    const [name,ic,allKeys]=g;
+    const keys=allKeys.filter(k=>navVisible(k) && (k!=='settings' || !isReadOnly()));
+    if(!keys.length) return;
     nav+=`<a href="#" class="${g===cur?'active':''}" data-nav="${keys[0]}" data-label="${name}" title="${name}" style="justify-content:center;padding:11px 0">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${NAVICON[ic]}</svg>
       <span style="display:none">${name}</span></a>`;
@@ -5966,7 +5975,7 @@ function dashboardView(){
           ${culturePanel()}
         </div>
         <div class="col-rail">
-          ${candidatePanel()}
+          ${isReadOnly()?'':candidatePanel()}
           ${newsPanel(3)}
         </div>
       </div>
@@ -5985,7 +5994,7 @@ function dashboardView(){
         ${culturePanel()}
       </div>
       <div class="col-rail">
-        ${candidatePanel()}
+        ${isReadOnly()?'':candidatePanel()}
         ${skillsPanel()}
         ${newsPanel(3)}
       </div>
@@ -7521,6 +7530,7 @@ function applyQueueView(){
     <div class="stack">${report}${readyPanel}${skippedPanel}${listPanel}</div>`;
 }
 function viewBody(){
+  if(!navVisible(view)) view='dashboard';
   switch(view){
     case 'queue': return queueView();
     case 'jobs': return jobsView();
@@ -7564,6 +7574,7 @@ function render(){
   initBudget();
   startCountdown();
   scheduleAutoScrape();
+  document.body.classList.toggle('locked', !role);
   if(!role){ openGate(); }
 }
 
@@ -9556,7 +9567,7 @@ function dossierHTML(j){
     ${matchBreakdownBlock(j)}
     ${erauFitBlock(j)}
     ${internPrepBlock(j)}
-    ${essayBlock(j)}
+    ${isReadOnly()?'':essayBlock(j)}
     <div id="airescore-${esc(j.id)}" class="dblock" style="display:none"></div>
     <div id="resumegen-${esc(j.id)}" class="dblock" style="display:none"></div>
     <div id="coverletter-${esc(j.id)}" class="dblock" style="display:none"></div>
@@ -9566,7 +9577,7 @@ function dossierHTML(j){
         <button class="dbtn primary" data-savenote="${esc(j.id)}">Save note</button>
         ${(appHistory()[j.id]||[]).length?`<span class="cad-trail" style="margin-left:auto">${progressTrail(j.id).replace(/^<span[^>]*>|<\/span>$/g,'')}</span>`:''}
       </div></div>`:''}
-    <div class="dblock cp-block" id="cp-block-${esc(j.id)}"><h4>Tailoring Copilot</h4>${copilotHTML(j)}</div>
+    ${isReadOnly()?'':`<div class="dblock cp-block" id="cp-block-${esc(j.id)}"><h4>Tailoring Copilot</h4>${copilotHTML(j)}</div>`}
     ${fullDescriptionBlock(j)}
     ${careerImpactBlock(j)}
     <div class="dgrid2">
@@ -9588,19 +9599,19 @@ function dossierHTML(j){
     ${missionAssuranceBlock(j)}
     <div class="dblock"><h4>✨ Required Technology Competencies</h4>
       <div class="techtags">${(j.tech||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div></div>
-    <div class="dblock"><h4>💬 Personalized Outreach Suite</h4>
-      <div class="outreach"><button data-copy="linkedin" data-copyjob="${esc(j.id)}">🔗 LinkedIn Connection</button><button data-copy="email" data-copyjob="${esc(j.id)}">✉ Cold Email Channel</button><button data-copy="referral" data-copyjob="${esc(j.id)}">🤝 Referral Request</button></div></div>
+    ${isReadOnly()?'':`<div class="dblock"><h4>💬 Personalized Outreach Suite</h4>
+      <div class="outreach"><button data-copy="linkedin" data-copyjob="${esc(j.id)}">🔗 LinkedIn Connection</button><button data-copy="email" data-copyjob="${esc(j.id)}">✉ Cold Email Channel</button><button data-copy="referral" data-copyjob="${esc(j.id)}">🤝 Referral Request</button></div></div>`}
   </div>
   <div class="dactions">
     <a class="apply" href="${esc(j.url||'#')}" target="_blank" rel="noreferrer" title="${esc(applyHint(j))}">${esc(applyLabel(j))} ↗</a>
     <button data-applied="${j.id}" style="${appliedJobs.has(j.id)?'color:var(--good);border-color:rgba(0,230,162,.4);background:rgba(0,230,162,.08)':''}">${appliedJobs.has(j.id)?'✔ Applied':'📌 I Applied'}</button>
-    <button data-airescore="${j.id}" title="Ask Claude to read the full posting vs. your résumé for a semantic fit check">🧠 AI Re-Score</button>
+    ${isReadOnly()?'':`<button data-airescore="${j.id}" title="Ask Claude to read the full posting vs. your résumé for a semantic fit check">🧠 AI Re-Score</button>
     <button data-resumegen="${j.id}" title="Generate a résumé tailored to this posting">📄 Tailored Résumé</button>
-    <button data-coverletter="${j.id}" title="Draft and download a cover letter written for this posting">✉ Cover Letter</button>
+    <button data-coverletter="${j.id}" title="Draft and download a cover letter written for this posting">✉ Cover Letter</button>`}
     <button data-share="${j.id}"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg> Share</button>
     <button data-newwin="${j.id}"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3h7v7M21 3l-9 9M5 5h5M5 5v14h14v-5"/></svg> New window</button>
-    <button data-report="${j.id}" title="Download the whole dossier — score build-up, requirement coverage, essays, outreach drafts, alumni leads, comp breakdown and the posting itself"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> Download match report</button>
-    <button data-notmatch="${j.id}" class="notmatch" title="Remove this role and record why — the ranking learns from it">⊘ Not a match</button>
+    ${isReadOnly()?'':`<button data-report="${j.id}" title="Download the whole dossier — score build-up, requirement coverage, essays, outreach drafts, alumni leads, comp breakdown and the posting itself"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> Download match report</button>
+    <button data-notmatch="${j.id}" class="notmatch" title="Remove this role and record why — the ranking learns from it">⊘ Not a match</button>`}
   </div>`;
 }
 function openDossier(id){
@@ -9746,7 +9757,7 @@ function gateHTML(){
         <div class="vcore">${orbitalLogo(40)}</div>
         <div class="vticks"></div>
       </div>
-      <div class="gsub">The vault that opens the secrets of the universe.<br>Enter your access code to unlock Orbital — or explore read-only as a guest.</div></div>
+      <div class="gsub">The vault that opens the secrets of the universe.<br>Enter your PIN to unlock Orbital.</div></div>
     <div class="gbody">
       <div class="pinwrap" id="pinwrap">
         <div class="pinlabel">◆ Access Code ◆</div>
@@ -9758,9 +9769,7 @@ function gateHTML(){
         <button class="gbtn vaultbtn" id="pinBtn" style="width:100%;font:inherit;font-weight:700;cursor:pointer;color:#04121a;background:linear-gradient(135deg,#37d6e6,#5b8cff);border:0;border-radius:var(--r);padding:13px;box-shadow:0 8px 28px rgba(91,140,255,.4);letter-spacing:.02em">⛒ Unlock the Vault</button>
       </div>
       <div class="gerr" id="gateErr"></div>
-      <div class="gor">or</div>
-      <button class="gbtn ghost" id="guestBtn" style="width:100%;font:inherit;font-weight:600;cursor:pointer;color:#9fb0c9;background:rgba(255,255,255,.04);border:1px solid rgba(120,160,235,.2);border-radius:var(--r);padding:12px">👁&nbsp; Enter as guest · read-only</button>
-      <div class="gatenote">Your 4-digit code unlocks full owner control instantly. Guests can explore everything in read-only mode — saving, data entry &amp; settings stay sealed.</div>
+      <div class="gatenote">Locks again after 90 seconds without activity.</div>
     </div>
   </div></div>`;
 }
@@ -9772,37 +9781,68 @@ function isOwnerEmail(email){
   return !!email && (email===owner || email.endsWith('@lisaney.com'));
 }
 function setRole(r,email){
-  role=r; localStorage.setItem('orbital.role',r);
+  role=r;
   if(email){ userEmail=email; localStorage.setItem('orbital.email',email); }
   closeGate(); render();
   if(r==='owner') pullTracking();   // returning owner on a new device inherits their history
 }
 /* Real Google OAuth via Supabase Auth (production). Falls back to email when
    Supabase isn't connected yet, so the gate always works. */
-function submitPin(){
-  const pin=($('#gatePin')?.value||'').trim();
-  const err=$('#gateErr');
-  if(pin==='1725'){
-    if(err) err.textContent='';
+// Two PINs, checked by fingerprint: the page holds only salted SHA-256 hashes, never the PINs.
+// This is a front-door lock, not real security: a static page can be read by anyone, and a
+// 4-digit PIN can be guessed from its hash offline. Server-side auth (Supabase RLS) is the real fix.
+const PIN_SALT='orbital-vault-2026:';
+const PIN_HASH={owner:'3a8fa7793cca680b63b83e6be960130bae8e8edc7ff1f91f7831a4b93e74edf4', guest:'6d65b2c05bc69be612eb29f938ceca5bab2a7518376cb475706ba6fd3812ecfd'};
+let pinFails=0, pinLockedUntil=0;
+async function pinHash(pin){
+  const buf=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(PIN_SALT+pin));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function submitPin(){
+  const gp=$('#gatePin'), pin=(gp?.value||'').trim(), err=$('#gateErr');
+  const clear=()=>{ if(gp) gp.value=''; document.querySelectorAll('#pinDots i').forEach(d=>d.classList.remove('on')); };
+  if(Date.now()<pinLockedUntil){ if(err) err.textContent=`⛔ Too many tries — wait ${Math.ceil((pinLockedUntil-Date.now())/1000)}s`; clear(); return; }
+  if(pin.length!==4) return;
+  let h=''; try{ h=await pinHash(pin); }catch(e){ if(err) err.textContent='This browser cannot check the PIN (needs HTTPS).'; clear(); return; }
+  const r = h===PIN_HASH.owner ? 'owner' : h===PIN_HASH.guest ? 'guest' : '';
+  if(r){
+    pinFails=0; if(err) err.textContent='';
     const dial=$('#vaultDial'); if(dial) dial.classList.add('unlocked');
-    setTimeout(()=>setRole('owner', OWNER_EMAIL||'lisaney@lisaney.com'),650);
+    lastActive=Date.now();
+    setTimeout(()=>setRole(r, r==='owner' ? (OWNER_EMAIL||'lisaney@lisaney.com') : ''),650);
   } else {
-    if(err) err.textContent='⛔ Access Denied — opening public read-only view…';
+    pinFails++;
+    if(pinFails>=5){ pinLockedUntil=Date.now()+60000; pinFails=0; }
+    if(err) err.textContent = Date.now()<pinLockedUntil ? '⛔ Too many tries — locked for 60 seconds' : '⛔ Access denied';
     const pw=$('#pinwrap'); if(pw){ pw.classList.add('shake'); setTimeout(()=>pw.classList.remove('shake'),450); }
-    const gp=$('#gatePin'); if(gp) gp.value='';
-    document.querySelectorAll('#pinDots i').forEach(d=>d.classList.remove('on'));
-    setTimeout(()=>setRole('guest'),1100);   // fall through to read-only guest view
+    clear();
   }
 }
+// Idle lock: 90 seconds with no activity (or away from the tab) brings the PIN pad back.
+const LOCK_IDLE_MS=90000;
+let lastActive=Date.now();
+['pointerdown','keydown','wheel','touchstart','scroll'].forEach(ev=>addEventListener(ev,()=>{ lastActive=Date.now(); },{passive:true,capture:true}));
+function lockVault(){
+  if(!role) return;
+  role=''; try{ closeModal(); }catch(e){} try{ closeDrawer(); }catch(e){}
+  render();
+}
+setInterval(()=>{ if(role && Date.now()-lastActive>LOCK_IDLE_MS) lockVault(); }, 5000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && role && Date.now()-lastActive>LOCK_IDLE_MS) lockVault(); });
+// Downloads are owner-only. Every download in the app goes through an <a download> placed in
+// the page, so one capturing listener covers them all.
+document.addEventListener('click',e=>{
+  const a=e.target && e.target.closest && e.target.closest('a[download]');
+  if(a && !canDownload()){ e.preventDefault(); e.stopImmediatePropagation(); alert('Downloads need the owner PIN.'); }
+}, true);
 async function checkSession(){
   if(sb && SB_URL && SB_KEY){
     try{
       const {data}=await sb.auth.getSession();
       const u=data&&data.session&&data.session.user;
       if(u&&u.email){
-        const r=isOwnerEmail(u.email)?'owner':'guest';
-        role=r; userEmail=u.email;
-        localStorage.setItem('orbital.role',r); localStorage.setItem('orbital.email',u.email);
+        // A signed-in Google session no longer grants a role: the PIN pad decides access.
+        userEmail=u.email; localStorage.setItem('orbital.email',u.email);
         return true;
       }
     }catch(e){}
@@ -9811,7 +9851,7 @@ async function checkSession(){
 }
 async function signOut(){
   try{ if(sb && SB_URL && SB_KEY) await sb.auth.signOut(); }catch(e){}
-  role=''; localStorage.setItem('orbital.role',''); render();
+  role=''; render();
 }
 
 /* =====================================================================
@@ -10802,7 +10842,6 @@ function wire(){
   // login / logout / guest switch
   const lo=$('#logoutBtn'); if(lo) lo.onclick=()=> role==='owner'?signOut():openGate();
   const gsw=$('#guestSwitch'); if(gsw) gsw.onclick=openGate;
-  const gb=$('#guestBtn'); if(gb) gb.onclick=()=>setRole('guest');
   const pb=$('#pinBtn'); if(pb) pb.onclick=submitPin;
   const gp=$('#gatePin');
   function syncDots(){ const n=(gp&&gp.value||'').length; document.querySelectorAll('#pinDots i').forEach((d,i)=>d.classList.toggle('on',i<n)); }
@@ -10811,7 +10850,6 @@ function wire(){
   function pinClear(){ if(!gp) return; gp.value=''; syncDots(); }
   document.querySelectorAll('#vKeys .vkey').forEach(b=>b.onclick=()=>{ const k=b.dataset.k; if(k==='del')pinBack(); else if(k==='clr')pinClear(); else pinPush(k); });
   const gate=$('#gate'); if(gate){ gate.tabIndex=-1; gate.onkeydown=e=>{ if(/^[0-9]$/.test(e.key)){ e.preventDefault(); pinPush(e.key); } else if(e.key==='Backspace'){ e.preventDefault(); pinBack(); } else if(e.key==='Enter'){ e.preventDefault(); submitPin(); } }; }
-  const gg=$('#guestBtn'); if(gg) gg.onclick=()=>setRole('guest');
   // mobile menu
   const mMenu=$('#mMenu'), side=$('#side'), scrim=$('#scrim');
   if(mMenu) mMenu.onclick=()=>{ side.classList.add('open'); scrim.classList.add('open'); };
@@ -10939,6 +10977,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('#aqCsv')){ exportApplicationsCsv(); return; }
   const sh=e.target.closest('[data-share]'); if(sh && e.target.closest('#modal')){ openShare(sh.dataset.share); }
   const nw=e.target.closest('[data-newwin]'); if(nw){ openNewWindow(nw.dataset.newwin); }
+  if(isReadOnly() && e.target.closest('[data-coverletter],[data-resumegen],[data-airescore],[data-report],[data-copy],[data-essaydl]')){ e.stopPropagation(); return; }
   const cvt=e.target.closest('[data-coverletter]'); if(cvt){ e.stopPropagation(); generateCoverLetter(cvt.dataset.coverletter); }
   const clc=e.target.closest('[data-clcopy]'); if(clc){ e.stopPropagation(); const c=coverLetterCache(clc.dataset.clcopy);
     if(c&&c.text){ try{ navigator.clipboard.writeText(c.text); }catch(_){} clc.textContent='Copied ✓'; setTimeout(()=>clc.textContent='Copy text',1400); } }
@@ -11315,7 +11354,7 @@ function cmdkIndex(q){
   const items=[];
   // views
   NAV.forEach(([label,ic,key])=>{
-    if(key==='settings') return;
+    if(key==='settings' || !navVisible(key)) return;
     const sc=score(label); if(!sc) return;
     items.push({group:'Go to', icon:NAVICON[ic]||ICONS.jobs, label, sub:'view', sc:sc+1, run:()=>{ view=key; render(); }});
   });

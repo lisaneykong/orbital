@@ -12,6 +12,22 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-26 — PIN pad access (two PINs, 90-second idle lock)
+
+- **Gate:** every visit opens the PIN pad. The role is never stored, and a Google session no longer grants one. There
+  are two PINs, checked by salted SHA-256 (`PIN_SALT`, `PIN_HASH` in index.html). Only hashes are in the code, and
+  the PINs were removed from every doc. Owner = full read, write and download. The read-only PIN (role `guest`)
+  hides the Apply group, Outreach, Essays, My Profile, Settings and the dashboard profile card; dossiers lose the
+  outreach templates, tailoring copilot, résumé/cover/AI generators, report download, Applied and Not-a-match.
+  All downloads are blocked by a capturing `a[download]` listener (`canDownload`).
+- **Wrong PINs:** denied (no guest fallback). After 5 misses the pad locks for 60 seconds.
+- **Idle lock:** 90 seconds with no pointer, key, wheel, touch or scroll (or returning to the tab after that)
+  brings the pad back and hides the app (`lockVault`, `body.locked`).
+- setup.html checks the owner hash too. Share links (`#share=`) stay public; they show one posting's public info.
+- **Limits, told to the user:** a static page plus a 4-digit PIN is a front-door lock, not real security. The hash
+  can be brute-forced offline, the owner PIN was public in the repo's git history (it should be changed), and
+  Supabase data is still readable with the public key until RLS is set up.
+
 ## 2026-10-26 — relocation fit
 
 - Lisaney's rules for where to live: near water (a lake counts), a big progressive and diverse metro, not the

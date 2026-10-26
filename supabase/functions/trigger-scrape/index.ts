@@ -13,7 +13,7 @@
 //   1. Install the CLI:            npm i -g supabase
 //   2. Log in and link:            supabase login && supabase link --project-ref <your-ref>
 //   3. Set the three secrets:      supabase secrets set GITHUB_TOKEN=ghp_xxx \
-//                                    GITHUB_REPO=yourname/orbital ORBITAL_PIN=1725
+//                                    GITHUB_REPO=yourname/orbital ORBITAL_PIN=<a PIN of your choice>
 //   4. Deploy:                     supabase functions deploy trigger-scrape
 //
 // The GitHub token needs exactly one permission: Actions -> Read and write, on
