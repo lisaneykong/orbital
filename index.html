@@ -2732,7 +2732,11 @@ function dismissedHighScoresHTML(){
   </div>`;
 }
 function removedRolesPanel(){
-  return dismissedHighScoresHTML()+removedRolesPanelBody();
+  const n=(applyQueue||[]).filter(r=>r.status==='skipped').length;
+  const queueNote=`<div class="dsec"><h4>Skipped in the Apply Queue${n?' · '+n:''}</h4>
+    <p class="subtle" style="margin:0 0 8px;line-height:1.55">Roles skipped from the Apply Queue are listed there, under Skipped, each with a Restore button.</p>
+    <button class="dbtn" data-nav="apply">Open Apply Queue → Skipped</button></div>`;
+  return queueNote+dismissedHighScoresHTML()+removedRolesPanelBody();
 }
 function removedRolesPanelBody(){
   const L=matchLearning();
@@ -7241,6 +7245,10 @@ async function aqSetStatus(jobId, status){
     dismissedJobs.add(jobId); if(r) saveMeta('orbital.dismissedMeta',jobId,{title:r.title,company:r.company});
     localStorage.setItem('orbital.dismissed',JSON.stringify([...dismissedJobs])); pushTracking();
   }
+  if(status==='ready' && dismissedJobs.has(jobId)){
+    dismissedJobs.delete(jobId); saveMeta('orbital.dismissedMeta',jobId,null);
+    localStorage.setItem('orbital.dismissed',JSON.stringify([...dismissedJobs])); clearMatchCache(); pushTracking();
+  }
   refreshContent();
 }
 // One running list: everything marked applied (dashboard or queue), newest first.
@@ -7320,7 +7328,7 @@ function applyQueueView(){
       ${(ck.projects||[]).length?`<div class="subtle" style="font-size:var(--fs-sm)">Projects on the résumé: ${esc(ck.projects.join('; '))}</div>`:''}
       ${warn.map(w=>`<div style="font-size:var(--fs-sm);color:var(--gold)">⚠ ${esc(w)}</div>`).join('')}
       <div style="display:flex;flex-wrap:wrap;gap:8px">
-        <span class="subtle" style="font-size:var(--fs-sm);align-self:center" title="${esc((r.resume_file||'')+(r.cover_file?' · '+r.cover_file:''))}">📎 Résumé &amp; cover letter are attached to the morning email</span>
+        <span class="subtle" style="font-size:var(--fs-sm);align-self:center" title="${esc((r.resume_file||'')+(r.cover_file?' · '+r.cover_file:''))}">📎 Résumé &amp; cover letter: attached to the first morning email after ${r.prepared_at?esc(new Date(r.prepared_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})):'it was prepared'}</span>
         ${r.url?`<a class="dbtn" href="${esc(r.url)}" target="_blank" rel="noopener">Open posting ↗</a>`:''}
         <button class="dbtn" data-aq-open="${esc(r.job_id)}">Dossier</button>
         <span style="flex:1"></span>
@@ -7335,6 +7343,26 @@ function applyQueueView(){
       : ready.length?`<div style="display:flex;flex-direction:column;gap:12px">${ready.map(card).join('')}</div>`
       : `<div class="empty"><div class="big">Queue clear</div><div>${applyQueueLoading?'Loading…':'Nothing waiting. New hot '+APPLY_MIN_MATCH+'%+ roles are prepared at the next morning run.'}</div></div>`}
   </div></div>`;
+  const skipped=q.filter(r=>r.status==='skipped').sort((a,b)=>Date.parse(b.updated_at||b.prepared_at||0)-Date.parse(a.updated_at||a.prepared_at||0));
+  const skipRow=r=>{
+    const gaps=Array.isArray(r.gaps)?r.gaps:[], hard=gaps.filter(g=>g.level==='hard');
+    const stop=hard.find(g=>/^don.t apply/i.test(g.note||''));
+    const why=stop?stop.note:hard.length?hard.length+' hard gap'+(hard.length>1?'s':'')+': '+(hard[0].note||''):'No hard gaps flagged';
+    return `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line)">
+      <div style="flex:1;min-width:220px"><b>${esc(r.title)}</b> <span class="subtle">· ${esc(r.company)}${r.location?' · '+esc(r.location):''}</span>
+        <div class="subtle" style="font-size:var(--fs-sm);margin-top:3px;color:${stop?'var(--bad)':hard.length?'var(--gold)':'var(--good)'}">${esc(why.length>150?why.slice(0,150)+'…':why)}</div></div>
+      <span class="chip" style="color:${matchColor(r.match||0)};flex:none">${r.match||0}%</span>
+      <div style="display:flex;gap:8px;flex:none">
+        ${r.url?`<a class="dbtn" href="${esc(r.url)}" target="_blank" rel="noopener" style="width:auto">Posting ↗</a>`:''}
+        <button class="dbtn" data-aq-open="${esc(r.job_id)}" style="width:auto">Dossier</button>
+        <button class="dbtn primary" data-aq-st="${esc(r.job_id)}" data-st="ready" style="width:auto">↩ Restore</button>
+      </div>
+    </div>`;
+  };
+  const skippedPanel=skipped.length?`<div class="panel" id="aqSkipped"><div class="ph"><h3>${cic("file")} Skipped</h3><span class="va">${skipped.length}</span></div><div class="pb">
+    <details${skipped.length<=6?' open':''}><summary class="subtle" style="cursor:pointer;font-size:var(--fs-md)">Roles you skipped. Restore puts a role back in Ready to apply and back on your job lists; its tailored files stay as they were.</summary>
+      <div style="margin-top:8px">${skipped.map(skipRow).join('')}</div></details>
+  </div></div>`:'';
   const apps=applicationsList();
   const fmt=t=>t?new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
   const listPanel=`<div class="panel"><div class="ph"><h3>${cic("target")} All applications</h3><span class="va" style="display:flex;gap:8px;align-items:center">${apps.length}<button class="dbtn" id="aqCsv" ${apps.length?'':'disabled'}>Export CSV</button></span></div><div class="pb" style="overflow-x:auto">
@@ -7350,7 +7378,7 @@ function applyQueueView(){
       : `<div class="empty"><div class="big">No applications yet</div><div>Roles you mark applied here or in any job's dossier are listed here.</div></div>`}
   </div></div>`;
   return `${guestStrip()}${viewHead('Apply Queue','Prepared every morning for hot roles at '+APPLY_MIN_MATCH+'%+ match · you review and apply','Auto-prepare')}
-    <div class="stack">${report}${readyPanel}${listPanel}</div>`;
+    <div class="stack">${report}${readyPanel}${skippedPanel}${listPanel}</div>`;
 }
 function viewBody(){
   switch(view){
