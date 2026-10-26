@@ -518,6 +518,8 @@ a{color:inherit;text-decoration:none}
 .heatmapbox .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.78) contrast(.92) saturate(.55)}
 .heatmapbox .leaflet-control-attribution{background:rgba(11,15,23,.75);color:#8fa0b8;font-size:10px}
 .heatmapbox .leaflet-control-attribution a{color:#9fc0ff}
+.herocredit{position:absolute;right:12px;bottom:8px;z-index:3;font-size:10px;color:rgba(255,255,255,.55);text-decoration:none;background:rgba(0,0,0,.25);padding:2px 7px;border-radius:999px}
+.herocredit:hover{color:#fff}
 .hmtop{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;font-size:var(--fs-sm)}
 .hmchip{font:inherit;font-size:var(--fs-xs);color:var(--text);background:rgba(120,160,255,.10);border:1px solid rgba(140,180,255,.25);border-radius:999px;padding:4px 10px;cursor:pointer}
 .hmchip b{color:var(--a3);margin-left:4px}
@@ -1864,6 +1866,42 @@ const REGIONS = {
     sub:'Europe, the UK, Japan, India, Australia, Canada, Israel and the Gulf — 60+ operators beyond the US.',
     weather:null,
   },
+  europe:{
+    id:'europe', label:'Europe', short:'Europe', flag:'🇪🇺',
+    a:'#7aa8ff', a2:'#ffd25e', a3:'#bfe3ff',
+    photo:'https://images.unsplash.com/photo-1757755489534-7a2733da54ed?auto=format&fit=crop&w=2000&h=900&q=80',
+    photoCredit:'https://unsplash.com/photos/city-skyline-with-snow-capped-mountains-in-the-distance-MrAG_PvHRI8',
+    city:'Europe', tagline:'Alpine peaks, harbor cities, launch pads.',
+    sub:'Munich under the Alps, Toulouse, Bremen, Helsinki, Bristol, London, Paris, Barcelona and Luxembourg — Europe\u2019s space capitals.',
+    weather:null,
+  },
+  canada:{
+    id:'canada', label:'Canada', short:'Canada', flag:'🇨🇦',
+    a:'#ff6b6b', a2:'#ffd9a0', a3:'#9fd8ff',
+    photo:'https://images.unsplash.com/photo-1507992781348-310259076fe0?auto=format&fit=crop&w=2000&h=900&q=80',
+    photoCredit:'https://unsplash.com/photos/toronto-skyline-and-cn-tower-hRg1KL4-AUE',
+    city:'Canada', tagline:'Lake Ontario at golden hour.',
+    sub:'Toronto, Ottawa, Montréal and Vancouver — satellites, robotics and ground systems on the water.',
+    weather:null,
+  },
+  asia:{
+    id:'asia', label:'Asia', short:'Asia', flag:'🌏',
+    a:'#ff8a5c', a2:'#ffcf6e', a3:'#ffb3c7',
+    photo:'https://images.unsplash.com/photo-1782936638284-bb54c7c13ff6?auto=format&fit=crop&w=2000&h=900&q=80',
+    photoCredit:'https://unsplash.com/photos/orange-sunset-over-a-vast-cityscape-with-distant-mount-fuji-KNK25eZZyF0',
+    city:'Asia', tagline:'Mount Fuji over Tokyo at dusk.',
+    sub:'Tokyo, Seoul, Singapore, Taipei and India\u2019s space hubs — lunar landers, SAR constellations and launchers.',
+    weather:null,
+  },
+  oceania:{
+    id:'oceania', label:'Australia', short:'Australia', flag:'🇦🇺',
+    a:'#2fd8ff', a2:'#ffe08a', a3:'#9dffcf',
+    photo:'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=2000&h=900&q=80',
+    photoCredit:'https://unsplash.com/photos/sydney-opera-house-during-daytime-7Zb7kUyQg1E',
+    city:'Australia', tagline:'Sydney Harbour, bright and blue.',
+    sub:'Sydney, Melbourne, Canberra and Adelaide — Australia\u2019s growing space industry, an ocean away from New Zealand.',
+    weather:null,
+  },
   us:{
     id:'us', label:'United States (other)', short:'US Other', flag:'🇺🇸',
     a:'#5b8fff', a2:'#ff6680', a3:'#a6e4ff',
@@ -1872,7 +1910,10 @@ const REGIONS = {
     weather:null,
   },
 };
-const REGION_ORDER = ['global','seattle','la','nz','us','intl'];
+const REGION_ORDER = ['global','seattle','la','nz','us','europe','canada','asia','oceania','intl'];
+// Europe, Canada, Asia and Australia are views of International: a role keeps region 'intl' and
+// intlZone() says which of them it falls in. International still shows every non-US/NZ role.
+const INTL_ZONES=['europe','canada','asia','oceania'];
 
 // jobs — salary is first-class (salMin/salMax). match >=70 firewall.
 // Real ATS job boards — tokens mirror the VERIFIED roster in companies.json (probed
@@ -2081,8 +2122,12 @@ const JOBS = [];
 const COMPANIES = {};
 const ROLE_DEMAND = {};
 const SKILL_TERMS = ['Program Management','Technical Program Management','Project Management','Systems Engineering','Requirements','Mission Integration','Mission Operations','Payload Integration','Mission Assurance','Risk Management','Schedule','Earned Value','Configuration Management','Supply Chain','Supplier Management','S&OP','Stakeholder Management','Process Improvement','Process Automation','Cost Analysis','Budget','Data Analysis','Python','SQL','Tableau','Power BI','Salesforce','JIRA','MS Project','MBSE','SysML','MATLAB','Contract Negotiation','Regulatory Compliance','Verification'];
+const _skillDemandCache=new Map();   // one entry per region/track/floor/data key
 function liveSkillDemand(){
   if(dataMode!=='live') return [];
+  const raw=liveJobs||[];
+  const key=[region,track,settings.matchFloor,showArchived,raw.length,raw[0]&&raw[0].id,(OWNER.skills||[]).length].join('|');
+  if(_skillDemandCache.has(key)) return _skillDemandCache.get(key);
   const savedCF=companyFilter, savedQ=query; companyFilter=''; query='';
   let rows; try{ rows=jobsForRegion(); } finally { companyFilter=savedCF; query=savedQ; }
   const terms=[...new Set([...SKILL_TERMS, ...((typeof OWNER!=='undefined'&&OWNER.skills)||[])])];
@@ -2091,6 +2136,8 @@ function liveSkillDemand(){
     return [t, rows.filter(j=>re.test(`${j.title||''} ${j.description||''} ${j.requirements||''} ${(j.tech||[]).join(' ')}`)).length];
   }).filter(x=>x[1]>0);
   out.sort((a,b)=>b[1]-a[1]);
+  if(_skillDemandCache.size>40) _skillDemandCache.clear();
+  _skillDemandCache.set(key,out);
   return out;
 }
 // region stat cards — single-user funnel, computed LIVE from the qualifying roles
@@ -2101,7 +2148,7 @@ function statMedian(arr){ if(!arr.length) return 0; const s=[...arr].sort((a,b)=
 // pool (otherwise the Internships card reads 0 whenever Full-time is selected).
 function regionPool(){
   let base = dataMode==='live' ? (liveJobs||[]).map(r=>enhanceMatch(mapLiveJob(r))) : JOBS.map(j=>enhanceMatch(j));
-  let out = base.filter(j=> (j.live || spaceQualifies(j)) && (showArchived||!isArchived(j)) && (region==='global'||j.region===region) && ((j.match||0)>=settings.matchFloor || (j.live && j.type==='Internship')) );
+  let out = base.filter(j=> (j.live || spaceQualifies(j)) && (showArchived||!isArchived(j)) && inRegion(j, region) && ((j.match||0)>=settings.matchFloor || (j.live && j.type==='Internship')) );
   return out; // live + empty → genuinely empty (No Data); never backfill with demo rows
 }
 function statsForRegion(){
@@ -2626,6 +2673,10 @@ const WX_COORDS = {
   la:     {place:'Los Angeles, CA', lat:34.0522, lon:-118.2437},
   nz:     {place:'Auckland, NZ',    lat:-36.8485, lon:174.7633},
   global: {place:'Auckland, NZ',    lat:-36.8485, lon:174.7633},
+  europe: {place:'Munich, DE',      lat:48.1374, lon:11.5755},
+  canada: {place:'Toronto, ON',     lat:43.6532, lon:-79.3832},
+  asia:   {place:'Tokyo, JP',       lat:35.6762, lon:139.6503},
+  oceania:{place:'Sydney, AU',      lat:-33.8688, lon:151.2093},
 };
 let WX_LIVE = {};   // populated by fetchLiveWeather(); no static/dummy fallback values
 function wmoToIconCond(code){
@@ -4387,7 +4438,7 @@ function targetSalary(){ return +localStorage.getItem('orbital.targetGross') || 
 // midpoint of their cost-of-living index in REGIONS ("1.44x – 1.57x" → ×1.505 → $188K).
 const US_COL_STANDARD = 125000;
 const COL_REGIONS = ['seattle','la','us','nz','intl'];
-const REGION_COLOR = {seattle:'#3ecf94', la:'#ff8a5c', us:'#5b8cff', nz:'#c17bff', intl:'#f2c94c'};
+const REGION_COLOR = {seattle:'#3ecf94', la:'#ff8a5c', us:'#5b8cff', nz:'#c17bff', intl:'#f2c94c', europe:'#7aa8ff', canada:'#ff6b6b', asia:'#ff9f5a', oceania:'#2fd8ff'};
 function colStandard(reg){
   if(reg!=='seattle' && reg!=='la') return US_COL_STANDARD;
   const m=((REGIONS[reg]||{}).reloc||{}).col; const k=(m||'').match(/([\d.]+)x\s*[–-]\s*([\d.]+)x/);
@@ -4402,7 +4453,7 @@ function colFoot(){
   if(region==='global') return 'Roles first posted in the last 7 days, colored by region. Dotted lines are each region\u2019s cost-of-living standard: '
     + COL_REGIONS.map(r=>`<b style="color:${REGION_COLOR[r]}">${esc(REGIONS[r].short)} ${k(colStandard(r))}</b>`).join(' \u00b7 ') + '.';
   return `Roles posted in the last ${REGION_CHART_DAYS} days in ${esc(REGIONS[region].short)}. Flames mark the hot ones (posted in the last 7 days), colored by heat: ${heatLegendHTML()}. The dotted line is ${esc(REGIONS[region].short)}\u2019s cost-of-living standard (<b style="color:${REGION_COLOR[region]||'#f5c560'}">${k(colStandard(region))}</b>)`
-    + (region==='seattle'||region==='la' ? ' \u2014 the US $125K scaled by its cost-of-living index.' : ' \u2014 the US standard.');
+    + (region==='seattle'||region==='la' ? ' \u2014 the US $125K scaled by its cost-of-living index.' : ' \u2014 the $125K standard you set for everywhere outside Seattle and LA.');
 }
 /* Credential dates in one place so no prose has to re-type them, and tense is derived
    rather than written. On September 9 2026 the report was crediting the L'SPACE academy
@@ -4559,6 +4610,18 @@ async function initData(){
   // Live only: a failed or missing connection shows an empty board with the reason, never sample rows.
   dataMode = 'live'; liveJobs = liveJobs || [];
 }
+const INTL_ZONE_CACHE=new Map();
+function intlZone(j){
+  if(j.region!=='intl') return null;
+  const key=j.location||''; if(INTL_ZONE_CACHE.has(key)) return INTL_ZONE_CACHE.get(key);
+  const l=key.toLowerCase(); let z=null;
+  if(/canada|ontario|qu[eé]bec|british columbia|alberta|nova scotia|manitoba|toronto|ottawa|montr[eé]al|vancouver|calgary|edmonton|longueuil|mississauga|brampton|markham|winnipeg|halifax|waterloo|saint-hubert|st-hubert|^ca-/.test(l)) z='canada';
+  else if(/australia|sydney|melbourne|canberra|adelaide|brisbane|perth|alice springs|gold coast|hobart|darwin|oc-aus|new south wales|victoria, au|queensland/.test(l)) z='oceania';
+  else if(/japan|tokyo|osaka|kanagawa|yokohama|fukuoka|nagoya|tsukuba|hokkaido|korea|seoul|daejeon|busan|\bindia\b|bengaluru|bangalore|hyderabad|chennai|pune|mumbai|delhi|ahmedabad|thiruvananthapuram|singapore|taiwan|taipei|hsinchu|china|hong kong|vietnam|hanoi|thailand|bangkok|malaysia|kuala lumpur|indonesia|jakarta|philippines|manila|subic|cambodia|phnom penh/.test(l)) z='asia';
+  else if(/united kingdom|\buk\b|england|scotland|wales|ireland|france|germany|deutschland|italy|italia|spain|españa|espana|portugal|netherlands|belgium|luxembourg|switzerland|austria|denmark|sweden|norway|finland|iceland|poland|czech|slovakia|hungary|romania|bulgaria|greece|croatia|slovenia|estonia|latvia|lithuania|london|bristol|stevenage|harwell|guildford|glasgow|edinburgh|toulouse|paris|bordeaux|munich|m[uü]nchen|bremen|berlin|darmstadt|parsdorf|ottobrunn|bavaria|noordwijk|delft|madrid|barcelona|lisbon|lisboa|turin|torino|rome|milan|helsinki|espoo|stockholm|gothenburg|kiruna|oslo|copenhagen|warsaw|prague|athens|vienna|brussels|leuven|liège|zurich|zürich|lausanne|geneva|amsterdam|rotterdam|eindhoven|leiden|the hague|coimbra|porto|sevilla|seville|valencia|bilbao|augsburg|hamburg|frankfurt|cologne|k[oö]ln|stuttgart|dresden|leipzig|friedrichshafen|lyon|marseille|cannes|nice|lille|naples|florence|bologna|genoa|krak[oó]w|gdansk|wroc|bucharest|budapest|sofia|tallinn|riga|vilnius|tartu|reykjavik|lule[aå]|trondheim|troms|andenes|and[oø]ya|^uk-|^gbr|^deu|^fra|^esp|^ita|^nld/.test(l)) z='europe';
+  INTL_ZONE_CACHE.set(key,z); return z;
+}
+function inRegion(j, r){ return r==='global' || j.region===r || (INTL_ZONES.includes(r) && intlZone(j)===r); }
 function jobsForRegion(){
   // sample mode → curated JOBS; live mode → map supabase rows
   let base;
@@ -4570,7 +4633,7 @@ function jobsForRegion(){
   const out = base.filter(j=>{
     if(!j.live && !spaceQualifies(j)) return false;   // sample rows: client gate; live rows: already server-gated
     if(!showArchived && isArchived(j)) return false;   // hide roles past the live window (45d; internships 270d)
-    if(region!=='global' && j.region!==region) return false;
+    if(!inRegion(j, region)) return false;
     if(track==='intern' && j.type!=='Internship') return false;
     if(track==='fulltime' && j.type==='Internship') return false;
     if(track==='earlycareer' && !isEarlyCareer(j)) return false;
@@ -4995,11 +5058,11 @@ function hero(){
         ${heroHUD()}
       </div>${heroStatusStrip()}</div>`;
   }
-  const heroBg = {seattle:'linear-gradient(120deg,#0a2a3a,#0c1626)', la:'linear-gradient(120deg,#3a1526,#1a0e18)', nz:'linear-gradient(120deg,#0f2a24,#0a1620)', global:'linear-gradient(120deg,#10204a,#0a0e1c)'}[region]||'#0a0e1c';
+  const heroBg = {seattle:'linear-gradient(120deg,#0a2a3a,#0c1626)', la:'linear-gradient(120deg,#3a1526,#1a0e18)', nz:'linear-gradient(120deg,#0f2a24,#0a1620)', global:'linear-gradient(120deg,#10204a,#0a0e1c)', europe:'linear-gradient(120deg,#1a2a4a,#0a0e1c)', canada:'linear-gradient(120deg,#3a1a1a,#0c1626)', asia:'linear-gradient(120deg,#3a2210,#120c1a)', oceania:'linear-gradient(120deg,#0a2a3a,#0a1620)'}[region]||'#0a0e1c';
   const greet = region==='nz'
     ? `<h1 class="greet">Kia ora, ${esc(ownerFirstName())} <span style="font-size:var(--fs-d3)">👋</span></h1>`
     : `<div class="eyebrow">◂ ${esc(R.city)} · Sector Lock ▸</div><h1>${esc(R.tagline||R.city)}</h1>`;
-  return `<div class="hero">${heroFX()}<div class="bg" style="background:${heroBg};background-image:url('${R.photo}');background-size:cover;background-position:center"></div>
+  return `<div class="hero">${heroFX()}<div class="bg" style="background:${heroBg};background-image:url('${R.photo}');background-size:cover;background-position:center"></div>${R.photoCredit?`<a class="herocredit" href="${R.photoCredit}" target="_blank" rel="noreferrer">Photo: Unsplash</a>`:''}
     <div class="ov" style="background:linear-gradient(100deg,rgba(18,28,45,.34) 20%,rgba(18,28,45,.05) 58%,transparent 82%),linear-gradient(180deg,transparent,rgba(18,28,45,.18))"></div>
     <div class="inner">
       <div class="hero-lead">${greet}<div class="sub">${esc(R.sub)}</div><div class="clock" id="clock"></div></div>
@@ -5473,7 +5536,7 @@ function jobListPanel(jobs, title, opts={}){
 const listFilters = { region:'all', type:'all', reloc:'all', place:'all', sort:'match', q:'', itar:'all', clearance:'all', track:'all', company:'all' };
 function applyListFilters(jobs){
   let a=jobs.filter(j=>{
-    if(region==='global' && listFilters.region!=='all' && j.region!==listFilters.region) return false;
+    if(region==='global' && listFilters.region!=='all' && !inRegion(j, listFilters.region)) return false;
     if(listFilters.company!=='all' && (j.company||'')!==listFilters.company) return false;
     if(listFilters.type==='Full' && j.type==='Internship') return false;
     if(listFilters.type==='Internship' && j.type!=='Internship') return false;
@@ -6161,9 +6224,12 @@ function poolAll(){ return (typeof liveJobs!=='undefined' && dataMode==='live') 
    thousands of times per render. */
 let _coIndex=null, _coIndexKey='';
 function companyIndex(){
-  const pool=poolAll();
-  const key=dataMode+':'+pool.length+':'+(pool[0]&&pool[0].id||'');
+  // The cache key reads the raw rows: building poolAll() just to compare keys re-mapped every
+  // row (~18 ms), and the company dropdown asks once per company — ~2 s per render at 100+.
+  const raw=(typeof liveJobs!=='undefined' && dataMode==='live') ? (liveJobs||[]) : JOBS;
+  const key=dataMode+':'+raw.length+':'+(raw[0]&&raw[0].id||'')+':'+(raw[raw.length-1]&&raw[raw.length-1].id||'');
   if(_coIndex && _coIndexKey===key) return _coIndex;
+  const pool=poolAll();
   const map=new Map();
   pool.forEach(j=>{
     const name=(j.company||'').trim(); if(!name) return;
@@ -7711,6 +7777,10 @@ const MAP_VIEW={
   la:{label:'California',        bounds:[[32.4,-124.5],[42.1,-114.1]], radius:18, local:true, h:600},
   nz:{label:'New Zealand',       bounds:[[-47.4,166.3],[-34.3,178.7]], radius:20, local:true, h:560},
   us:{label:'United States',     bounds:[[24.3,-125],[49.5,-66.9]], radius:15, local:true},
+  europe:{label:'Europe',         bounds:[[36,-11],[66,32]], radius:16, local:true, h:520},
+  canada:{label:'Canada',         bounds:[[42,-128],[56,-60]], radius:16, local:true},
+  asia:{label:'Asia',             bounds:[[-2,68],[46,146]], radius:16, local:true, h:500},
+  oceania:{label:'Australia',     bounds:[[-44,112],[-10,155]], radius:18, local:true, h:500},
   intl:{label:'World',           bounds:[[-48,-160],[68,175]], radius:14},
 };
 const GEO_COUNTRY={'united states':'US','united states of america':'US','usa':'US','us':'US','u s':'US','america':'US',
@@ -7944,7 +8014,7 @@ function startClock(){
 let cdTimer;
 // Live "Next Launch" via Launch Library 2 (thespacedevs.com) — free, keyless, real upcoming
 // launch data. Cached per-region like the weather panel; no fabricated countdown target.
-const LAUNCH_QUERY = { seattle:'Blue Origin', la:'Vandenberg', nz:'Rocket Lab', global:'Falcon 9' };
+const LAUNCH_QUERY = { seattle:'Blue Origin', la:'Vandenberg', nz:'Rocket Lab', global:'Falcon 9', europe:'Ariane', asia:'H3', oceania:'Electron' };
 let MISSIONS_LIVE = {};
 async function fetchLiveLaunch(r){
   const q = LAUNCH_QUERY[r] || LAUNCH_QUERY.global;

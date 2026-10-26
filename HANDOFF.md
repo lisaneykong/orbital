@@ -12,6 +12,18 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-26 — new region tabs, render speed
+
+- **Four new tabs:** Europe, Canada, Asia and Australia (`REGIONS`, `REGION_ORDER`), each with a scenic header
+  photo hot-linked from Unsplash (free Unsplash License, credited with a "Photo: Unsplash" link): Munich under the
+  Alps, Toronto across Lake Ontario, Tokyo with Mount Fuji, Sydney Harbour. They are views of International: a role
+  keeps `region:'intl'` and `intlZone()` places it, and `inRegion()` is used by `jobsForRegion`, `regionPool` (stat
+  cards) and the list filter. Each tab has its own heat-map view, hero colors, live weather city and launch query.
+  Roles in none of the four (Gulf, Latin America, Africa) appear only under International.
+- **Speed:** tab switches took 2–6.6 s. `companyIndex()` rebuilt the whole pool just to compare its cache key, once
+  per company in the dropdown (~1.9 s); it now keys off the raw rows. `liveSkillDemand()` re-scanned every description
+  on every render (~1.3 s on Global); it is now cached per region, track, floor and data. Switches now take 0.3–1.8 s.
+
 ## 2026-10-26 — PIN pad access (two PINs, 90-second idle lock)
 
 - **Gate:** every visit opens the PIN pad. The role is never stored, and a Google session no longer grants one. There
