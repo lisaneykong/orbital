@@ -55,8 +55,9 @@ Rejected:
 - ArkEdge (Japanese-only HERP board).
 - Most of Australia, which posts on in-house pages.
 
-**Run time:** the four new Workday boards add ~8 min of serial work, about one extra minute with 8 workers. A
-healthy run stays near 11 min, against the 25-min timeout.
+**Run time:** the four new Workday boards add ~8 min of serial work, about one extra minute with 8 workers. Today's
+run (2026-10-26, before these boards) took 14 min; expect ~15–16 min, against the 25-min timeout. The new boards
+first appear in the 2026-10-27 run.
 
 **Diagnose after the change:** 141 of 146 boards listed postings. The 5 misses were transient: Workable rate
 limits (429) during the burst, and Anduril, Loft Orbital and Booz Allen, which all answered on a recheck minutes
