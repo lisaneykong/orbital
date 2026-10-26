@@ -12,6 +12,29 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-26 — relocation fit
+
+- Lisaney's rules for where to live: near water (a lake counts), a big progressive and diverse metro, not the
+  South, cool or dry with snow nearby, a house with a yard for 3–4 beagles, and a strong field. They are encoded as
+  `RELOC_RULES` (first match wins) with tiers in `RELOC_TIER`: Great +6, Good +2, Check closely −3, Avoid −12.
+  This replaces the old Deep South −10 and the flat +5 for Seattle/LA/NZ (`DEEP_SOUTH_RE` removed). Places with
+  no rule (Rochester, New Jersey, Ohio, Honolulu…) are not rated. Tiers were agreed with the user on 2026-10-26 and
+  include Europe and Asia.
+- **Great:** Seattle–Tacoma, LA/Long Beach/South Bay, San Diego, SF Bay Area, New Zealand, Munich, Helsinki/Espoo,
+  Toronto, Berlin, Bristol.
+- **Good:** Portland, Boston, Chicago, Denver–Boulder, eastern Washington, London/SE England, Barcelona, Paris,
+  Luxembourg, Toulouse, Ottawa, Melbourne, Sydney, Canberra.
+- **Check closely:** DC/NoVA/MD, Salt Lake City, Colorado Springs, the Antelope Valley high desert, New Mexico, East
+  and South Asia.
+- **Avoid:** the South (incl. the Carolinas, Tennessee, Oklahoma), Texas, Florida, Arizona, the Gulf states.
+- **Where it shows:** a chip on every job row, table row and dossier, plus a line in the match breakdown, a "Where"
+  filter on the Jobs page (Anywhere / Places I'd live / Great fit only), a "Places I'd live" option in the
+  dashboard lists, and an "Only places I'd live" toggle on the heat maps. Dash-coded sites ("US-TX-MCKINNEY-…") are
+  read as "city, state".
+- `matchRules` is bumped to `fit-2026-10-26-reloc`, so cached scores rebuild.
+- **Fixed (older bug):** `findJobById` returned an unscored live row, so dossiers showed no match breakdown or
+  flags, and could show a different match % than the lists. It now runs `enhanceMatch` (cached).
+
 ## 2026-10-26 — job heat maps
 
 - Every tab's dashboard has a "Where the jobs are" heat map (`heatMapPanel`, `drawHeatMap`): Global and

@@ -1778,6 +1778,7 @@ let query = '';
 let companyFilter = '';     // click a bar → filter to this company
 let favOnly = false;        // Favorites filter
 let expFilter = '';         // '' | early | mid | senior — real title-based seniority filter
+let placeFilter = '';       // '' = anywhere · 'live' = Great/Good relocation fit · 'great' = Great only
 let salFilter = 0;          // minimum salary floor (0 = any) — real salaryValue() filter
 let sortMode = 'priority';  // priority | erau | match | salary | newest — Jobs view sort
 let internVertical = '';    // '' | gnc | ground | mission — internship domain vertical (guide §4)
@@ -2325,7 +2326,75 @@ const TARGET_TITLE_RE=/\b(program manager|technical program|tpm|systems engineer
 const MANAGER_TITLE_RE=/\b(program manager|project manager|technical program|tpm|program coordinator|project coordinator|mission manager)\b/i;
 const HANDS_ON_RE=/\b(gnc|guidance|navigation and control|propulsion|avionics|thermal|structures?|structural|stress|aerodynamic(s)?|flight software|software engineer|software developer|firmware|fpga|embedded|rf engineer|electrical engineer|mechanical engineer|design engineer|test engineer|manufacturing engineer|data scientist|machinist|technician)\b/i;
 const WRONG_FN_RE=/\b(sales|account executive|account manager|business development|bdr|sdr|recruit(er|ing)|talent acquisition|human resources|hr (business partner|generalist|manager)|people (partner|operations)|accountant|accounting|financial analyst|fp&a|tax|payroll|marketing|legal counsel|attorney|paralegal)\b/i;
-const DEEP_SOUTH_RE=/\b(alabama|mississippi|louisiana|georgia|south carolina|arkansas|tennessee|huntsville|birmingham|baton rouge|new orleans|atlanta|savannah|charleston|nashville|memphis|knoxville|chattanooga|little rock)\b|,\s*(AL|MS|GA|SC|AR|TN)\b/;
+/* RELOCATION FIT — Lisaney's own rules for where to live (Oct 2026): near water (ocean, or a lake
+   counts), a major progressive and diverse metro, not the South, cool or dry climate with snow
+   within reach, a house with a yard for 3-4 beagles, and a strong job market in the field. The
+   tiers are Orbital's read of each place against those rules, agreed with Lisaney on 2026-10-26.
+   First rule that matches wins; a place with no rule is not rated (no bonus, no penalty). */
+const RELOC_TIER={
+  great:{label:'Great fit',     c:'#37e0a0', adj:6},
+  good: {label:'Good fit',      c:'#5ec8ff', adj:2},
+  check:{label:'Check closely', c:'#f5c560', adj:-3},
+  avoid:{label:'Avoid',         c:'#ff6f86', adj:-12},
+};
+const RELOC_RULES=[
+  // Washington: the region is resolved by hubToRegion, so "Kent, OH" never lands here.
+  {name:'Eastern Washington', tier:'good', test:(j,l)=>j.region==='seattle' && /spokane|richland|kennewick|pasco|yakima|wenatchee|walla walla|moses lake|ellensburg/.test(l)},
+  {name:'Seattle–Tacoma', tier:'great', test:j=>j.region==='seattle'},
+  {name:'Antelope Valley high desert', tier:'check', re:/palmdale|lancaster,?\s*(ca|california)|mojave|edwards/},
+  {name:'San Diego', tier:'great', re:/san diego|carlsbad|oceanside|chula vista|poway|escondido|la jolla|san marcos,?\s*(ca|california)/},
+  {name:'SF Bay Area', tier:'great', re:/san francisco|bay area|oakland|san jose|palo alto|mountain view|sunnyvale|berkeley|redwood city|menlo park|santa clara|fremont|hayward|milpitas|cupertino|san mateo|south san francisco|emeryville|alameda|pleasanton|livermore|san carlos|foster city|burlingame/},
+  {name:'LA / Long Beach / South Bay', tier:'great', test:j=>j.region==='la'},
+  {name:'Portland', tier:'good', re:/portland,?\s*(or|oregon)|beaverton|hillsboro,?\s*(or|oregon)/},
+  {name:'Boston', tier:'good', re:/boston|cambridge,?\s*(ma|massachusetts)|woburn|lowell|burlington,?\s*(ma|massachusetts)|bedford,?\s*(ma|massachusetts)|lexington,?\s*(ma|massachusetts)|waltham|quincy,?\s*(ma|massachusetts)|andover|tewksbury|marlborough|chelmsford|billerica|natick|hanscom|massachusetts|,\s*ma\b/},
+  {name:'Chicago', tier:'good', re:/chicago|evanston|naperville|schaumburg|oak brook|rolling meadows|arlington heights|elk grove|hoffman estates|des plaines|illinois|,\s*il\b/},
+  {name:'Colorado Springs', tier:'check', re:/colorado springs|peterson sfb|schriever/},
+  {name:'Denver–Boulder', tier:'good', re:/denver|boulder|aurora,?\s*(co|colorado)|centennial|littleton|lakewood,?\s*(co|colorado)|englewood,?\s*(co|colorado)|louisville,?\s*(co|colorado)|broomfield|longmont|golden,?\s*(co|colorado)|westminster,?\s*(co|colorado)|fort collins|buckley|lafayette,?\s*(co|colorado)|colorado|,\s*co\b/},
+  {name:'DC / Northern Virginia / Maryland', tier:'check', re:/washington,?\s*d\.?\s*c|district of columbia|arlington,?\s*(va|virginia)|reston|chantilly|herndon|dulles|mclean|fairfax|springfield,?\s*(va|virginia)|alexandria,?\s*(va|virginia)|tysons|northern va|columbia,?\s*(md|maryland)|annapolis|laurel,?\s*(md|maryland)|greenbelt|bethesda|rockville|gaithersburg|beltsville|national harbor|virginia|maryland|,\s*(va|md)\b/},
+  {name:'Salt Lake City / Utah', tier:'check', re:/salt lake|ogden|layton|provo|lehi|draper|sandy,?\s*(ut|utah)|corinne|utah|,\s*ut\b/},
+  {name:'New Mexico desert', tier:'check', re:/albuquerque|white sands|las cruces|truth or consequences|kirtland|new mexico|,\s*nm\b/},
+  {name:'the South (hot, humid, Bible Belt)', tier:'avoid', re:/alabama|mississippi|louisiana|georgia|south carolina|north carolina|arkansas|tennessee|kentucky|oklahoma|huntsville|birmingham|baton rouge|new orleans|atlanta|savannah|charleston|nashville|memphis|knoxville|chattanooga|little rock|tulsa|oklahoma city|charlotte|raleigh|,\s*(al|ms|ga|sc|nc|ar|tn|ky|ok|la)\b/},
+  {name:'Texas', tier:'avoid', re:/texas|houston|austin|dallas|san antonio|fort worth|el paso|starbase|mcgregor|van horn|webster,?\s*tx|,\s*tx\b/},
+  {name:'Florida', tier:'avoid', re:/florida|space coast|cape canaveral|kennedy space center|titusville|merritt island|melbourne,?\s*(fl|florida)|orlando|tampa|jacksonville|miami|,\s*fl\b/},
+  {name:'Arizona desert', tier:'avoid', re:/arizona|tucson|phoenix|chandler|mesa,?\s*(az|arizona)|tempe|scottsdale|gilbert|,\s*az\b/},
+  // International
+  {name:'New Zealand', tier:'great', test:j=>j.region==='nz'},
+  {name:'Munich / Bavaria', tier:'great', re:/munich|m[uü]nchen|parsdorf|ottobrunn|oberpfaffenhofen|taufkirchen|bavaria|bayern/},
+  {name:'Helsinki / Espoo', tier:'great', re:/helsinki|espoo|finland/},
+  {name:'Toronto', tier:'great', re:/toronto|mississauga|markham|brampton/},
+  {name:'Berlin', tier:'great', re:/berlin/},
+  {name:'Bristol', tier:'great', re:/bristol|filton/},
+  {name:'London & South East England', tier:'good', re:/london|stevenage|harwell|guildford|leatherhead|surrey|farnborough|oxford|reading,?\s*(uk|united kingdom)|portsmouth|cambridge,?\s*(uk|united kingdom)|united kingdom|england|,\s*uk\b/},
+  {name:'Barcelona', tier:'good', re:/barcelona/},
+  {name:'Paris', tier:'good', re:/paris|les mureaux|massy|[eé]lancourt|v[eé]lizy/},
+  {name:'Luxembourg', tier:'good', re:/luxembourg/},
+  {name:'Toulouse', tier:'good', re:/toulouse/},
+  {name:'Ottawa', tier:'good', re:/ottawa/},
+  {name:'Melbourne', tier:'good', re:/melbourne,?\s*(vic|victoria|australia)|melbourne$/},
+  {name:'Sydney', tier:'good', re:/sydney/},
+  {name:'Canberra', tier:'good', re:/canberra/},
+  {name:'East and South Asia', tier:'check', re:/tokyo|japan|seoul|korea|bengaluru|bangalore|hyderabad|chennai|pune|\bindia\b|singapore|taipei|taiwan/},
+  {name:'Gulf states / desert', tier:'avoid', re:/abu dhabi|dubai|united arab emirates|\buae\b|saudi|riyadh|khobar|jeddah|qatar|doha|alice springs/},
+];
+const RELOC_CACHE=new Map();
+function relocationFit(j){
+  const key=(j.region||'')+'|'+(j.location||'');
+  if(RELOC_CACHE.has(key)) return RELOC_CACHE.get(key);
+  // Dash-coded sites read as "city, state": "US-TX-MCKINNEY-513WD ~ …" → "mckinney, tx",
+  // "United States-Illinois-Rolling Meadows" → "rolling meadows, illinois".
+  let l=String(j.location||'').toLowerCase().split('~')[0].trim();
+  const dm=l.match(/^(?:us|usa|united states)\s*-\s*([a-z .]+?)\s*-\s*([a-z .']+)/);
+  if(dm) l=dm[2].trim()+', '+dm[1].trim();
+  let hit=null;
+  for(const r of RELOC_RULES){ if(r.test ? r.test(j,l) : r.re.test(l)){ hit={tier:r.tier, name:r.name, ...RELOC_TIER[r.tier]}; break; } }
+  RELOC_CACHE.set(key, hit); return hit;
+}
+function relocFitChip(j){
+  const f=relocationFit(j); if(!f) return '';
+  return `<span class="chip relocfit" style="color:${f.c};border-color:${f.c}66;background:${f.c}14" title="Relocation fit: ${esc(f.label)} — ${esc(f.name)}, judged against your rules (water, big progressive diverse metro, not the South, cool/dry with snow nearby, room for the beagles)">${f.tier==='great'?'🏡':f.tier==='good'?'🙂':f.tier==='check'?'🔎':'⛔'} ${esc(f.label)}</span>`;
+}
+// Places I'd live = Great or Good fit.
+function livesHere(j){ const f=relocationFit(j); return !!f && (f.tier==='great'||f.tier==='good'); }
 function fitRules(j, text){
   const title=j.title||'', out={adj:0, flags:[], bd:{}};
   const add=(k,v,flag)=>{ out.adj+=v; out.bd[k]=v; if(flag) out.flags.push(flag); };
@@ -2354,8 +2423,8 @@ function fitRules(j, text){
   // non-hands-on role mentions CAD/PLM tooling. Hands-on CAD roles keep their penalty above.
   if(/\b(siemens nx|nx cad|unigraphics|teamcenter|cad|plm|product lifecycle management)\b/i.test(text) && !out.bd.handsOnPenalty) add('nxCadBonus', 3);
   const loc=j.location||'';
-  if(j.region!=='la' && (DEEP_SOUTH_RE.test(loc) || /,\s*LA\b/.test(loc) && !/los angeles/i.test(loc))) add('locationPenalty', -10, 'Deep South location');
-  else if(['seattle','la','nz'].includes(j.region)) add('targetRegionBonus', 5);
+  { const rf=relocationFit(j);
+    if(rf) add('relocationFit', rf.adj, rf.tier==='avoid'||rf.tier==='check' ? `${rf.label}: ${rf.name}` : ''); }
   return out;
 }
 function seniorityOf(title){
@@ -2454,7 +2523,7 @@ function erauChips(j){
 function _loadMatchCache(){ try{ const raw=JSON.parse(localStorage.getItem('orbital.matchCache')||'{}'); Object.entries(raw).forEach(([id,v])=>_matchCache.set(id,v)); }catch(e){} }
 function _persistMatchCache(){ try{ const obj={}; let n=0; for(const [k,v] of _matchCache){ if(n++>800) break; obj[k]=v; } localStorage.setItem('orbital.matchCache', JSON.stringify(obj)); }catch(e){} }
 const _matchCache=new Map();
-try{ if(localStorage.getItem('orbital.matchRules')!=='fit-2026-09-23c'){ localStorage.removeItem('orbital.matchCache'); localStorage.setItem('orbital.matchRules','fit-2026-09-23c'); } }catch(e){}
+try{ if(localStorage.getItem('orbital.matchRules')!=='fit-2026-10-26-reloc'){ localStorage.removeItem('orbital.matchCache'); localStorage.setItem('orbital.matchRules','fit-2026-10-26-reloc'); } }catch(e){}
 _loadMatchCache();
 function clearMatchCache(){ _matchCache.clear(); localStorage.removeItem('orbital.matchCache'); _corrobMemo=null; }
 /* RÉSUMÉ LIBRARY — every uploaded résumé is scanned and kept (skills only, not the PDF), so
@@ -3117,8 +3186,11 @@ async function runAiReScore(id){
 // Looks up a job by id whether we're in live (Supabase) or sample data mode.
 function findJobById(id){
   if(typeof liveJobs!=='undefined' && dataMode==='live'){
-    // live rows are re-mapped fresh on every lookup, so re-apply pasted text each time
-    return hydratePastedDescs((liveJobs||[]).map(mapLiveJob)).find(x=>x.id===id);
+    // live rows are re-mapped fresh on every lookup, so re-apply pasted text each time, and
+    // score the row the same way the lists do (cached), or a dossier shows no breakdown,
+    // no flags and the scraper's raw match instead of the list's.
+    const j=hydratePastedDescs((liveJobs||[]).map(mapLiveJob)).find(x=>x.id===id);
+    return j ? enhanceMatch(j) : j;
   }
   return JOBS.find(x=>x.id===id);
 }
@@ -4941,6 +5013,10 @@ function filterBar(){
       <option value="100000" ${salFilter===100000?'selected':''}>$100K+</option>
       <option value="150000" ${salFilter===150000?'selected':''}>$150K+</option>
       <option value="200000" ${salFilter===200000?'selected':''}>$200K+</option></select></div>
+    <div class="fsel"><label>Where</label><select id="fPlace">
+      <option value="" ${placeFilter===''?'selected':''}>Anywhere</option>
+      <option value="live" ${placeFilter==='live'?'selected':''}>Places I'd live</option>
+      <option value="great" ${placeFilter==='great'?'selected':''}>Great fit only</option></select></div>
     <div class="fsel"><label>Sort by</label><select id="fSort">
       <option value="hot" ${sortMode==='hot'?'selected':''}>🔥 Hottest — newest + fit + pay</option>
       <option value="priority" ${sortMode==='priority'?'selected':''}>Priority — fit + fresh + degree + pay</option>
@@ -5286,6 +5362,9 @@ function jobListPanel(jobs, title, opts={}){
       <div class="lsel"><select data-lf="reloc">
         <option value="all" ${listFilters.reloc==='all'?'selected':''}>Any relocation</option>
         <option value="yes" ${listFilters.reloc==='yes'?'selected':''}>Relocation offered</option></select></div>
+      <div class="lsel"><select data-lf="place">
+        <option value="all" ${listFilters.place==='all'?'selected':''}>Anywhere</option>
+        <option value="live" ${listFilters.place==='live'?'selected':''}>Places I'd live</option></select></div>
       ${track==='intern' ? `
       <div class="lsel"><select data-lf="itar">
         <option value="all" ${listFilters.itar==='all'?'selected':''}>ITAR: any</option>
@@ -5345,7 +5424,7 @@ function jobListPanel(jobs, title, opts={}){
       <div class="jmain">
         <div class="jtitle">${esc(j.title)} ${settings.hotBadges?tempBadge(j):''}<span class="postedage">${daysLabel(j)}</span></div>
         <div class="jco"><b class="colink" data-company="${esc(j.company)}" title="Company profile — every role, pay band, hiring pattern and alumni lead">${esc(j.company)}</b> · ${esc(j.location)}</div>
-        <div class="jmeta">${internChip}${internMeta}${relocChip}<span class="chip mchip" style="color:${matchColor(j.match)};border-color:${matchColor(j.match)}55">${matchIcon(j.match)} ${j.match}% match</span>${(j.matchFlags&&j.matchFlags.length)?`<span class="chip" style="color:var(--a4);border-color:var(--a4-soft);background:var(--a4-soft)" title="${esc(j.matchFlags.join(', '))}">⚠ ${j.matchFlags.length} flag${j.matchFlags.length>1?'s':''}</span>`:''}${sourceBadge(j)}${roleTagChips(j)}</div>
+        <div class="jmeta">${internChip}${internMeta}${relocFitChip(j)}${relocChip}<span class="chip mchip" style="color:${matchColor(j.match)};border-color:${matchColor(j.match)}55">${matchIcon(j.match)} ${j.match}% match</span>${(j.matchFlags&&j.matchFlags.length)?`<span class="chip" style="color:var(--a4);border-color:var(--a4-soft);background:var(--a4-soft)" title="${esc(j.matchFlags.join(', '))}">⚠ ${j.matchFlags.length} flag${j.matchFlags.length>1?'s':''}</span>`:''}${sourceBadge(j)}${roleTagChips(j)}</div>
       </div>
       <div class="jright">
         <div class="jsalary">${salaryLabel(j)}</div>
@@ -5382,7 +5461,7 @@ function jobListPanel(jobs, title, opts={}){
   return `<div class="panel">${bar}<div class="pb"><div class="joblist">${rows}</div>${more}</div></div>`;
 }
 // inline list-filter state + helpers
-const listFilters = { region:'all', type:'all', reloc:'all', sort:'match', q:'', itar:'all', clearance:'all', track:'all', company:'all' };
+const listFilters = { region:'all', type:'all', reloc:'all', place:'all', sort:'match', q:'', itar:'all', clearance:'all', track:'all', company:'all' };
 function applyListFilters(jobs){
   let a=jobs.filter(j=>{
     if(region==='global' && listFilters.region!=='all' && j.region!==listFilters.region) return false;
@@ -5390,6 +5469,7 @@ function applyListFilters(jobs){
     if(listFilters.type==='Full' && j.type==='Internship') return false;
     if(listFilters.type==='Internship' && j.type!=='Internship') return false;
     if(listFilters.reloc==='yes' && (!j.reloc||j.reloc==='—')) return false;
+    if(listFilters.place==='live' && !livesHere(j)) return false;
     if(j.type==='Internship' && (listFilters.itar!=='all' || listFilters.clearance!=='all' || listFilters.track!=='all')){
       const s=internshipSignals(j);
       if(listFilters.itar==='no' && s.itar) return false;
@@ -5590,6 +5670,8 @@ function applyJobFilters(list){
   return list.filter(j=>{
     if(expFilter && jobSeniorityBand(j)!==expFilter) return false;
     if(salFilter && salaryValue(j) < salFilter) return false;
+    if(placeFilter==='live' && !livesHere(j)) return false;
+    if(placeFilter==='great' && (relocationFit(j)||{}).tier!=='great') return false;
     return true;
   });
 }
@@ -5916,7 +5998,7 @@ function jobTable(jobs){
   return `<div style="overflow-x:auto"><table class="dtable"><thead><tr>
     <th>Role</th><th>Company</th><th>Location</th><th class="r">Salary</th><th class="r">Match</th><th class="r">Reloc</th><th class="r">Save</th>
     </tr></thead><tbody>${jobs.map(j=>`<tr data-job="${j.id}" class="agefade" style="--fade:${ageFade(j)}">
-    <td><div class="ti"><b>${esc(j.title)} ${settings.hotBadges?tempBadge(j,'var(--fs-md)'):''}</b><span>${esc(j.type)} · ${daysLabel(j)}</span></div></td>
+    <td><div class="ti"><b>${esc(j.title)} ${settings.hotBadges?tempBadge(j,'var(--fs-md)'):''}</b><span>${esc(j.type)} · ${daysLabel(j)} ${relocFitChip(j)}</span></div></td>
     <td><div class="co"><div class="lg" style="background:${j.logoBg};${j.logoFg?'color:'+j.logoFg:''}">${esc(j.logo)}</div>${esc(j.company)}</div></td>
     <td style="color:var(--muted)">${esc(j.location)}</td>
     <td class="r salcell">${salaryLabel(j)}</td>
@@ -7739,7 +7821,7 @@ function geoJob(j){
 }
 function heatMapPanel(){
   const V=MAP_VIEW[region]||MAP_VIEW.global;
-  return `<div class="panel"><div class="ph"><h3>${cic("map")} Where the jobs are · ${esc(V.label)}</h3><span class="va" id="hmStat">loading…</span></div>
+  return `<div class="panel"><div class="ph"><h3>${cic("map")} Where the jobs are · ${esc(V.label)}</h3><span class="va" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="hmchip" id="hmLive" aria-pressed="${mapLiveOnly}" style="${mapLiveOnly?'border-color:#37e0a0;color:#37e0a0':''}">${mapLiveOnly?'✓ ':''}Only places I'd live</button><span id="hmStat">loading…</span></span></div>
     <div class="pb"><div id="jobHeatMap" class="heatmapbox" style="--hmh:${V.h||440}px" role="img" aria-label="Heat map of where open roles are concentrated in ${esc(V.label)}"></div>
       <div id="hmTop" class="hmtop"></div>
       <p class="subtle" style="margin:8px 2px 0;font-size:var(--fs-xs)">Brighter = more open roles. Remote and state-only postings have no map point and are left off. Places: GeoNames (CC BY 4.0).</p></div></div>`;
@@ -7748,9 +7830,10 @@ function heatMapPanel(){
 // The Leaflet map lives in its own host element that is moved into the new panel, so tiles are
 // fetched once per tab, not on every render (OpenStreetMap's fair-use policy asks for that).
 // It is rebuilt only when the tab or the job data changes. heatGen drops a stale build.
-let heatHost=null, heatKey='', heatInfo=null, heatGen=0;
+let heatHost=null, heatKey='', heatInfo=null, heatGen=0, mapLiveOnly=false;
 function paintHeatInfo(){
-  const stat=document.getElementById('hmStat'), top=document.getElementById('hmTop');
+  const stat=document.getElementById('hmStat'), top=document.getElementById('hmTop'), lv=document.getElementById('hmLive');
+  if(lv) lv.onclick=()=>{ mapLiveOnly=!mapLiveOnly; render(); };
   if(!heatInfo) return;
   if(stat) stat.textContent=heatInfo.stat;
   if(top){
@@ -7765,8 +7848,8 @@ async function drawHeatMap(){
   catch(e){ const st=document.getElementById('hmStat'); if(st) st.textContent='map unavailable';
     slot.innerHTML=`<div class="empty"><div class="big">Map unavailable</div><div>${esc(e.message)}</div></div>`; return; }
   if(gen!==heatGen || !document.body.contains(slot)) return;   // a newer render took over
-  const V=MAP_VIEW[region]||MAP_VIEW.global, jobs=marketPool();
-  const key=region+'|'+jobs.length+'|'+(Array.isArray(liveJobs)?liveJobs.length:0);
+  const V=MAP_VIEW[region]||MAP_VIEW.global, jobs=marketPool().filter(j=>!mapLiveOnly || livesHere(j));
+  const key=region+'|'+jobs.length+'|'+(Array.isArray(liveJobs)?liveJobs.length:0)+'|'+mapLiveOnly;
   if(heatMap && heatHost && key===heatKey){
     slot.appendChild(heatHost); heatMap.invalidateSize(); paintHeatInfo(); return;
   }
@@ -8195,6 +8278,7 @@ function matchBreakdownBlock(j){
     ${row('Target role type (PM / TPM / Systems Engineering)',bd.targetRoleBonus)}
     ${row('Dealbreaker penalty',bd.dealbreakerPenalty)}
     ${row('Relocation / visa support bonus',bd.relocationBonus)}
+    ${row('Relocation fit (your rules for where to live)',bd.relocationFit)}
     ${row('Learned from your saves/dismissals',bd.learnedNudge)}
     ${flags}
   </div>`;
@@ -9463,7 +9547,7 @@ function dossierHTML(j){
     </div>
     <div class="dco"><b class="colink" data-company="${esc(j.company)}" title="Open ${esc(j.company)}'s company profile">${esc(j.company)}</b> · ${esc(j.location)} · ${esc(R.short)} · <span class="subtle">${daysLabel(j,' days on market')}</span></div>
     <div class="dtagrow"><span class="dsal">${salaryLabel(j)}</span>${settings.planetRanks?planetRow(j.planets):''}<span class="chip">${esc(j.type)}</span><span class="chip reloc">🧳 ${esc(j.reloc)}</span><span class="chip" style="color:${matchColor(j.match)}">Match ${j.match}%</span></div>
-    <div class="dtagrow" style="margin-top:8px">${roleTagChips(j)}</div>
+    <div class="dtagrow" style="margin-top:8px">${relocFitChip(j)}${roleTagChips(j)}</div>
   </div>
   <div class="dbody">
     <div class="dblock"><h4>🛰️ Role Summary</h4><p style="margin:0;font-size:var(--fs-lg);color:#cfdcec;line-height:1.6">${esc(det.summary)}</p></div>
@@ -10313,6 +10397,7 @@ function drawerHTML(){
       <div class="dsec"><h4>Display</h4>
         <div class="swrow"><div class="si"><b>📖 Readable Mode</b><span>Bigger text, higher contrast, no moving backgrounds — for astigmatism/low-vision</span></div><div class="${sw(settings.readableMode)}" data-toggle="readableMode"></div></div>
         <div class="swrow"><div class="si"><b>Planet rankings</b><span>Opportunity quality 0–5 🪐</span></div><div class="${sw(settings.planetRanks)}" data-toggle="planetRanks"></div></div>
+        <div class="swrow"><div class="si"><b>Relocation fit</b><span>Every role is rated against your rules for where to live: near water, a big progressive and diverse metro, not the South, cool or dry with snow nearby, room for 3–4 beagles. 🏡 Great +6 · 🙂 Good +2 · 🔎 Check closely −3 · ⛔ Avoid −12 to the match score. Places with no rule are not rated.</span></div></div>
         <div class="swrow"><div class="si"><b>Listing temperature</b><span>Hot = posted in the last ${HOT_DAYS} days, graded 1–5 flames: ${heatLegendHTML()} · then Warm (≤10d) · Lukewarm (≤30d) · Cold (≤${ROLE_WINDOW_DAYS}d)</span></div><div class="${sw(settings.hotBadges)}" data-toggle="hotBadges"></div></div>
         <div class="swrow"><div class="si"><b>Weather widgets</b><span>Regional climate header</span></div><div class="${sw(settings.weather)}" data-toggle="weather"></div></div>
         <div class="swrow"><div class="si"><b>Relocation dossiers</b><span>Cost, tax, housing sidebar</span></div><div class="${sw(settings.relocation)}" data-toggle="relocation"></div></div>
@@ -10757,6 +10842,7 @@ function rewireContent(){
   // filter-bar controls — like #search, these are recreated on every content refresh
   const fe=$('#fExp'); if(fe) fe.onchange=()=>{ expFilter=fe.value; jobsShown=PAGE_SIZE; refreshContent(); };
   const fsl=$('#fSal'); if(fsl) fsl.onchange=()=>{ salFilter=+fsl.value; jobsShown=PAGE_SIZE; refreshContent(); };
+  const fpl=$('#fPlace'); if(fpl) fpl.onchange=()=>{ placeFilter=fpl.value; jobsShown=PAGE_SIZE; refreshContent(); };
   const fo=$('#fSort'); if(fo) fo.onchange=()=>{ sortMode=fo.value; refreshContent(); };
   // main search box — must be rebound after every content refresh (it gets recreated)
   const gs=$('#search'); if(gs) gs.oninput=e=>{
