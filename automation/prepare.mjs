@@ -4,6 +4,7 @@
 // and a cover letter with the same engine as the dashboard's buttons, and files them in
 // the app_queue table as "ready". It never submits anything: you review and apply.
 import * as docx from 'docx';
+import { loadOrbitalFit, scoreRows } from './fit.mjs';
 import { requireEnv, sbSelect, sbUpsert, loadTracking, loadOrbitalCore, claude, postedMs, daysSince, HOT_DAYS } from './lib.mjs';
 
 requireEnv(['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ANTHROPIC_API_KEY']);
@@ -21,8 +22,14 @@ const queued = new Set(queue.rows.filter(r => !retryable(r)).map(r => r.job_id))
 const tracking = await loadTracking();
 
 const since = new Date(Date.now() - HOT_DAYS * 864e5).toISOString();
-const { rows: jobs } = await sbSelect('jobs',
-  `select=*&timestamp=gte.${since}&match=gte.${MIN_MATCH}&archived=is.false&order=match.desc,timestamp.desc`);
+const { rows: allJobs } = await sbSelect('jobs',
+  `select=*&timestamp=gte.${since}&archived=is.false&order=timestamp.desc`);
+// Select by the dashboard's fit score (fit.mjs), not the scraper's raw keyword match: the raw
+// score sent Director and Avoid-place roles here that the dossier rates as weak fits.
+const fitEngine = loadOrbitalFit(tracking.raw);
+const scored = new Map(scoreRows(fitEngine, allJobs).map(j => [j.id, j.match]));
+const jobs = allJobs.filter(r => scored.get(r.id) >= MIN_MATCH).map(r => ({ ...r, match: scored.get(r.id) }))
+  .sort((a, b) => b.match - a.match);
 
 const todo = jobs.filter(j => !queued.has(j.id) && !tracking.applied.has(j.id) && !tracking.dismissed.has(j.id));
 console.log(`Hot roles (posted ≤${HOT_DAYS}d) at ${MIN_MATCH}%+ match: ${jobs.length}. New to prepare: ${todo.length}. This run prepares up to ${MAX_PER_RUN}.`);

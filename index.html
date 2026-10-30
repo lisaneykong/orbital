@@ -2599,7 +2599,7 @@ function erauChips(j){
 function _loadMatchCache(){ try{ const raw=JSON.parse(localStorage.getItem('orbital.matchCache')||'{}'); Object.entries(raw).forEach(([id,v])=>_matchCache.set(id,v)); }catch(e){} }
 function _persistMatchCache(){ try{ const obj={}; let n=0; for(const [k,v] of _matchCache){ if(n++>800) break; obj[k]=v; } localStorage.setItem('orbital.matchCache', JSON.stringify(obj)); }catch(e){} }
 const _matchCache=new Map();
-try{ if(localStorage.getItem('orbital.matchRules')!=='fit-2026-10-26-reloc'){ localStorage.removeItem('orbital.matchCache'); localStorage.setItem('orbital.matchRules','fit-2026-10-26-reloc'); } }catch(e){}
+try{ if(localStorage.getItem('orbital.matchRules')!=='fit-2026-10-30-penalty-after-cap'){ localStorage.removeItem('orbital.matchCache'); localStorage.setItem('orbital.matchRules','fit-2026-10-30-penalty-after-cap'); } }catch(e){}
 _loadMatchCache();
 function clearMatchCache(){ _matchCache.clear(); localStorage.removeItem('orbital.matchCache'); _corrobMemo=null; }
 /* RÉSUMÉ LIBRARY — every uploaded résumé is scanned and kept (skills only, not the PDF), so
@@ -2687,7 +2687,10 @@ function enhanceMatch(j){
   const erauAdj=Math.round(ef.score*0.12); score+=erauAdj; bd.erauAdj=erauAdj; bd.erauCreds=ef.creds;
   const propAdj = PROPOSAL_RE.test(text) ? 7 : 0;
   if(propAdj){ score+=propAdj; bd.proposalBonus=propAdj; j.proposalFit=true; }
-  const final=Math.max(5,Math.min(100,Math.round(score)));
+  // Penalties apply AFTER the 100 cap. Capping last let headroom swallow them: a role at 109
+  // with an Avoid-place -12 still showed 97%, so a real problem never moved the number.
+  let neg=0; [seniorityAdj, dbPenalty, nudge, rej||0, ...Object.values(fr.bd)].forEach(v=>{ if(typeof v==='number' && v<0) neg+=v; });
+  const final=Math.max(5,Math.min(100, Math.min(100,Math.round(score-neg)) + Math.round(neg)));
   j.match=final; j.matchFlags=flags; j.matchBreakdown=bd;
   _matchCache.set(j.id,{match:final,flags,bd,ef:ef.score,ec:ef.creds});
   if(_matchCache.size % 15 === 0) _persistMatchCache();   // batched write, not on every single job

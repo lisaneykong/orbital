@@ -8,13 +8,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, SITE, requireEnv, sbSelect, sbUpsert, loadTracking, chicagoDate, chicagoLong, chicagoTime,
          HUB_LABEL, HUB_ORDER, postedMs, daysSince, esc } from './lib.mjs';
+import { loadOrbitalFit, scoreRows } from './fit.mjs';
 
 const PREVIEW = process.argv.includes('--preview');
 const FORCE = process.argv.includes('--force');
 requireEnv(['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']);
 const TO = process.env.EMAIL_TO || 'one@lisaney.com';
 const FROM = process.env.EMAIL_FROM || 'Orbital <onboarding@resend.dev>';
-const MAX_ROLES = 40;
 const today = chicagoDate();
 
 // ---- once per day ----
@@ -28,18 +28,25 @@ else if (log.rows.length && !FORCE && !PREVIEW) { console.log(`Today's email (${
 
 // ---- data ----
 const since = new Date(Date.now() - 864e5).toISOString();
-const { rows: fresh } = await sbSelect('jobs',
-  `select=id,company,title,location,location_hub,url,match,timestamp,salary_range,is_intern,type&timestamp=gte.${since}&order=match.desc,timestamp.desc`);
+const { rows: freshRows } = await sbSelect('jobs', `select=*&timestamp=gte.${since}&order=match.desc,timestamp.desc`);
 const { rows: runs } = await sbSelect('scrape_runs', 'select=status,started_at,finished_at,rows_upserted&order=started_at.desc&limit=1', { page: 1, max: 1 });
 const q = await sbSelect('app_queue', 'select=job_id,company,title,location,url,match,posted_at,status,prepared_at,applied_at,gaps,notes');
 const tracking = await loadTracking();
+// Score with the dashboard's own engine (fit.mjs), so the % here is the % the dossier shows.
+// Roles you dismissed or applied to are left out. Hot = heat 4-5 (75%+ fit), Lukewarm = heat 3
+// (55-74%); anything weaker is counted, not listed.
+const fit = loadOrbitalFit(tracking.raw);
+const fresh = scoreRows(fit, freshRows.filter(r => !tracking.dismissed.has(r.id) && !tracking.applied.has(r.id)))
+  .sort((a, b) => b.match - a.match);
+const hot = fresh.filter(j => j.match >= 75), luke = fresh.filter(j => j.match >= 55 && j.match < 75);
+const coldCount = fresh.length - hot.length - luke.length;
 
 const lastRun = runs[0];
 const scrapeOk = lastRun && lastRun.status === 'done' && (lastRun.rows_upserted || 0) > 0
   && chicagoDate(new Date(lastRun.finished_at || lastRun.started_at)) === today;
 const ready = q.rows.filter(r => r.status === 'ready').sort((a, b) => (b.match || 0) - (a.match || 0));
 const readyNew = ready.filter(r => Date.parse(r.prepared_at) >= Date.now() - 864e5);
-const strong = fresh.filter(j => (j.match || 0) >= 75);
+const strong = hot;
 
 // Attach the résumé and cover letter prepared this morning, so applying is: open the
 // email, read the draft, upload it on the posting. Capped to keep the email small.
@@ -91,20 +98,14 @@ const button = (href, label) => `<table role="presentation" cellpadding="0" cell
 const appLink = id => `${SITE}#job=${encodeURIComponent(id)}`;
 const links = items => `<div style="font:600 12px/1.6 ${F};padding-top:5px;">${items.filter(Boolean).map(([href, label]) =>
   `<a href="${esc(href)}" style="color:${C.link};text-decoration:none;">${label}</a>`).join(`<span style="color:${C.soft};"> &nbsp;&middot;&nbsp; </span>`)}</div>`;
-const roleRow = j => {
-  const meta = [j.company, j.location].filter(Boolean).map(esc).join(' &middot; ');
-  const extra = [j.is_intern || j.type === 'Internship' ? 'Internship' : '', j.salary_range ? esc(j.salary_range) : ''].filter(Boolean).join(' &middot; ');
-  return `<tr><td style="padding:14px 0;border-top:1px solid ${C.line};">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td valign="top" style="padding-right:14px;">
-        <a href="${esc(j.url || SITE)}" style="font:700 15px/1.35 ${F};color:${C.ink};text-decoration:none;">${esc(j.title)}</a>
-        <div style="font:13px/1.5 ${F};color:${C.muted};padding-top:3px;">${meta}</div>
-        ${extra ? `<div style="font:12px/1.5 ${F};color:${C.muted};">${extra}</div>` : ''}
-        ${links([[appLink(j.id), 'View in Orbital'], j.url && [j.url, `Apply at ${esc(j.company || 'employer')} &#8599;`]])}
-      </td>
-      <td valign="top" align="right" width="62" style="width:62px;white-space:nowrap;">${pill(j.match || 0)}</td>
-    </tr></table></td></tr>`;
-};
+const flames = n => `<span style="font:14px/1 ${F};letter-spacing:-1px;">${'&#128293;'.repeat(n)}</span>`;
+const RELOC_C = { great: '#0d6b4a', good: '#1f4fa3', check: '#7a4d00', avoid: '#b42318' };
+// Compact on purpose: Gmail clips an email past ~102 KB, and a busy day lists 200+ roles.
+const salTxt = j => j.type === 'Internship' && !j.internRate ? 'pay not posted' : j.salary;
+const flagTxt = j => (j.matchFlags || []).filter(f => !/^(Avoid|Check closely):/.test(f)).join('; ');
+const relocTxt = j => j.reloc ? `<b style="color:${RELOC_C[j.reloc.tier]}">${esc(j.reloc.label)}</b>` : '';
+const roleRow = j => `<tr><td style="padding:9px 0;border-top:1px solid ${C.line};font:13px/1.45 ${F};color:${C.ink}"><b>${j.match}%</b> ${flames(j.heat)} <a href="${esc(appLink(j.id))}" style="color:${C.ink};font-weight:700">${esc(j.title)}</a><br><b style="color:#0d6b4a">${esc(salTxt(j))}</b> &middot; ${esc(j.company)} &middot; ${esc(String(j.location).split("~")[0].slice(0,48))}${j.reloc ? ' &middot; ' + relocTxt(j) : ''}${flagTxt(j) ? `<br><span style="color:${C.hot}">&#9888; ${esc(flagTxt(j))}</span>` : ''}${j.url ? ` &middot; <a href="${esc(j.url)}" style="color:${C.link}">Apply</a>` : ''}</td></tr>`;
+const lukeRow = j => `<tr><td style="padding:6px 0;border-top:1px solid ${C.line};font:12px/1.4 ${F};color:${C.muted}"><b style="color:${C.ink}">${j.match}%</b> <a href="${esc(appLink(j.id))}" style="color:${C.ink}">${esc(j.title)}</a> &middot; <b style="color:#0d6b4a">${esc(salTxt(j))}</b> &middot; ${esc(j.company)} &middot; ${esc(String(j.location).split("~")[0].slice(0,48))}${j.reloc ? ' &middot; ' + relocTxt(j) : ''}</td></tr>`;
 
 // ---- sections ----
 let body = '';
@@ -133,17 +134,14 @@ if (ready.length) {
   body += `<tr><td style="padding:10px 0 0;">${button(SITE + '#view=apply', `Review ${ready.length} in the Apply Queue`)}</td></tr>`;
 }
 
-body += section('New in the last 24 hours', fresh.length
-  ? `${fresh.length} role${fresh.length > 1 ? 's' : ''} first posted by the employer since yesterday morning, highest match first.`
-  : 'No roles were first posted by an employer in the last 24 hours.');
-const shown = fresh.slice(0, MAX_ROLES);
-for (const hub of [...HUB_ORDER, null]) {
-  const group = shown.filter(j => hub ? j.location_hub === hub : !HUB_ORDER.includes(j.location_hub));
-  if (!group.length) continue;
-  body += `<tr><td style="padding:20px 0 6px;font:700 12px/1 ${F};color:${C.ink};">${esc(hub ? HUB_LABEL[hub] : 'Other')} <span style="color:${C.muted};font-weight:400;">&middot; ${group.length}</span></td></tr>`;
-  body += group.map(roleRow).join('');
-}
-if (fresh.length > MAX_ROLES) body += `<tr><td style="padding:14px 0 0;font:14px/1.5 ${F};"><a href="${SITE}" style="color:${C.link};">${fresh.length - MAX_ROLES} more in Orbital &rarr;</a></td></tr>`;
+const group = (title, sub, list, row) => {
+  body += section(title, sub);
+  if (!list.length) { body += `<tr><td style="padding:8px 0;font:13px/1.5 ${F};color:${C.muted};">None today.</td></tr>`; return; }
+  body += list.map(row).join('');
+};
+group(`Hot · ${hot.length}`, 'Posted in the last 24 hours and a 75%+ fit by the same score Orbital shows (4–5 flames).', hot, roleRow);
+group(`Lukewarm · ${luke.length}`, 'Posted in the last 24 hours, 55–74% fit (3 flames). Worth a look.', luke, lukeRow);
+body += `<tr><td style="padding:12px 0 0;font:12px/1.5 ${F};color:${C.muted};">${coldCount} more new role${coldCount === 1 ? '' : 's'} scored under 55% and ${coldCount === 1 ? 'is' : 'are'} not listed${tracking.dismissed.size ? '; roles you skipped or applied to are left out' : ''}. Salaries marked est. are Orbital estimates; the rest are the employer's posted range.</td></tr>`;
 
 body += section('Your applications', appList.length ? '' : 'Nothing marked applied yet. Mark roles applied in Orbital and they are tracked here.');
 if (appList.length) {
@@ -156,9 +154,9 @@ if (appList.length) {
 }
 
 const readyLine = ready.length ? ` · ${ready.length} ready to apply` : '';
-const subject = `Orbital · ${fresh.length} new role${fresh.length === 1 ? '' : 's'}${strong.length ? ` · ${strong.length} at 75%+` : ''}${readyLine}`;
-const top = fresh[0];
-const preheader = top ? `Top match: ${top.title} at ${top.company} (${top.match}%).` : 'No new postings in the last 24 hours.';
+const subject = `Orbital · ${hot.length} hot · ${luke.length} lukewarm${readyLine}`;
+const top = hot[0] || luke[0];
+const preheader = top ? `Top match: ${top.title} at ${top.company} (${top.match}%, ${top.salary}).` : 'No new postings in the last 24 hours.';
 
 const html = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><title>${esc(subject)}</title></head>
@@ -174,7 +172,7 @@ const html = `<!DOCTYPE html>
   </td></tr>
   <tr><td bgcolor="${C.navy2}" style="background:${C.navy2};padding:18px 32px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td width="33%" style="width:33%;"><div style="font:700 26px/1 ${SERIF};color:${C.head};">${fresh.length}</div><div style="font:12px/1.4 ${F};color:${C.soft};padding-top:5px;">new roles</div></td>
+      <td width="33%" style="width:33%;"><div style="font:700 26px/1 ${SERIF};color:${C.head};">${hot.length + luke.length}</div><div style="font:12px/1.4 ${F};color:${C.soft};padding-top:5px;">new roles (55%+ fit)</div></td>
       <td width="33%" style="width:33%;"><div style="font:700 26px/1 ${SERIF};color:${C.head};">${strong.length}</div><div style="font:12px/1.4 ${F};color:${C.soft};padding-top:5px;">at 75%+ match</div></td>
       <td width="34%" style="width:34%;"><div style="font:700 26px/1 ${SERIF};color:${C.head};">${ready.length}</div><div style="font:12px/1.4 ${F};color:${C.soft};padding-top:5px;">ready to apply</div></td>
     </tr></table>
@@ -185,7 +183,7 @@ const html = `<!DOCTYPE html>
     </table>
   </td></tr>
   <tr><td style="padding:18px 32px;font:12px/1.6 ${F};color:${C.muted};text-align:center;">
-    Sent by Orbital to ${esc(TO)} every day at 8:00 AM Central.<br>Match scores come from the scraper. Posting ages use the job board's original posting date.<br>To stop these emails, disable the "Orbital daily email" workflow in GitHub Actions.
+    Sent by Orbital to ${esc(TO)} every day at 8:00 AM Central.<br>Match scores are Orbital's own fit score, the same number the dashboard shows. Posting ages use the job board's original posting date.<br>To stop these emails, disable the "Orbital daily email" workflow in GitHub Actions.
   </td></tr>
 </table>
 <!--[if mso]></td></tr></table><![endif]-->
@@ -194,10 +192,10 @@ const html = `<!DOCTYPE html>
 
 const text = [
   `ORBITAL DAILY BRIEF — ${chicagoLong()}`, '',
-  `${fresh.length} new roles · ${strong.length} at 75%+ · ${ready.length} ready to apply`, '',
+  `${hot.length} hot · ${luke.length} lukewarm · ${ready.length} ready to apply`, '',
   ...(ready.length ? ['READY TO APPLY', ...ready.slice(0, 8).map(r => `- ${r.title} — ${r.company} (${r.match}%)`), `Review: ${SITE}#view=apply`, ''] : []),
-  'NEW IN THE LAST 24 HOURS',
-  ...(fresh.length ? shown.map(j => `- ${j.title} — ${j.company}, ${j.location || ''} (${j.match}%) ${j.url || ''}`) : ['None.']),
+  `HOT (${hot.length})`, ...hot.map(j => `- ${j.title} — ${j.salary} — ${j.match}% — ${j.company}, ${j.location || ''} ${j.url || ''}`),
+  '', `LUKEWARM (${luke.length})`, ...luke.map(j => `- ${j.title} — ${j.salary} — ${j.match}% — ${j.company}, ${j.location || ''} ${j.url || ''}`),
   '', `Applied this week: ${week} · total: ${appList.length} · interviewing: ${interviewing} · offers: ${offers} · follow-ups due: ${followDue.length}`,
   '', SITE,
 ].join('\n');

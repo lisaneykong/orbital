@@ -544,6 +544,25 @@ def estimate_salary(title, hub):
     return lo, hi
 
 
+# Pay-transparency postings print the real range ("$150,000 - $190,000", "$150K–$190K",
+# "USD 150,000 to 190,000"). A posted range beats the estimate; hourly ranges are skipped.
+_PAY_RE = re.compile(
+    r"(?:\$|usd\s?)\s?(\d{2,3}(?:,\d{3})+|\d{2,3}(?:\.\d)?\s?[kK])\s*(?:-|–|—|to)\s*"
+    r"(?:\$|usd\s?)?\s?(\d{2,3}(?:,\d{3})+|\d{2,3}(?:\.\d)?\s?[kK])", re.I)
+
+
+def extract_posted_salary(description):
+    for m in _PAY_RE.finditer(description or ""):
+        vals = []
+        for g in m.groups():
+            g = g.replace(",", "").replace(" ", "")
+            vals.append(int(float(g[:-1]) * 1000) if g[-1] in "kK" else int(g))
+        lo, hi = min(vals), max(vals)
+        if 30000 <= lo <= hi <= 900000 and hi <= lo * 3:
+            return lo, hi
+    return None
+
+
 def slugify(name):
     return re.sub(r"[^a-z0-9]+", "", (name or "").lower())
 
@@ -950,7 +969,8 @@ def build_row(company, ats_id, title, location, url, source, description="", pos
     posted_iso = dt.isoformat() if dt else None
     posting_age = max(0, (datetime.utcnow() - dt).days) if dt else None
 
-    sal_min, sal_max = estimate_salary(title, hub)
+    posted_pay = None if is_intern else extract_posted_salary(description)
+    sal_min, sal_max = posted_pay or estimate_salary(title, hub)
     tech_terms = ["Python", "MATLAB", "Simulink", "AWS", "Azure", "Kubernetes",
                   "SQL", "Salesforce", "Tableau", "Jira", "Confluence", "Terraform"]
     body_l = (title + " " + (description or "")).lower()
@@ -963,7 +983,7 @@ def build_row(company, ats_id, title, location, url, source, description="", pos
         "title": title,
         "location_hub": hub,
         "location": location or hub.replace("_", " ").title(),
-        "salary_range": f"${sal_min:,} - ${sal_max:,} (est.)",
+        "salary_range": f"${sal_min:,} - ${sal_max:,}" + ("" if posted_pay else " (est.)"),
         "salary_min": sal_min,
         "salary_max": sal_max,
         "is_intern": is_intern,

@@ -12,6 +12,22 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-30 — email and auto-prepare use the dashboard's fit score; posted pay
+
+- **New `automation/fit.mjs`** runs index.html's own `enhanceMatch`, `heatLevel`, `salaryLabel` and
+  `relocationFit` in Node against the synced `user_state` tracking. The email and prepare used the scraper's raw
+  `match`, so a role sold as 85% opened in the dossier at 48% (AST SpaceMobile Sr Director: seniority, 15+ years,
+  Avoid Texas).
+- **Daily email:** all roles posted in the last 24 h, minus skipped/applied, in two sections listed in full:
+  Hot (75%+ fit, 4–5 flames) and Lukewarm (55–74%, 3 flames); weaker ones are counted only. Each row leads with
+  match %, flames, title, salary (est. marked), company, location, relocation verdict and flags. Rows are compact
+  because Gmail clips past ~102 KB; a 237-role day still builds to ~138 KB, so Gmail may show "View entire message".
+- **prepare.mjs** selects roles at 75%+ by the same fit score.
+- **enhanceMatch:** penalties now apply after the 100 cap (they used to be absorbed by headroom). Cache key bumped
+  to `fit-2026-10-30-penalty-after-cap`.
+- **Scraper:** `extract_posted_salary()` reads a posted pay range ("$150,000 - $190,000", "$120K–$160K",
+  "USD 98,000 to 140,000") from the description; only rows without one keep the "(est.)" estimate.
+
 ## 2026-10-26 — worldwide metro scan: 28 boards, Teamtailor reader
 
 About 200 space employers in the target metros were probed: Seattle, LA, San Diego, the Bay Area, Portland,
