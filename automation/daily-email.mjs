@@ -140,7 +140,9 @@ const group = (title, sub, list, row) => {
   body += list.map(row).join('');
 };
 group(`Hot · ${hot.length}`, 'Posted in the last 24 hours and a 75%+ fit by the same score Orbital shows (4–5 flames).', hot, roleRow);
-group(`Lukewarm · ${luke.length}`, 'Posted in the last 24 hours, 55–74% fit (3 flames). Worth a look.', luke, lukeRow);
+const LUKE_PREVIEW = 5;
+group(`Lukewarm · ${luke.length}`, `55–74% fit (3 flames). The top ${Math.min(LUKE_PREVIEW, luke.length)} are below; the full list is in Orbital.`, luke.slice(0, LUKE_PREVIEW), lukeRow);
+if (luke.length > LUKE_PREVIEW) body += `<tr><td style="padding:10px 0 0;">${button(SITE, `See all ${luke.length} lukewarm roles in Orbital`)}</td></tr>`;
 body += `<tr><td style="padding:12px 0 0;font:12px/1.5 ${F};color:${C.muted};">${coldCount} more new role${coldCount === 1 ? '' : 's'} scored under 55% and ${coldCount === 1 ? 'is' : 'are'} not listed${tracking.dismissed.size ? '; roles you skipped or applied to are left out' : ''}. Salaries marked est. are Orbital estimates; the rest are the employer's posted range.</td></tr>`;
 
 body += section('Your applications', appList.length ? '' : 'Nothing marked applied yet. Mark roles applied in Orbital and they are tracked here.');
@@ -195,7 +197,7 @@ const text = [
   `${hot.length} hot · ${luke.length} lukewarm · ${ready.length} ready to apply`, '',
   ...(ready.length ? ['READY TO APPLY', ...ready.slice(0, 8).map(r => `- ${r.title} — ${r.company} (${r.match}%)`), `Review: ${SITE}#view=apply`, ''] : []),
   `HOT (${hot.length})`, ...hot.map(j => `- ${j.title} — ${j.salary} — ${j.match}% — ${j.company}, ${j.location || ''} ${j.url || ''}`),
-  '', `LUKEWARM (${luke.length})`, ...luke.map(j => `- ${j.title} — ${j.salary} — ${j.match}% — ${j.company}, ${j.location || ''} ${j.url || ''}`),
+  '', `LUKEWARM (${luke.length}, top 5)`, ...luke.slice(0, 5).map(j => `- ${j.title} — ${j.salary} — ${j.match}% — ${j.company}, ${j.location || ''} ${j.url || ''}`),
   '', `Applied this week: ${week} · total: ${appList.length} · interviewing: ${interviewing} · offers: ${offers} · follow-ups due: ${followDue.length}`,
   '', SITE,
 ].join('\n');
