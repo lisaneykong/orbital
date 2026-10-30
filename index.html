@@ -9885,7 +9885,7 @@ let pendingJob='';   // a #job= deep link waits here until the vault is open
 function setRole(r,email){
   role=r;
   if(email){ userEmail=email; localStorage.setItem('orbital.email',email); }
-  closeGate(); render();
+  closeGate(); render(); paintDbLogin();
   if(r && pendingJob){ const id=pendingJob; pendingJob=''; setTimeout(()=>openDossier(id),150); }
   if(r==='owner') pullTracking();   // returning owner on a new device inherits their history
 }
@@ -9928,7 +9928,7 @@ let lastActive=Date.now();
 function lockVault(){
   if(!role) return;
   role=''; try{ closeModal(); }catch(e){} try{ closeDrawer(); }catch(e){}
-  render();
+  render(); paintDbLogin();
 }
 setInterval(()=>{ if(role && Date.now()-lastActive>LOCK_IDLE_MS) lockVault(); }, 5000);
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden && role && Date.now()-lastActive>LOCK_IDLE_MS) lockVault(); });
@@ -9941,10 +9941,34 @@ document.addEventListener('click',e=>{
 async function emailPassOk(key){
   try{
     if(!sb) return false;
-    const {data}=await sb.from('user_state').select('v').eq('k','emailpass').maybeSingle();
-    const list=(data&&data.v&&data.v.keys)||[]; const h=await pinHash(key);
-    return list.some(x=>x && x.h===h && Date.parse(x.exp)>Date.now());
+    const {data,error}=await sb.rpc('email_pass_ok',{h:await pinHash(key)});
+    return !error && data===true;
   }catch(e){ return false; }
+}
+/* DATABASE SIGN-IN. Row-level security (2026-10-30) lets only the owner's signed-in Supabase
+   account read or write your tracking, profile, résumés and Apply Queue. The PIN guards the
+   screen; this guards the data. Sign-in is a one-time emailed link per device; the device then
+   stays signed in. Job listings stay readable without it. */
+const DB_OWNER_EMAIL='one@lisaney.com';
+let dbSignedIn=false;
+async function refreshDbSession(){
+  try{ const {data}=sb ? await sb.auth.getSession() : {data:null}; const u=data&&data.session&&data.session.user;
+    dbSignedIn=!!(u && (u.email||'').toLowerCase()===DB_OWNER_EMAIL); }catch(e){ dbSignedIn=false; }
+  paintDbLogin(); return dbSignedIn;
+}
+function paintDbLogin(){
+  let el=document.getElementById('dbLogin');
+  const show = role==='owner' && sb && !dbSignedIn;
+  if(!show){ if(el) el.remove(); return; }
+  if(!el){ el=document.createElement('div'); el.id='dbLogin'; document.body.appendChild(el); }
+  el.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;max-width:560px;width:calc(100% - 32px);background:var(--panel);border:1px solid var(--a);border-radius:14px;padding:14px 16px;box-shadow:var(--sh);color:var(--text);font-size:var(--fs-md);line-height:1.5';
+  el.innerHTML=`<b>🔒 Sign this device in to load your data</b><br><span style="color:var(--muted)">Your applications, profile and Apply Queue are locked to your account. We'll email a one-time sign-in link to ${DB_OWNER_EMAIL}; this device then stays signed in.</span>
+    <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="dbtn" id="dbLoginBtn" style="background:linear-gradient(90deg,var(--a),var(--a2));color:#fff;border:0">Email me a sign-in link</button><span id="dbLoginMsg" style="color:var(--muted)"></span></div>`;
+  el.querySelector('#dbLoginBtn').onclick=async()=>{
+    const msg=el.querySelector('#dbLoginMsg'); msg.textContent='Sending…';
+    const {error}=await sb.auth.signInWithOtp({email:DB_OWNER_EMAIL, options:{shouldCreateUser:false, emailRedirectTo:location.origin+location.pathname}});
+    msg.textContent = error ? 'Could not send: '+error.message : 'Sent. Open the link on this device.';
+  };
 }
 async function checkSession(){
   if(sb && SB_URL && SB_KEY){
@@ -11601,6 +11625,8 @@ function kfocusOpen(){
   // upgrade to live Supabase data + pick up any Google OAuth session on return
   initData().then(async ()=>{
     await checkSession();
+    await refreshDbSession();
+    try{ sb && sb.auth.onAuthStateChange((ev)=>{ refreshDbSession().then(ok=>{ if(ok && role==='owner'){ pullTracking(); loadApplyQueue(true); } }); }); }catch(e){}
     if(location.hash.match(/share=([\w-]+)/)){ hideScanOverlay(); const jj=findJob(RegExp.$1); document.getElementById('root').innerHTML = jj ? sharedRoleView(jj) : sharedGoneView(); return; }
     render();
     hideScanOverlay();
