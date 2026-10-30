@@ -37,8 +37,8 @@ grant select, insert, update on public.user_state to authenticated;
 -- Email links: the page sends the salted hash of its key; true only for an unexpired key.
 create or replace function public.email_pass_ok(h text) returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists (select 1 from user_state s, jsonb_array_elements(coalesce(s.v->'keys','[]'::jsonb)) k
-                 where s.k = 'emailpass' and k->>'h' = h and (k->>'exp')::timestamptz > now());
+  select exists (select 1 from user_state s, jsonb_array_elements(coalesce(s.v->'keys','[]'::jsonb)) e
+                 where s.k = 'emailpass' and e->>'h' = h and (e->>'exp')::timestamptz > now());
 $$;
 revoke all on function public.email_pass_ok(text) from public;
 grant execute on function public.email_pass_ok(text) to anon, authenticated;

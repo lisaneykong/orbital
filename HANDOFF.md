@@ -12,6 +12,24 @@ is not in here. Add it below under "Notes from the user".
 - **Live site:** jobs.lisaney.com (IONOS). Settings should show `2026-10-19.1` once this build is live.
 - **Install:** not done yet. Follow `CLEAN-INSTALL.html` (six steps, all safe to repeat, nothing deletes data).
 
+## 2026-10-30 — Supabase locked down (row-level security)
+
+- **RLS on every table** (`supabase/rls-lockdown.sql`, applied to the live project as migration
+  `rls_lockdown_2026_10_30`). The public key can read `jobs`, `scrape_runs` and `scrape_progress` only. It can no
+  longer read or write `user_state`, `app_queue` or `email_log`; those are limited to the signed-in Supabase account
+  one@lisaney.com. GitHub Actions use the service-role key and are unaffected. Verified from outside: private
+  tables return 42501, and writes/deletes return 401.
+- **Database sign-in:** after the owner PIN, a device without a session shows "Sign this device in". It emails a
+  one-time Supabase link (`signInWithOtp`, `shouldCreateUser:false`), and the device then stays signed in. Until
+  then the device reads jobs only; tracking and Apply Queue stay local and sync after sign-in.
+- **Email links:** the key check moved to `email_pass_ok(h)`, a SECURITY DEFINER function that returns only true or
+  false for a salted hash. Supabase's linter warns that it is publicly callable; that is by design. A key opens the
+  screen, but private data still needs the device to be signed in.
+- **Schema scripts:** `SUPABASE-SCHEMA.sql` and setup.html now end with the lockdown block, so re-running them can't
+  switch security back off.
+- **If the sign-in link lands on the wrong site:** add https://jobs.lisaney.com to Supabase → Authentication → URL
+  Configuration (Site URL / Redirect URLs).
+
 ## 2026-10-30 — email and auto-prepare use the dashboard's fit score; posted pay
 
 - **New `automation/fit.mjs`** runs index.html's own `enhanceMatch`, `heatLevel`, `salaryLabel` and
