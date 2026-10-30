@@ -9881,10 +9881,12 @@ function isOwnerEmail(email){
   const owner=(OWNER_EMAIL||'').trim().toLowerCase();
   return !!email && (email===owner || email.endsWith('@lisaney.com'));
 }
+let pendingJob='';   // a #job= deep link waits here until the vault is open
 function setRole(r,email){
   role=r;
   if(email){ userEmail=email; localStorage.setItem('orbital.email',email); }
   closeGate(); render();
+  if(r && pendingJob){ const id=pendingJob; pendingJob=''; setTimeout(()=>openDossier(id),150); }
   if(r==='owner') pullTracking();   // returning owner on a new device inherits their history
 }
 /* Real Google OAuth via Supabase Auth (production). Falls back to email when
@@ -9936,6 +9938,14 @@ document.addEventListener('click',e=>{
   const a=e.target && e.target.closest && e.target.closest('a[download]');
   if(a && !canDownload()){ e.preventDefault(); e.stopImmediatePropagation(); alert('Downloads need the owner PIN.'); }
 }, true);
+async function emailPassOk(key){
+  try{
+    if(!sb) return false;
+    const {data}=await sb.from('user_state').select('v').eq('k','emailpass').maybeSingle();
+    const list=(data&&data.v&&data.v.keys)||[]; const h=await pinHash(key);
+    return list.some(x=>x && x.h===h && Date.parse(x.exp)>Date.now());
+  }catch(e){ return false; }
+}
 async function checkSession(){
   if(sb && SB_URL && SB_KEY){
     try{
@@ -11594,7 +11604,16 @@ function kfocusOpen(){
     if(location.hash.match(/share=([\w-]+)/)){ hideScanOverlay(); const jj=findJob(RegExp.$1); document.getElementById('root').innerHTML = jj ? sharedRoleView(jj) : sharedGoneView(); return; }
     render();
     hideScanOverlay();
-    const m=location.hash.match(/job=([\w-]+)/); if(m) setTimeout(()=>openDossier(m[1]),200);
+    // Email links carry #job=<id>&k=<key>. The daily email stores only the SHA-256 of each key
+    // (user_state 'emailpass', 3-day expiry), so a valid key opens the vault without the PIN.
+    // The key is stripped from the address bar at once; the 90-second idle lock still applies.
+    const m=location.hash.match(/job=([^&]+)/), km=location.hash.match(/[#&]k=([0-9a-f]{64})/);
+    if(m) pendingJob=decodeURIComponent(m[1]);
+    if(km){
+      history.replaceState(null,'',location.pathname+location.search+(m?'#job='+m[1]:''));
+      if(!role && await emailPassOk(km[1])){ lastActive=Date.now(); setRole('owner', OWNER_EMAIL||'lisaney@lisaney.com'); }
+    }
+    if(role && pendingJob){ const id=pendingJob; pendingJob=''; setTimeout(()=>openDossier(id),200); }
     const vm=location.hash.match(/view=(\w+)/); if(vm && NAV.some(n=>n[2]===vm[1]) && vm[1]!=='settings'){ view=vm[1]; render(); }
     loadApplyQueue();
   }).catch(()=>{ hideScanOverlay(); });

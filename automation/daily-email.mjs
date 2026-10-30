@@ -5,6 +5,7 @@
 //   node daily-email.mjs --force    send even if today's already went out
 //   node daily-email.mjs --preview  build it, write out/email-preview.html, send nothing
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { ROOT, SITE, requireEnv, sbSelect, sbUpsert, loadTracking, chicagoDate, chicagoLong, chicagoTime,
          HUB_LABEL, HUB_ORDER, postedMs, daysSince, esc } from './lib.mjs';
@@ -97,7 +98,11 @@ const button = (href, label) => `<table role="presentation" cellpadding="0" cell
 // Every role in the 24-hour list is within the 7-day "hot" window, so no flame here: it
 // would mark every row and tell you nothing.
 // #job=<id> opens that role's dossier in Orbital (handled after live data loads).
-const appLink = id => `${SITE}#job=${encodeURIComponent(id)}`;
+// Each email gets a fresh random key on its links; only its salted SHA-256 is stored (with the
+// same salt the PIN uses), kept 3 days, last 7 emails. index.html checks it and opens the role.
+const passKey = crypto.randomBytes(32).toString('hex');
+const passHash = crypto.createHash('sha256').update('orbital-vault-2026:' + passKey).digest('hex');
+const appLink = id => `${SITE}#job=${encodeURIComponent(id)}&k=${passKey}`;
 const links = items => `<div style="font:600 12px/1.6 ${F};padding-top:5px;">${items.filter(Boolean).map(([href, label]) =>
   `<a href="${esc(href)}" style="color:${C.link};text-decoration:none;">${label}</a>`).join(`<span style="color:${C.soft};"> &nbsp;&middot;&nbsp; </span>`)}</div>`;
 const flames = n => `<span style="font:14px/1 ${F};letter-spacing:-1px;">${'&#128293;'.repeat(n)}</span>`;
@@ -228,6 +233,12 @@ if (PREVIEW) { console.log('::notice::Preview only — nothing was sent. The ema
 if (!process.env.RESEND_API_KEY) {
   console.log('::error::RESEND_API_KEY is not set, so nothing was sent. Add it under Settings → Secrets and variables → Actions. The built email is attached to this run as "email-preview".');
   process.exit(1);
+}
+{
+  const prev = await sbSelect('user_state', 'select=v&k=eq.emailpass');
+  const keys = (((prev.rows[0] || {}).v || {}).keys || []).filter(x => Date.parse(x.exp) > Date.now()).slice(-6);
+  keys.push({ h: passHash, exp: new Date(Date.now() + 3 * 864e5).toISOString() });
+  await sbUpsert('user_state', [{ k: 'emailpass', v: { keys }, updated_at: new Date().toISOString() }]);
 }
 const r = await fetch('https://api.resend.com/emails', {
   method: 'POST',
