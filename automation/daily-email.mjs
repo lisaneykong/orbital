@@ -105,9 +105,13 @@ const RELOC_C = { great: '#37e0a0', good: '#5ec8ff', check: '#f5c560', avoid: '#
 // Compact on purpose: Gmail clips an email past ~102 KB, and a busy day lists 200+ roles.
 const salTxt = j => j.type === 'Internship' && !j.internRate ? 'pay not posted' : j.salary;
 const flagTxt = j => (j.matchFlags || []).filter(f => !/^(Avoid|Check closely):/.test(f)).join('; ');
+const k$ = v => '$' + Math.round(v / 1000) + 'K';
+const colTxt = j => j.colOk == null ? '' : j.colOk
+  ? `<span style="color:${C.good}">&#10003; clears the ${k$(j.colBar)} cost-of-living bar</span>`
+  : `<span style="color:${C.hot}">&#10007; ${Math.round((1 - j.salMax / j.colBar) * 100)}% under the ${k$(j.colBar)} cost-of-living bar</span>`;
 const relocTxt = j => j.reloc ? `<b style="color:${RELOC_C[j.reloc.tier]}">${esc(j.reloc.label)}</b>` : '';
-const roleRow = j => `<tr><td style="padding:9px 0;border-top:1px solid ${C.line};font:13px/1.45 ${F};color:${C.ink}"><b>${j.match}%</b> ${flames(j.heat)} <a href="${esc(appLink(j.id))}" style="color:${C.ink};font-weight:700">${esc(j.title)}</a><br><b style="color:${C.good}">${esc(salTxt(j))}</b> &middot; ${esc(j.company)} &middot; ${esc(String(j.location).split("~")[0].slice(0,48))}${j.reloc ? ' &middot; ' + relocTxt(j) : ''}${flagTxt(j) ? `<br><span style="color:${C.hot}">&#9888; ${esc(flagTxt(j))}</span>` : ''}${j.url ? ` &middot; <a href="${esc(j.url)}" style="color:${C.link}">Apply</a>` : ''}</td></tr>`;
-const lukeRow = j => `<tr><td style="padding:6px 0;border-top:1px solid ${C.line};font:12px/1.4 ${F};color:${C.muted}"><b style="color:${C.ink}">${j.match}%</b> <a href="${esc(appLink(j.id))}" style="color:${C.ink}">${esc(j.title)}</a> &middot; <b style="color:${C.good}">${esc(salTxt(j))}</b> &middot; ${esc(j.company)} &middot; ${esc(String(j.location).split("~")[0].slice(0,48))}${j.reloc ? ' &middot; ' + relocTxt(j) : ''}</td></tr>`;
+const roleRow = j => `<tr><td style="padding:9px 0;border-top:1px solid ${C.line};font:13px/1.45 ${F};color:${C.ink}"><b>${j.match}%</b> ${flames(j.heat)} <a href="${esc(appLink(j.id))}" style="color:${C.ink};font-weight:700">${esc(j.title)}</a><br><b style="color:${C.good}">${esc(salTxt(j))}</b>${colTxt(j) ? ' &middot; ' + colTxt(j) : ''}<br>${esc(j.company)} &middot; ${esc(String(j.location).split("~")[0].slice(0,48))}${j.reloc ? ' &middot; ' + relocTxt(j) : ''}${flagTxt(j) ? `<br><span style="color:${C.hot}">&#9888; ${esc(flagTxt(j))}</span>` : ''}${j.url ? ` &middot; <a href="${esc(j.url)}" style="color:${C.link}">Apply</a>` : ''}</td></tr>`;
+const lukeRow = j => `<tr><td style="padding:6px 0;border-top:1px solid ${C.line};font:12px/1.4 ${F};color:${C.muted}"><b style="color:${C.ink}">${j.match}%</b> <a href="${esc(appLink(j.id))}" style="color:${C.ink}">${esc(j.title)}</a> &middot; <b style="color:${C.good}">${esc(salTxt(j))}</b>${j.colOk == null ? '' : j.colOk ? ` <span style="color:${C.good}">&#10003;</span>` : ` <span style="color:${C.hot}">&#10007;</span>`} &middot; ${esc(j.company)} &middot; ${esc(String(j.location).split("~")[0].slice(0,48))}${j.reloc ? ' &middot; ' + relocTxt(j) : ''}</td></tr>`;
 
 // ---- sections ----
 let body = '';
@@ -116,6 +120,13 @@ if (!scrapeOk) {
     <b>Today's 6 AM scrape has not finished</b>${lastRun ? ` (last run: ${esc(lastRun.status)}, ${esc(chicagoLong(new Date(lastRun.started_at)))})` : ''}. This list may be missing roles. The catch-up runs at 10 AM, 2 PM and 6 PM retry automatically.</td></tr></table></td></tr>`;
 }
 
+// Ready-to-apply rows get the same salary and cost-of-living line as the role lists.
+const readyScored = new Map();
+if (ready.length) {
+  const ids = encodeURIComponent('(' + ready.slice(0, 8).map(r => '"' + String(r.job_id).replace(/"/g, '') + '"').join(',') + ')');
+  const { rows: rj } = await sbSelect('jobs', `select=*&id=in.${ids}`);
+  for (const j of scoreRows(fit, rj)) readyScored.set(j.id, j);
+}
 if (ready.length) {
   body += section('Ready to apply', `${readyNew.length ? `${readyNew.length} prepared this morning${attachments.length ? '; their résumés and cover letters are attached to this email' : ''}. ` : ''}Read each draft, then apply on the company site.`);
   for (const r of ready.slice(0, 8)) {
@@ -127,6 +138,7 @@ if (ready.length) {
         <td valign="top" style="padding-right:14px;">
           <a href="${esc(appLink(r.job_id))}" style="font:700 15px/1.35 ${F};color:${C.ink};text-decoration:none;">${esc(r.title)}</a>
           <div style="font:13px/1.5 ${F};color:${C.muted};padding-top:3px;">${esc(r.company)}${r.location ? ' &middot; ' + esc(r.location) : ''}</div>
+          ${readyScored.get(r.job_id) ? `<div style="font:13px/1.5 ${F};"><b style="color:${C.good}">${esc(salTxt(readyScored.get(r.job_id)))}</b>${colTxt(readyScored.get(r.job_id)) ? ' &middot; ' + colTxt(readyScored.get(r.job_id)) : ''}</div>` : r.salary_range ? `<div style="font:13px/1.5 ${F};color:${C.good};font-weight:700;">${esc(r.salary_range)}</div>` : ''}
           <div style="font:12px/1.5 ${F};color:${hard ? C.hot : C.muted};">${facts}</div>
           ${links([[appLink(r.job_id), 'Open résumé &amp; cover letter'], r.url && [r.url, 'Job posting &#8599;']])}
         </td>

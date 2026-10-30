@@ -39,7 +39,15 @@ export function loadOrbitalFit(trackingRaw = {}) {
   const src = `let liveClosed=new Set(); const ROLE_WINDOW_DAYS=45;\n${blocks.join('\n')}\n
     return { mapLiveJob, enhanceMatch, heatLevel, HEAT_FORMS, salaryLabel, salaryValue, relocationFit, isHot, daysOnMarket, matchIcon:
       p=>p>=85?'strong':p>=70?'decent':p>=55?'marginal':'weak', erauCredLabel: k=>ERAU_CREDS[k]&&ERAU_CREDS[k].label, OWNER };`;
-  return new Function('localStorage', src)(store);
+  // Cost-of-living bar (index.html colStandard): $125K everywhere, scaled by the region's COL
+  // multiplier for Seattle and LA.
+  const colOf = reg => { const i = html.indexOf(`
+  ${reg}:{`); const m = i < 0 ? null : html.slice(i, i + 4000).match(/col:'([\d.]+)x\s*[–-]\s*([\d.]+)x/); return m ? [+m[1], +m[2]] : null; };
+  const US = +(html.match(/const US_COL_STANDARD = (\d+)/) || [])[1] || 125000;
+  const COL = { seattle: colOf('seattle'), la: colOf('la') };
+  const fit = new Function('localStorage', src)(store);
+  fit.colStandard = reg => COL[reg] ? Math.round(US * (COL[reg][0] + COL[reg][1]) / 2 / 1000) * 1000 : US;
+  return fit;
 }
 
 // Score live rows exactly as the dashboard does. Returns the mapped job objects.
@@ -49,6 +57,9 @@ export function scoreRows(fit, rows) {
     j.heat = fit.heatLevel(j);
     j.salary = fit.salaryLabel(j);
     j.reloc = fit.relocationFit(j);
+    // Does the pay (top of the range, as the dashboard's lifestyle check uses) clear the bar?
+    j.colBar = fit.colStandard(j.region);
+    j.colOk = j.type === 'Internship' || !j.salMax ? null : j.salMax >= j.colBar;
     j.rawMatch = r.match;
     j.hub = r.location_hub;
     j.row = r;
