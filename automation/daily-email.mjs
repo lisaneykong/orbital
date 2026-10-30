@@ -81,16 +81,18 @@ const followDue = appList.filter(a => a.at && a.status === 'applied' && !trackin
   .sort((a, b) => a.at - b.at);
 
 // ---- design tokens (inline everywhere; email clients drop <style>) ----
-const F = "Arial, Helvetica, sans-serif", SERIF = "Georgia, 'Times New Roman', serif", MONO = "'Courier New', Courier, monospace";
-const C = { page: '#e9eef5', navy: '#0e1a2b', navy2: '#15263d', ink: '#18212f', muted: '#56657a', line: '#dde4ee', card: '#fbfcfe', cyan: '#37d6e6', link: '#1f4fa3', hot: '#c2410c', soft: '#aebbd0', head: '#f3f6fb' };
+// Orbital's own brand (index.html :root): deep-space navy panels, blue→violet accent, cyan
+// labels, Space Grotesk / Inter Tight / JetBrains Mono. Clients without web fonts fall back.
+const F = "'Inter Tight', 'Segoe UI', Arial, sans-serif", SERIF = "'Space Grotesk', 'Segoe UI', Arial, sans-serif", MONO = "'JetBrains Mono', 'Courier New', monospace";
+const C = { page: '#10161f', navy: '#18212f', navy2: '#243045', ink: '#f6faff', muted: '#b6c5d9', line: '#3b4d66', card: '#1e2839', cyan: '#37d6e6', link: '#8fb0ff', hot: '#ff6f86', soft: '#8fa0b8', head: '#f6faff', a: '#5b8cff', a2: '#9d6bff', good: '#37e0a0', gold: '#f5c560' };
 const pill = m => {
-  const [bg, fg] = m >= 75 ? ['#dff3ea', '#0d6b4a'] : m >= 50 ? ['#fbeed6', '#7a4d00'] : ['#eceff4', '#4a576a'];
+  const [bg, fg] = m >= 75 ? ['#123a2e', '#37e0a0'] : m >= 50 ? ['#3a2f12', '#f5c560'] : ['#2b3950', '#b6c5d9'];
   return `<span style="display:inline-block;padding:4px 9px;border-radius:999px;background:${bg};color:${fg};font:700 13px/1 ${F};">${m}%</span>`;
 };
 const fmtDay = ms => new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', month: 'short', day: 'numeric' }).format(new Date(ms));
 const ago = ms => { const d = daysSince(ms); return d == null ? 'posting date unknown' : d === 0 ? 'posted today' : d === 1 ? 'posted yesterday' : `posted ${d} days ago`; };
 const section = (title, sub) => `<tr><td style="padding:30px 0 4px;"><div style="font:700 11px/1 ${MONO};letter-spacing:2px;color:${C.link};text-transform:uppercase;">${esc(title)}</div>${sub ? `<div style="font:14px/1.5 ${F};color:${C.muted};padding-top:6px;">${sub}</div>` : ''}</td></tr>`;
-const button = (href, label) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${C.link}" style="border-radius:8px;"><a href="${href}" style="display:block;padding:11px 18px;font:700 14px/1 ${F};color:#fbfcfe;text-decoration:none;border-radius:8px;">${esc(label)}</a></td></tr></table>`;
+const button = (href, label) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${C.a}" style="border-radius:10px;background:${C.a};background-image:linear-gradient(90deg,${C.a},${C.a2});"><a href="${href}" style="display:block;padding:12px 20px;font:700 14px/1 ${F};color:#ffffff;text-decoration:none;border-radius:8px;">${esc(label)}</a></td></tr></table>`;
 
 // Every role in the 24-hour list is within the 7-day "hot" window, so no flame here: it
 // would mark every row and tell you nothing.
@@ -99,18 +101,18 @@ const appLink = id => `${SITE}#job=${encodeURIComponent(id)}`;
 const links = items => `<div style="font:600 12px/1.6 ${F};padding-top:5px;">${items.filter(Boolean).map(([href, label]) =>
   `<a href="${esc(href)}" style="color:${C.link};text-decoration:none;">${label}</a>`).join(`<span style="color:${C.soft};"> &nbsp;&middot;&nbsp; </span>`)}</div>`;
 const flames = n => `<span style="font:14px/1 ${F};letter-spacing:-1px;">${'&#128293;'.repeat(n)}</span>`;
-const RELOC_C = { great: '#0d6b4a', good: '#1f4fa3', check: '#7a4d00', avoid: '#b42318' };
+const RELOC_C = { great: '#37e0a0', good: '#5ec8ff', check: '#f5c560', avoid: '#ff6f86' };
 // Compact on purpose: Gmail clips an email past ~102 KB, and a busy day lists 200+ roles.
 const salTxt = j => j.type === 'Internship' && !j.internRate ? 'pay not posted' : j.salary;
 const flagTxt = j => (j.matchFlags || []).filter(f => !/^(Avoid|Check closely):/.test(f)).join('; ');
 const relocTxt = j => j.reloc ? `<b style="color:${RELOC_C[j.reloc.tier]}">${esc(j.reloc.label)}</b>` : '';
-const roleRow = j => `<tr><td style="padding:9px 0;border-top:1px solid ${C.line};font:13px/1.45 ${F};color:${C.ink}"><b>${j.match}%</b> ${flames(j.heat)} <a href="${esc(appLink(j.id))}" style="color:${C.ink};font-weight:700">${esc(j.title)}</a><br><b style="color:#0d6b4a">${esc(salTxt(j))}</b> &middot; ${esc(j.company)} &middot; ${esc(String(j.location).split("~")[0].slice(0,48))}${j.reloc ? ' &middot; ' + relocTxt(j) : ''}${flagTxt(j) ? `<br><span style="color:${C.hot}">&#9888; ${esc(flagTxt(j))}</span>` : ''}${j.url ? ` &middot; <a href="${esc(j.url)}" style="color:${C.link}">Apply</a>` : ''}</td></tr>`;
-const lukeRow = j => `<tr><td style="padding:6px 0;border-top:1px solid ${C.line};font:12px/1.4 ${F};color:${C.muted}"><b style="color:${C.ink}">${j.match}%</b> <a href="${esc(appLink(j.id))}" style="color:${C.ink}">${esc(j.title)}</a> &middot; <b style="color:#0d6b4a">${esc(salTxt(j))}</b> &middot; ${esc(j.company)} &middot; ${esc(String(j.location).split("~")[0].slice(0,48))}${j.reloc ? ' &middot; ' + relocTxt(j) : ''}</td></tr>`;
+const roleRow = j => `<tr><td style="padding:9px 0;border-top:1px solid ${C.line};font:13px/1.45 ${F};color:${C.ink}"><b>${j.match}%</b> ${flames(j.heat)} <a href="${esc(appLink(j.id))}" style="color:${C.ink};font-weight:700">${esc(j.title)}</a><br><b style="color:${C.good}">${esc(salTxt(j))}</b> &middot; ${esc(j.company)} &middot; ${esc(String(j.location).split("~")[0].slice(0,48))}${j.reloc ? ' &middot; ' + relocTxt(j) : ''}${flagTxt(j) ? `<br><span style="color:${C.hot}">&#9888; ${esc(flagTxt(j))}</span>` : ''}${j.url ? ` &middot; <a href="${esc(j.url)}" style="color:${C.link}">Apply</a>` : ''}</td></tr>`;
+const lukeRow = j => `<tr><td style="padding:6px 0;border-top:1px solid ${C.line};font:12px/1.4 ${F};color:${C.muted}"><b style="color:${C.ink}">${j.match}%</b> <a href="${esc(appLink(j.id))}" style="color:${C.ink}">${esc(j.title)}</a> &middot; <b style="color:${C.good}">${esc(salTxt(j))}</b> &middot; ${esc(j.company)} &middot; ${esc(String(j.location).split("~")[0].slice(0,48))}${j.reloc ? ' &middot; ' + relocTxt(j) : ''}</td></tr>`;
 
 // ---- sections ----
 let body = '';
 if (!scrapeOk) {
-  body += `<tr><td style="padding:22px 0 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:12px 14px;background:#fbeed6;border-radius:8px;font:13px/1.5 ${F};color:#5c3a00;">
+  body += `<tr><td style="padding:22px 0 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:12px 14px;background:#3a2f12;border-radius:8px;font:13px/1.5 ${F};color:#f5c560;">
     <b>Today's 6 AM scrape has not finished</b>${lastRun ? ` (last run: ${esc(lastRun.status)}, ${esc(chicagoLong(new Date(lastRun.started_at)))})` : ''}. This list may be missing roles. The catch-up runs at 10 AM, 2 PM and 6 PM retry automatically.</td></tr></table></td></tr>`;
 }
 
@@ -161,15 +163,19 @@ const top = hot[0] || luke[0];
 const preheader = top ? `Top match: ${top.title} at ${top.company} (${top.match}%, ${top.salary}).` : 'No new postings in the last 24 hours.';
 
 const html = `<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><title>${esc(subject)}</title></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Inter+Tight:wght@400;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"><title>${esc(subject)}</title></head>
 <body style="margin:0;padding:0;background:${C.page};">
 <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;mso-hide:all;">${esc(preheader)}&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</span>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.page}" style="background:${C.page};"><tr><td align="center" style="padding:24px 12px;">
 <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
-  <tr><td bgcolor="${C.navy}" style="background:${C.navy};padding:28px 32px 20px;border-radius:14px 14px 0 0;">
-    <div style="font:700 11px/1 ${MONO};letter-spacing:3px;color:${C.cyan};">ORBITAL // DAILY BRIEF</div>
-    <div style="font:400 28px/1.2 ${SERIF};color:${C.head};padding-top:12px;mso-line-height-rule:exactly;">${esc(chicagoLong())}</div>
+  <tr><td height="4" bgcolor="${C.a}" style="height:4px;line-height:4px;font-size:0;background:${C.a};background-image:linear-gradient(90deg,${C.a},${C.a2},${C.cyan});border-radius:14px 14px 0 0;">&nbsp;</td></tr>
+  <tr><td bgcolor="${C.navy}" style="background:${C.navy};padding:24px 32px 20px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td valign="middle" style="padding-right:10px;"><img src="${SITE}assets/icon-192.png" width="34" height="34" alt="Orbital" style="display:block;border:0;border-radius:9px;"></td>
+      <td valign="middle" style="font:700 18px/1 ${SERIF};color:${C.head};letter-spacing:.5px;">Orbital <span style="font:500 10px/1 ${MONO};letter-spacing:3px;color:${C.cyan};padding-left:6px;">DAILY BRIEF</span></td>
+    </tr></table>
+    <div style="font:700 28px/1.2 ${SERIF};color:${C.head};padding-top:12px;mso-line-height-rule:exactly;">${esc(chicagoLong())}</div>
     <div style="font:14px/1.5 ${F};color:${C.soft};padding-top:6px;">Roles first posted by employers in the 24 hours to 8:00 AM Central.</div>
   </td></tr>
   <tr><td bgcolor="${C.navy2}" style="background:${C.navy2};padding:18px 32px;">
